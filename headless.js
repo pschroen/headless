@@ -89,9 +89,13 @@ var init = function () {
         cert: files.read('headless-cert.pem')
     }, function (req, res) {
         req.addListener('end', function () {
-            var filepath = './mothership'+req.url;
+            var match = /(.*)\.headless\.io/.exec(req.headers.host),
+                filepath = './mothership'+req.url;
+            if (!match && /headless\.io/.test(req.headers.host) && req.url === '/') {
+                file.serveFile('/install/index.html', 200, {}, req, res);
+                return;
+            }
             if (!files.exists(filepath)) {
-                var match = /(.*)\.headless\.io/.exec(req.headers.host);
                 if (match && users[match[1]] && users[match[1]].host) {
                     var load = req.post ? JSON.parse(req.post) : {};
                     if (!load.remoteAddress) load.remoteAddress = req.connection.socket.remoteAddress;

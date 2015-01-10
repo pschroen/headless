@@ -1,0 +1,320 @@
+<!doctype html>
+<!--
+  __                          __   ___                            
+ /\ \                        /\ \ /\_ \                           
+ \ \ \___      __     __     \_\ \\//\ \      __    ____    ____  
+  \ \  _ `\  /'__`\ /'__`\   /'_` \ \ \ \   /'__`\ /',__\  /',__\ 
+   \ \ \ \ \/\  __//\ \L\.\_/\ \L\ \ \_\ \_/\  __//\__, `\/\__, `\
+    \ \_\ \_\ \____\ \__/.\_\ \___,_\/\____\ \____\/\____/\/\____/
+     \/_/\/_/\/____/\/__/\/_/\/__,_ /\/____/\/____/\/___/  \/___/ 
+                                                                  
+                                     >>headless.io. //+o: headless
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Headless - NodeJS and PhantomJS shell</title>
+    <meta name="title"                                  content="Headless - NodeJS and PhantomJS shell">
+    <meta name="description"                            content="Headless is a web 3.0 framework for managing Internet connected devices and scripting anything you can imagine with JavaScript.">
+    <meta name="keywords"                               content="headless, daemon, javascript, framework, web, 3.0, data, semantic, interface, internet, things, websocket, relay, ghost, shell, nodejs, phantomjs">
+    <meta name="author"                                 content="Patrick Schroen">
+    <meta name="viewport"                               content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-title"             content="Headless">
+    <!-- TODO: <meta name="apple-mobile-web-app-capable"           content="yes">-->
+    <meta name="apple-mobile-web-app-status-bar-style"  content="black-translucent">
+    <meta property="description"                        content="Headless is a web 3.0 framework for managing Internet connected devices and scripting anything you can imagine with JavaScript.">
+    <meta property="copyright"                          content="Copyright © UFO Technologies Ltd. All rights reserved.">
+    <link rel="shortcut icon"                           href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon"                        href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="57x57"          href="/apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="72x72"          href="/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76"          href="/apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114"        href="/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120"        href="/apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144"        href="/apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152"        href="/apple-touch-icon-152x152.png">
+    <meta property="og:type"                            content="Website">
+    <meta property="og:site_name"                       content="Headless - NodeJS and PhantomJS shell">
+    <meta property="og:title"                           content="Headless - NodeJS and PhantomJS shell">
+    <meta property="og:description"                     content="Headless is a web 3.0 framework for managing Internet connected devices and scripting anything you can imagine with JavaScript.">
+    <meta property="og:url"                             content="https://headless.io/">
+    <meta property="og:image"                           content="/facebook-icon.png">
+    <meta property="og:image:type"                      content="image/png">
+    <meta property="og:image:width"                     content="90">
+    <meta property="og:image:height"                    content="90">
+    <style>
+        @font-face {
+            font-family: 'Open Sans';
+            src: url('/OpenSans-Regular-webfont.eot');
+            src: url('/OpenSans-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+                 url('/OpenSans-Regular-webfont.woff') format('woff'),
+                 url('/OpenSans-Regular-webfont.ttf') format('truetype'),
+                 url('/OpenSans-Regular-webfont.svg#OpenSansRegular') format('svg');
+            font-weight: normal;
+            font-style: normal;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        body {
+            background-color: #111;
+            margin: 0;
+            font-family: sans-serif;
+            font-size: 13px;
+            line-height: 18px;
+            color: #f8f8f0;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+            position: relative;
+            -webkit-user-select: none;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizelegibility;
+        }
+        a {
+            cursor: pointer;
+            color: #ccc;
+            text-decoration: none;
+        }
+        a:hover, a:active, input:focus, button {
+            outline: none;
+        }
+        h1 {
+            color: #eee;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 24px;
+            font-weight: normal;
+            line-height: 28px;
+        }
+        pre {
+            font-family: monaco, monospace;
+            font-size: 12px;
+            line-height: 14px;
+            -webkit-user-select: auto;
+        }
+        .btn {
+            position: absolute;
+            display: block;
+            height: 28px;
+            margin: 1px 0 2px;
+            padding: 0 12px;
+            background-color: #222;
+            border-radius: 3px;
+            -webkit-box-shadow: #222 0 0 0 1px inset, rgba(255, 255, 255, 0.05) 0 0 0 1px inset, #111 0 2px 0 0, rgba(0, 0, 0, 0.4) 0 2px 0 1px, rgba(0, 0, 0, 0.5) 0 2px 2px 1px;
+            box-shadow: #222 0 0 0 1px inset, rgba(255, 255, 255, 0.05) 0 0 0 1px inset, #111 0 2px 0 0, rgba(0, 0, 0, 0.4) 0 2px 0 1px, rgba(0, 0, 0, 0.5) 0 2px 2px 1px;
+            color: #eee;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 13px;
+            line-height: 28px;
+            text-align: center;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .pressed {
+            margin: 2px 0 1px;
+            background-color: black;
+            background-image: none;
+            border: solid 1px black;
+            -webkit-box-shadow: rgba(0, 0, 0, 0.1) 0 1px 0 0 inset, rgba(255, 255, 255, 0.05) 0 1px 0 0;
+        }
+        .small {
+            height: 24px;
+            padding: 0 8px;
+            font-size: 12px;
+            line-height: 24px;
+        }
+        .legal {
+            position: absolute;
+            display: block;
+            width: 210px;
+            color: #ccc;
+            font-size: 12px;
+            line-height: 16px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body></body>
+<script>
+/**
+ * Headless alien interface.
+ *
+ * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @license  MIT Licensed
+ */
+
+/*jshint
+ strict:true, eqeqeq:true, newcap:false,
+ loopfunc:true, shadow:true, browser:true, indent:4
+*/
+
+var d = document,
+    page = 0,
+    pages = [],
+    alien = {},
+    interfaces = {};
+
+alien.element = function (element, node) {
+    "use strict";
+    node = node || d.body;
+    element.style.visibility = 'hidden';
+    element.style.position = 'absolute';
+    element.style.WebkitTransform = 'translateZ(0)';
+    element.style.MozTransform = 'translateZ(0)';
+    element.style.msTransform = 'translateZ(0)';
+    element.style.OTransform = 'translateZ(0)';
+    element.style.transform = 'translateZ(0)';
+    element.draggable = false;
+    node.appendChild(element);
+    this.element = element;
+    this.show = function () {
+        if (element.getAttribute('data-visible') !== 'hidden') element.style.visibility = 'visible';
+    };
+    this.hide = function () {
+        element.style.visibility = 'hidden';
+    };
+};
+
+alien.group = function (objects, node) {
+    "use strict";
+    this.objects = objects || [];
+    var element = d.createElement('div');
+    for (var i = 0; i < this.objects.length; i++) element.appendChild(this.objects[i].element);
+    var object = new alien.element(element, node);
+    object.addObject = function (obj) {
+        this.objects.push(obj);
+        var last = element.appendChild(obj.element);
+        element.style.width = last.offsetLeft+last.offsetWidth+'px';
+        element.style.height = last.offsetTop+last.offsetHeight+'px';
+        return last;
+    };
+    object.show = function () {
+        if (element.getAttribute('data-visible') !== 'hidden') {
+            element.style.visibility = 'visible';
+            for (var i = 0; i < this.objects.length; i++) this.objects[i].show();
+        }
+    };
+    object.hide = function () {
+        element.style.visibility = 'hidden';
+        for (var i = 0; i < this.objects.length; i++) this.objects[i].hide();
+    };
+    object.bounds = function () {
+        var width = 0,
+            height = 0;
+        for (var i = 0; i < this.objects.length; i++) {
+            var elm = this.objects[i].element,
+                boundswidth = elm.offsetLeft+elm.offsetWidth,
+                boundsheight = elm.offsetTop+elm.offsetHeight;
+            if (boundswidth > width) width = boundswidth;
+            if (boundsheight > height) height = boundsheight;
+        }
+        element.style.width = width+'px';
+        element.style.height = height+'px';
+    };
+    object.resize = function () {
+        for (var i = 0; i < this.objects.length; i++) if (this.objects[i].resize) this.objects[i].resize();
+    };
+    object.objects = this.objects;
+    if (object.objects.length) object.bounds();
+    return object;
+};
+
+alien.welcome = function () {
+    "use strict";
+    var element = d.createElement('div');
+    var headless = d.createElement('a');
+    headless.href = '/headless.png';
+    headless.target = '_blank';
+    var icon = d.createElement('img');
+    icon.src = '/apple-touch-icon-152x152.png';
+    icon.alt = 'Headless';
+    icon.style.height = '76px';
+    icon.style.width = '76px';
+    headless.appendChild(icon);
+    element.appendChild(headless);
+    var commandline = d.createElement('div');
+    commandline.innerHTML = '<h1>Installation</h1>Visit <a href="https://headless.io/setup/" target="_blank">https://headless.io/setup/</a> with <a href="https://www.google.com/chrome/" target="_blank">Chrome</a>.<pre>curl -O -L https://github.com/pschroen/headless/archive/stable.zip\nunzip stable.zip\ncd headless-stable\nnpm install\nnpm start</pre>Return to the setup page, create your first user and happy scripting! :)';
+    element.appendChild(commandline);
+    var downloads = d.createElement('div');
+    downloads.innerHTML = '<h1>Downloads</h1>Headless - <a href="/headless.png" target="_blank">logo</a>.<br>&nbsp;<br>Documentation coming soon.<br>&nbsp;<br>QPKG coming soon.<br>&nbsp;<br>RPi image coming soon.';
+    element.appendChild(downloads);
+    var object = new alien.element(element);
+    return object;
+};
+
+alien.button = function (text, large) {
+    "use strict";
+    var element = d.createElement('a');
+    element.className = 'btn'+(!large ? ' small' : '');
+    var t = d.createTextNode(text);
+    element.appendChild(t);
+    var object = new alien.element(element);
+    return object;
+};
+
+alien.legal = function () {
+    "use strict";
+    var element = d.createElement('div');
+    element.className = 'legal';
+    var div = d.createElement('div');
+    div.innerHTML = 'TM & &copy; UFO Technologies Ltd.';
+    element.appendChild(div);
+    div = d.createElement('div');
+    div.innerHTML = '<a href="http://blog.ufotechnologies.com/" target="_blank">Made with &#10084; in Toronto, Canada</a>';
+    element.appendChild(div);
+    var object = new alien.element(element);
+    return object;
+};
+
+alien.github = function () {
+    "use strict";
+    var element = d.createElement('a');
+    element.href = 'https://github.com/pschroen/headless';
+    element.target = '_blank';
+    var forkme = d.createElement('img');
+    forkme.src = 'https://s3.amazonaws.com/github/ribbons/forkme_left_white_ffffff.png';
+    forkme.alt = 'Fork me on GitHub';
+    element.appendChild(forkme);
+    var object = new alien.element(element);
+    return object;
+};
+
+var welcome = alien.welcome();
+welcome.resize = function () {
+    "use strict";
+    this.element.style.left = parseInt((d.documentElement.offsetWidth-this.element.offsetWidth)/2, 10)+'px';
+    this.element.style.top = parseInt((d.documentElement.offsetHeight-this.element.offsetHeight)/3, 10)+'px';
+};
+interfaces.welcome = welcome;
+
+var legal = alien.legal();
+legal.element.onclick = function () {};
+legal.resize = function () {
+    "use strict";
+    this.element.style.left = d.documentElement.offsetWidth-this.element.offsetWidth-10+'px';
+    this.element.style.top = d.documentElement.offsetHeight-this.element.offsetHeight-10+'px';
+};
+
+var github = alien.github();
+github.resize = function () {
+    "use strict";
+    this.element.style.display = d.documentElement.offsetWidth > 1023 ? 'block' : 'none';
+};
+interfaces.github = github;
+
+for (var x in interfaces) {
+    interfaces[x].resize();
+    interfaces[x].show();
+}
+legal.resize();
+legal.show();
+pages[0] = interfaces;
+
+
+var resize = function () {
+    "use strict";
+    for (var x in pages[page]) pages[page][x].resize();
+    legal.resize();
+};
+window.onresize = window.onload = resize;
+</script>
+</html>
