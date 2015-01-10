@@ -1,0 +1,5 @@
+{
+    "mothership": [
+        "aws-us-east-1.headless.io:443"
+    ]
+}

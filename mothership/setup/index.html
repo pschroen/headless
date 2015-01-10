@@ -1,0 +1,466 @@
+<!doctype html>
+<!--
+  __                          __   ___                            
+ /\ \                        /\ \ /\_ \                           
+ \ \ \___      __     __     \_\ \\//\ \      __    ____    ____  
+  \ \  _ `\  /'__`\ /'__`\   /'_` \ \ \ \   /'__`\ /',__\  /',__\ 
+   \ \ \ \ \/\  __//\ \L\.\_/\ \L\ \ \_\ \_/\  __//\__, `\/\__, `\
+    \ \_\ \_\ \____\ \__/.\_\ \___,_\/\____\ \____\/\____/\/\____/
+     \/_/\/_/\/____/\/__/\/_/\/__,_ /\/____/\/____/\/___/  \/___/ 
+                                                                  
+                               >>headless.io setup. //+o: headless
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Headless - Setup</title>
+    <meta name="title"                                  content="Headless - Setup">
+    <meta name="description"                            content="Headless is a web 3.0 framework for managing Internet connected devices and scripting anything you can imagine with JavaScript.">
+    <meta name="keywords"                               content="headless, daemon, javascript, framework, web, 3.0, data, semantic, interface, internet, things, websocket, relay, ghost, shell, nodejs, phantomjs">
+    <meta name="author"                                 content="Patrick Schroen">
+    <meta name="viewport"                               content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-title"             content="Headless">
+    <!-- TODO: <meta name="apple-mobile-web-app-capable"           content="yes">-->
+    <meta name="apple-mobile-web-app-status-bar-style"  content="black-translucent">
+    <meta property="description"                        content="Headless is a web 3.0 framework for managing Internet connected devices and scripting anything you can imagine with JavaScript.">
+    <meta property="copyright"                          content="Copyright © UFO Technologies Ltd. All rights reserved.">
+    <link rel="shortcut icon"                           href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon"                        href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="57x57"          href="/apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="72x72"          href="/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76"          href="/apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114"        href="/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120"        href="/apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144"        href="/apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152"        href="/apple-touch-icon-152x152.png">
+    <meta property="og:type"                            content="Website">
+    <meta property="og:site_name"                       content="Headless - Setup">
+    <meta property="og:title"                           content="Headless - Setup">
+    <meta property="og:description"                     content="Headless is a web 3.0 framework for managing Internet connected devices and scripting anything you can imagine with JavaScript.">
+    <meta property="og:url"                             content="https://headless.io/setup/">
+    <meta property="og:image"                           content="/facebook-icon.png">
+    <meta property="og:image:type"                      content="image/png">
+    <meta property="og:image:width"                     content="90">
+    <meta property="og:image:height"                    content="90">
+    <style>
+        @font-face {
+            font-family: 'Open Sans';
+            src: url('/OpenSans-Regular-webfont.eot');
+            src: url('/OpenSans-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+                 url('/OpenSans-Regular-webfont.woff') format('woff'),
+                 url('/OpenSans-Regular-webfont.ttf') format('truetype'),
+                 url('/OpenSans-Regular-webfont.svg#OpenSansRegular') format('svg');
+            font-weight: normal;
+            font-style: normal;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        body {
+            background-color: #111;
+            margin: 0;
+            font-family: sans-serif;
+            font-size: 13px;
+            line-height: 18px;
+            color: #f8f8f0;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+            position: relative;
+            -webkit-user-select: none;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizelegibility;
+        }
+        a {
+            cursor: pointer;
+            color: #ccc;
+            text-decoration: none;
+        }
+        a:hover, a:active, input:focus, button {
+            outline: none;
+        }
+        form {
+            position: absolute;
+            display: block;
+            width: 96px;
+            height: 27px;
+            padding: 0 12px 0 12px;
+            margin: 0;
+            background: #f8f8f0;
+            border-radius: 5px;
+            box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05), inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
+        }
+        input {
+            position: relative;
+            display: block;
+            width: 96px;
+            height: 16px;
+            top: 6px;
+            left: 0;
+            padding: 0;
+            border: none;
+            font-size: 12px;
+            line-height: 16px;
+            vertical-align: middle;
+            border-radius: 5px;
+            box-shadow: 0 0 0 0, 0 0 0 0;
+            background-color: #f8f8f0;
+            -webkit-rtl-ordering: logical;
+            -webkit-user-select: text;
+            cursor: auto;
+            -webkit-appearance: textfield;
+            -webkit-box-sizing: content-box;
+            box-sizing: content-box;
+        }
+        .we-come-in-peace {
+            position: absolute;
+            left: 0;
+            right: 0;
+            padding: 0 12px;
+            color: #eee;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 24px;
+            line-height: 28px;
+            text-align: center;
+            text-decoration: none;
+            word-break: break-all;
+            -webkit-user-select: auto;
+        }
+        .btn {
+            position: absolute;
+            display: block;
+            height: 28px;
+            margin: 1px 0 2px;
+            padding: 0 12px;
+            background-color: #222;
+            border-radius: 3px;
+            -webkit-box-shadow: #222 0 0 0 1px inset, rgba(255, 255, 255, 0.05) 0 0 0 1px inset, #111 0 2px 0 0, rgba(0, 0, 0, 0.4) 0 2px 0 1px, rgba(0, 0, 0, 0.5) 0 2px 2px 1px;
+            box-shadow: #222 0 0 0 1px inset, rgba(255, 255, 255, 0.05) 0 0 0 1px inset, #111 0 2px 0 0, rgba(0, 0, 0, 0.4) 0 2px 0 1px, rgba(0, 0, 0, 0.5) 0 2px 2px 1px;
+            color: #eee;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 13px;
+            line-height: 28px;
+            text-align: center;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .pressed {
+            margin: 2px 0 1px;
+            background-color: black;
+            background-image: none;
+            border: solid 1px black;
+            -webkit-box-shadow: rgba(0, 0, 0, 0.1) 0 1px 0 0 inset, rgba(255, 255, 255, 0.05) 0 1px 0 0;
+        }
+        .small {
+            height: 24px;
+            padding: 0 8px;
+            font-size: 12px;
+            line-height: 24px;
+        }
+        .legal {
+            position: absolute;
+            display: block;
+            width: 210px;
+            color: #ccc;
+            font-size: 12px;
+            line-height: 16px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body></body>
+<script>
+/**
+ * Headless alien interface.
+ *
+ * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @license  MIT Licensed
+ */
+
+/*jshint
+ strict:true, eqeqeq:true, newcap:false,
+ loopfunc:true, shadow:true, browser:true, indent:4
+*/
+
+var d = document,
+    page = 0,
+    pages = [],
+    alien = {},
+    interfaces = {},
+    socket = null,
+    heartbeat = null,
+    localhost = null;
+
+alien.mothership = function () {
+    "use strict";
+    socket = new WebSocket('wss://'+location.host);
+    socket.onopen = function (event) {
+        console.log("Connected to mothership with 4 minute heartbeat");
+        heartbeat = setInterval(function () {
+            socket.send(JSON.stringify({
+                message: 'heartbeat',
+                time: Date.now()
+            }));
+        }, 240000);
+        socket.send(JSON.stringify({
+            message: 'setup',
+            time: Date.now()
+        }));
+    };
+    socket.onmessage = function (event) {
+        var payload = JSON.parse(event.data),
+            message = payload.message,
+            data = payload.data;
+        switch (message) {
+        case 'setup':
+            localhost = data.localhost;
+            console.log("Setup localhost of "+localhost);
+            if (!page) {
+                probename.element.innerHTML = data.hostname;
+                for (var x in pages[page]) pages[page][x].hide();
+                page++;
+                for (var x in pages[page]) {
+                    var object = pages[page][x];
+                    object.resize();
+                    object.show();
+                }
+                user.input.focus();
+            }
+            break;
+        case 'heartbeat':
+            console.log("Heartbeat with "+(Date.now()-payload.time)+"ms latency");
+            break;
+        }
+    };
+    socket.onerror = socket.onclose = function () {
+        location.reload();
+    };
+};
+alien.mothership();
+
+alien.element = function (element, node) {
+    "use strict";
+    node = node || d.body;
+    element.style.visibility = 'hidden';
+    element.style.position = 'absolute';
+    element.style.WebkitTransform = 'translateZ(0)';
+    element.style.MozTransform = 'translateZ(0)';
+    element.style.msTransform = 'translateZ(0)';
+    element.style.OTransform = 'translateZ(0)';
+    element.style.transform = 'translateZ(0)';
+    element.draggable = false;
+    node.appendChild(element);
+    this.element = element;
+    this.show = function () {
+        if (element.getAttribute('data-visible') !== 'hidden') element.style.visibility = 'visible';
+    };
+    this.hide = function () {
+        element.style.visibility = 'hidden';
+    };
+};
+
+alien.group = function (objects, node) {
+    "use strict";
+    this.objects = objects || [];
+    var element = d.createElement('div');
+    for (var i = 0; i < this.objects.length; i++) element.appendChild(this.objects[i].element);
+    var object = new alien.element(element, node);
+    object.addObject = function (obj) {
+        this.objects.push(obj);
+        var last = element.appendChild(obj.element);
+        element.style.width = last.offsetLeft+last.offsetWidth+'px';
+        element.style.height = last.offsetTop+last.offsetHeight+'px';
+        return last;
+    };
+    object.show = function () {
+        if (element.getAttribute('data-visible') !== 'hidden') {
+            element.style.visibility = 'visible';
+            for (var i = 0; i < this.objects.length; i++) this.objects[i].show();
+        }
+    };
+    object.hide = function () {
+        element.style.visibility = 'hidden';
+        for (var i = 0; i < this.objects.length; i++) this.objects[i].hide();
+    };
+    object.bounds = function () {
+        var width = 0,
+            height = 0;
+        for (var i = 0; i < this.objects.length; i++) {
+            var elm = this.objects[i].element,
+                boundswidth = elm.offsetLeft+elm.offsetWidth,
+                boundsheight = elm.offsetTop+elm.offsetHeight;
+            if (boundswidth > width) width = boundswidth;
+            if (boundsheight > height) height = boundsheight;
+        }
+        element.style.width = width+'px';
+        element.style.height = height+'px';
+    };
+    object.resize = function () {
+        for (var i = 0; i < this.objects.length; i++) if (this.objects[i].resize) this.objects[i].resize();
+    };
+    object.objects = this.objects;
+    if (object.objects.length) object.bounds();
+    return object;
+};
+
+alien.welcome = function (text) {
+    "use strict";
+    text = text || '';
+    var element = d.createElement('div');
+    element.className = 'we-come-in-peace';
+    var t = d.createTextNode(text);
+    element.appendChild(t);
+    var object = new alien.element(element);
+    return object;
+};
+
+alien.button = function (text, large) {
+    "use strict";
+    var element = d.createElement('a');
+    element.className = 'btn'+(!large ? ' small' : '');
+    var t = d.createTextNode(text);
+    element.appendChild(t);
+    var object = new alien.element(element);
+    return object;
+};
+
+alien.input = function (text, password, maxlength) {
+    "use strict";
+    var element = d.createElement('form');
+    var input = d.createElement('input');
+    input.type = !password ? 'text' : 'password';
+    input.maxLength = maxlength || 255;
+    input.placeholder = text;
+    input.autocapitalize = 'none';
+    element.appendChild(input);
+    var object = new alien.element(element);
+    object.input = input;
+    return object;
+};
+
+alien.legal = function () {
+    "use strict";
+    var element = d.createElement('div');
+    element.className = 'legal';
+    var div = d.createElement('div');
+    div.innerHTML = 'TM & &copy; UFO Technologies Ltd.';
+    element.appendChild(div);
+    div = d.createElement('div');
+    div.innerHTML = '<a href="http://blog.ufotechnologies.com/" target="_blank">Made with &#10084; in Toronto, Canada</a>';
+    element.appendChild(div);
+    var object = new alien.element(element);
+    return object;
+};
+
+var welcome = alien.welcome("Start your Headless device");
+welcome.resize = function () {
+    "use strict";
+    this.element.style.top = parseInt((d.documentElement.offsetHeight-this.element.offsetHeight)/3, 10)+'px';
+};
+interfaces.welcome = welcome;
+
+var legal = alien.legal();
+legal.element.onclick = function () {};
+legal.resize = function () {
+    "use strict";
+    this.element.style.left = d.documentElement.offsetWidth-this.element.offsetWidth-10+'px';
+    this.element.style.top = d.documentElement.offsetHeight-this.element.offsetHeight-10+'px';
+};
+
+for (var x in interfaces) {
+    interfaces[x].resize();
+    interfaces[x].show();
+}
+legal.resize();
+legal.show();
+pages[0] = interfaces;
+
+
+interfaces = {};
+
+var probename = alien.welcome();
+probename.resize = function () {
+    "use strict";
+    this.element.style.top = parseInt((d.documentElement.offsetHeight-this.element.offsetHeight)/5, 10)+'px';
+};
+interfaces.probename = probename;
+
+var user = alien.input("Username");
+user.element.onsubmit = function () {
+    "use strict";
+    if (create.element.className !== 'btn pressed') {
+        if (user.input.value !== '' && pass.input.value !== '') {
+            create.element.className = 'btn pressed';
+            clearInterval(heartbeat);
+            socket.onerror = socket.onclose = function () {};
+            socket.send(JSON.stringify({
+                message: 'setup',
+                data: {
+                    name: user.input.value,
+                    auth: pass.input.value,
+                    userAgent: navigator.userAgent
+                },
+                time: Date.now()
+            }));
+            setTimeout(function () {
+                done.element.innerHTML = 'All done, visit https://'+localhost+'<a href="https://www.google.com/chrome/" target="_blank"> with Chrome</a>';
+                for (var x in pages[page]) pages[page][x].hide();
+                page++;
+                for (var x in pages[page]) {
+                    var object = pages[page][x];
+                    object.resize();
+                    object.show();
+                }
+            }, 100);
+        } else if (user.input.value === '') {
+            user.input.focus();
+        } else if (pass.input.value === '') {
+            pass.input.focus();
+        }
+    }
+    return false;
+};
+
+var pass = alien.input("Password", true);
+pass.element.style.left = user.element.offsetLeft+user.element.offsetWidth+10+'px';
+pass.element.onsubmit = user.element.onsubmit;
+
+var create = alien.button("Create User", true);
+create.element.style.left = pass.element.offsetLeft+pass.element.offsetWidth-2+'px';
+create.element.style.top = '-3px';
+create.element.onclick = user.element.onsubmit;
+
+var form = alien.group([user, pass, create]);
+form.resize = function () {
+    "use strict";
+    this.element.style.left = parseInt((d.documentElement.offsetWidth-this.element.offsetWidth)/2, 10)+'px';
+    this.element.style.top = probename.element.offsetTop+probename.element.offsetHeight+40+'px';
+};
+interfaces.form = form;
+
+pages[1] = interfaces;
+
+
+interfaces = {};
+
+var done = alien.welcome();
+done.resize = function () {
+    "use strict";
+    this.element.style.top = parseInt((d.documentElement.offsetHeight-this.element.offsetHeight)/3, 10)+'px';
+};
+interfaces.done = done;
+
+pages[2] = interfaces;
+
+
+var resize = function () {
+    "use strict";
+    for (var x in pages[page]) pages[page][x].resize();
+    legal.resize();
+};
+window.onresize = window.onload = resize;
+window.onbeforeunload = function () {
+    "use strict";
+    socket.close();
+};
+</script>
+</html>
