@@ -2130,6 +2130,7 @@ interfaces.legal = legal;
 
 var github = alien.github();
 github.resize = function () {
+    "use strict";
     this.element.style.display = d.documentElement.offsetWidth > 1023 ? 'block' : 'none';
 };
 interfaces.github = github;
