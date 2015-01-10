@@ -155,7 +155,7 @@ var init = function () {
     }).listen(config.https, config.ip, function () {
         wss = new ws.Server({server:server});
         wss.on('connection', function (socket) {
-            if (socket.upgradeReq.headers.cookie) {
+            if (socket.upgradeReq.headers['user-agent']) {
                 if (process.env.NODE_ENV !== 'production') util.log("Hello "+socket._socket.remoteAddress);
                 socket.on('message', function (payload) {
                     receive(socket, payload, true);
