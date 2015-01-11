@@ -8,7 +8,7 @@ Headless is a web 3.0 framework for managing Internet connected devices and scri
 1. Install [Node.js](http://nodejs.org/) - >=0.6.x, essentially anywhere you can get Node working you can run Headless, embedded computers, NAS and TV devices.
 1. Visit `https://headless.io/setup/` with [Chrome](https://www.google.com/chrome/).
 
-```
+```sh
 curl -O -L https://github.com/pschroen/headless/archive/stable.zip
 unzip stable.zip
 cd headless-stable
@@ -26,7 +26,7 @@ Documentation coming soon.
 
 ## Running Forever
 
-```
+```sh
 [sudo] npm install forever -g
 forever start headless.js
 forever list
@@ -37,7 +37,7 @@ forever list
 
 For Linux-based systems add the following to your `/etc/rc.local` before the final `exit 0`.
 
-```
+```sh
 # Headless
 su - <user> -c "cd <install path> && forever start headless.js"
 ```
