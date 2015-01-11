@@ -91,6 +91,20 @@
             line-height: 14px;
             -webkit-user-select: auto;
         }
+        .we-come-in-peace {
+            position: absolute;
+            left: 0;
+            right: 0;
+            padding: 0 12px;
+            color: #eee;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 24px;
+            line-height: 28px;
+            text-align: center;
+            text-decoration: none;
+            word-break: break-all;
+            -webkit-user-select: auto;
+        }
         .btn {
             position: absolute;
             display: block;
@@ -241,6 +255,28 @@ alien.welcome = function () {
     return object;
 };
 
+alien.mobile = function () {
+    "use strict";
+    var element = d.createElement('div');
+    element.className = 'we-come-in-peace';
+    var headless = d.createElement('a');
+    headless.href = '/headless.png';
+    headless.target = '_blank';
+    var icon = d.createElement('img');
+    icon.src = '/apple-touch-icon-152x152.png';
+    icon.alt = 'Headless';
+    icon.style.height = '76px';
+    icon.style.width = '76px';
+    headless.appendChild(icon);
+    element.appendChild(headless);
+    var commandline = d.createElement('div');
+    var t = d.createTextNode("Computer, Y U NO HAZ?");
+    commandline.appendChild(t);
+    element.appendChild(commandline);
+    var object = new alien.element(element);
+    return object;
+};
+
 alien.button = function (text, large) {
     "use strict";
     var element = d.createElement('a');
@@ -281,10 +317,20 @@ alien.github = function () {
 var welcome = alien.welcome();
 welcome.resize = function () {
     "use strict";
+    this.element.style.display = d.documentElement.offsetWidth > 479 ? 'block' : 'none';
     this.element.style.left = parseInt((d.documentElement.offsetWidth-this.element.offsetWidth)/2, 10)+'px';
     this.element.style.top = parseInt((d.documentElement.offsetHeight-this.element.offsetHeight)/3, 10)+'px';
 };
 interfaces.welcome = welcome;
+
+var mobile = alien.mobile();
+mobile.resize = function () {
+    "use strict";
+    this.element.style.display = d.documentElement.offsetWidth < 480 ? 'block' : 'none';
+    this.element.style.left = parseInt((d.documentElement.offsetWidth-this.element.offsetWidth)/2, 10)+'px';
+    this.element.style.top = parseInt((d.documentElement.offsetHeight-this.element.offsetHeight)/3, 10)+'px';
+};
+interfaces.mobile = mobile;
 
 var legal = alien.legal();
 legal.element.onclick = function () {};
