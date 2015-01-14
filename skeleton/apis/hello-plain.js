@@ -11,7 +11,7 @@
 */
 
 var utils = require(shell.path+'/modules/utils'),
-    Script = utils.Script(module.id, 'Hello World');
+    Script = utils.Script(module.id, "Hello World");
 
 /**
  * Initialize.

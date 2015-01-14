@@ -11,7 +11,7 @@
 */
 
 var utils = require(shell.path+'/modules/utils'),
-    Script = utils.Script(module.id, 'Hello World');
+    Script = utils.Script(module.id, "Hello World");
 
 /**
  * Initialize.
@@ -24,7 +24,7 @@ function init(probe, callback) {
     probe.log(exports.name);
     callback({
         title: exports.name,
-        text: "The Headless framework simply receives and sends JavaScript Objects as input and output. The name of this file is your end-point, for example; <a href=\"/hello\" target=\"_blank\">/hello</a>."
+        text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. The name of this file is your endpoint, for example; <a href="/hello" target="_blank">/hello</a>.'
     });
 }
 Script.prototype.init = init;

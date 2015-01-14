@@ -1,0 +1,873 @@
+<!doctype html>
+<!--
+  __                          __   ___                            
+ /\ \                        /\ \ /\_ \                           
+ \ \ \___      __     __     \_\ \\//\ \      __    ____    ____  
+  \ \  _ `\  /'__`\ /'__`\   /'_` \ \ \ \   /'__`\ /',__\  /',__\ 
+   \ \ \ \ \/\  __//\ \L\.\_/\ \L\ \ \_\ \_/\  __//\__, `\/\__, `\
+    \ \_\ \_\ \____\ \__/.\_\ \___,_\/\____\ \____\/\____/\/\____/
+     \/_/\/_/\/____/\/__/\/_/\/__,_ /\/____/\/____/\/___/  \/___/ 
+                                                                  
+                                >>headless.io docs. //+o: headless
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Headless - NodeJS and PhantomJS shell</title>
+    <meta name="title"                                  content="Headless - NodeJS and PhantomJS shell">
+    <meta name="description"                            content="Headless is a web 3.0 framework for managing Internet connected devices and scripting anything you can imagine with JavaScript.">
+    <meta name="keywords"                               content="headless, daemon, javascript, framework, web, 3.0, data, semantic, interface, internet, things, websocket, relay, ghost, shell, nodejs, phantomjs">
+    <meta name="author"                                 content="Patrick Schroen">
+    <meta name="viewport"                               content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-title"             content="Headless">
+    <!-- TODO: <meta name="apple-mobile-web-app-capable"           content="yes">-->
+    <meta name="apple-mobile-web-app-status-bar-style"  content="black-translucent">
+    <meta property="description"                        content="Headless is a web 3.0 framework for managing Internet connected devices and scripting anything you can imagine with JavaScript.">
+    <meta property="copyright"                          content="Copyright © UFO Technologies Ltd. All rights reserved.">
+    <link rel="shortcut icon"                           href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon"                        href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="57x57"          href="/apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="72x72"          href="/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76"          href="/apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114"        href="/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120"        href="/apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144"        href="/apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152"        href="/apple-touch-icon-152x152.png">
+    <meta property="og:type"                            content="Website">
+    <meta property="og:site_name"                       content="Headless - NodeJS and PhantomJS shell">
+    <meta property="og:title"                           content="Headless - NodeJS and PhantomJS shell">
+    <meta property="og:description"                     content="Headless is a web 3.0 framework for managing Internet connected devices and scripting anything you can imagine with JavaScript.">
+    <meta property="og:url"                             content="https://headless.io/">
+    <meta property="og:image"                           content="/facebook-icon.png">
+    <meta property="og:image:type"                      content="image/png">
+    <meta property="og:image:width"                     content="90">
+    <meta property="og:image:height"                    content="90">
+    <style>
+        @font-face {
+            font-family: 'Open Sans';
+            src: url('/OpenSans-Regular-webfont.eot');
+            src: url('/OpenSans-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+                 url('/OpenSans-Regular-webfont.woff') format('woff'),
+                 url('/OpenSans-Regular-webfont.ttf') format('truetype'),
+                 url('/OpenSans-Regular-webfont.svg#OpenSansRegular') format('svg');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            background-color: #111;
+            margin: 0;
+            font-family: sans-serif;
+            font-size: 13px;
+            line-height: 18px;
+            color: #f8f8f0;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+            position: relative;
+            -webkit-user-select: none;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizelegibility;
+        }
+        a {
+            cursor: pointer;
+            color: #ccc;
+            text-decoration: none;
+        }
+        a:hover, a:active, input:focus, button {
+            outline: none;
+        }
+        h1, h2, h3 {
+            color: #eee;
+            font-family: 'Open Sans', sans-serif;
+            font-weight: normal;
+        }
+        h1 {
+            font-size: 24px;
+            line-height: 28px;
+        }
+        h2 {
+            font-size: 20px;
+            line-height: 24px;
+        }
+        h3 {
+            font-size: 18px;
+            line-height: 22px;
+        }
+        pre {
+            padding-left: 10px;
+            padding-bottom: 10px;
+            font-family: monaco, monospace;
+            font-size: 12px;
+            line-height: 14px;
+        }
+        .btn {
+            position: absolute;
+            display: block;
+            height: 28px;
+            margin: 1px 0 2px;
+            padding: 0 12px;
+            background-color: #222;
+            border-radius: 3px;
+            -webkit-box-shadow: #222 0 0 0 1px inset, rgba(255, 255, 255, 0.05) 0 0 0 1px inset, #111 0 2px 0 0, rgba(0, 0, 0, 0.4) 0 2px 0 1px, rgba(0, 0, 0, 0.5) 0 2px 2px 1px;
+            box-shadow: #222 0 0 0 1px inset, rgba(255, 255, 255, 0.05) 0 0 0 1px inset, #111 0 2px 0 0, rgba(0, 0, 0, 0.4) 0 2px 0 1px, rgba(0, 0, 0, 0.5) 0 2px 2px 1px;
+            color: #eee;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 13px;
+            line-height: 28px;
+            text-align: center;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .pressed {
+            margin: 2px 0 1px;
+            background-color: black;
+            background-image: none;
+            border: solid 1px black;
+            -webkit-box-shadow: rgba(0, 0, 0, 0.1) 0 1px 0 0 inset, rgba(255, 255, 255, 0.05) 0 1px 0 0;
+        }
+        .small {
+            height: 24px;
+            padding: 0 8px;
+            font-size: 12px;
+            line-height: 24px;
+        }
+        .legal {
+            position: absolute;
+            display: block;
+            color: #ccc;
+            font-size: 12px;
+            line-height: 16px;
+            text-align: right;
+        }
+        .docs {
+            max-width: 1024px;
+            margin: 50px auto 10px;
+            padding: 0 10px;
+            -webkit-user-select: auto;
+        }
+    </style>
+    <link rel="stylesheet" href="/lib/codemirror/codemirror.css">
+    <link rel="stylesheet" href="/lib/codemirror/headless.css">
+</head>
+<body>
+
+<div class="docs">
+<a href="/headless.png" target="_blank"><img src="/apple-touch-icon-152x152.png" alt="Headless" style="height: 76px; width: 76px;"></a>
+
+<h1>Installation</h1>
+
+1. Install <a href="http://nodejs.org/" target="_blank">Node.js</a>, essentially anywhere you can get Node working you can run Headless, embedded computers, NAS and TV devices.
+<br>2. Visit <a href="https://headless.io/setup/" target="_blank">https://headless.io/setup/</a> with <a href="https://www.google.com/chrome/" target="_blank">Chrome</a>.
+
+<pre>
+curl -O -L https://github.com/pschroen/headless/archive/stable.zip
+unzip stable.zip
+cd headless-stable
+npm install
+npm start
+</pre>
+
+Return to the setup page and create your first user! :)
+<br>&nbsp;
+
+<h1>Downloads</h1>
+
+Headless - <a href="/headless.png" target="_blank">logo</a>.
+<br>
+<br>QPKG coming soon.
+<br>
+<br>RPi image coming soon.
+<br>&nbsp;
+
+<h1>Key features</h1>
+
+Inherit and chain together scripts
+<br>List-based approach to task management
+<br>Remotely access your device from anywhere
+<br>Multiple users per device with user management
+<br>Simple web IDE with built-in debugger and <a href="http://jshint.com/" target="_blank">JSHint</a>
+<br>Normalized shell functions for <a href="http://nodejs.org/" target="_blank">NodeJS</a> and <a href="http://phantomjs.org/" target="_blank">PhantomJS</a>
+<br>&nbsp;
+
+<h1>Introduction</h1>
+
+There are many different use cases for the Headless framework, from remotely accessing your Internet connected device to home automation.
+<br>
+<br>First you'll notice a couple nomenclature <em>themes</em> going-on here, <em>Probe</em> as in a space probe being your Internet connected device gathering information or acting on your behalf.
+<br>
+<br>And second being the <a href="http://en.wikipedia.org/wiki/Ghost_in_the_Shell" target="_blank">Ghost in the Shell</a> universe for which a lot of inspiration has been taken from for this project. In this case your <em>Ghost</em> is your private user configuration, and the <em>Shell</em> is a collection of shell scripts that your Ghost uses.
+<br>&nbsp;
+
+<h1>Lists</h1>
+
+Headless is list-based, what this means is everything you do is managed through a list. Scripts are run through a list, individually, sequentially, automatic, looped or forever which will respawn the <code>Probe</code> to run continuously.
+<br>&nbsp;
+
+<h1>Scripts</h1>
+
+<code>Script</code> objects are inheritable, this allows you to write code that can inherit properties and methods from any other script.
+
+<h2>Script inheritance</h2>
+
+<h3>scripts/inherit1.js</h3>
+
+<pre data-lang="javascript">
+var utils = require(shell.path+'/modules/utils'),
+    Script = utils.Script(require('./inherit2').Script, module.id, "Inherit 1");
+
+function init(probe, callback) {
+    probe.log("Inheritance "+this.sanity+" "+this.check);
+    probe.exit();
+}
+Script.prototype.init = init;
+
+module.exports = exports = new Script();
+</pre>
+
+<h3>scripts/inherit2.js</h3>
+
+<pre data-lang="javascript">
+var utils = require(shell.path+'/modules/utils'),
+    Script = utils.Script(require('./inherit3').Script, module.id, "Inherit 2");
+
+Script.prototype.sanity = "Sanity";
+
+module.exports = exports = new Script();
+</pre>
+
+<h3>scripts/inherit3.js</h3>
+
+<pre data-lang="javascript">
+var utils = require(shell.path+'/modules/utils'),
+    Script = utils.Script(module.id, "Inherit 3");
+
+Script.prototype.check = "Check";
+
+module.exports = exports = new Script();
+</pre>
+
+Scripts are also chain-able using the <code>init()</code> and <code>callback()</code> functions.
+
+<h2>Script chain</h2>
+
+<h3>scripts/chain1.js</h3>
+
+<pre data-lang="javascript">
+var utils = require(shell.path+'/modules/utils'),
+    Script = utils.Script(module.id, "Chain 1");
+
+function init(probe, callback) {
+    probe.log("Loading "+exports.name);
+    probe.script = require('./chain2');
+    probe.script.init(probe, function (name) {
+        probe.log("Callback from "+name);
+        probe.exit();
+    });
+}
+Script.prototype.init = init;
+
+module.exports = exports = new Script();
+</pre>
+
+<h3>scripts/chain2.js</h3>
+
+<pre data-lang="javascript">
+var utils = require(shell.path+'/modules/utils'),
+    Script = utils.Script(module.id, "Chain 2");
+
+function init(probe, callback) {
+    probe.log("Loading "+exports.name);
+    callback(exports.name);
+}
+Script.prototype.init = init;
+
+module.exports = exports = new Script();
+</pre>
+&nbsp;
+
+<h1>Probe</h1>
+
+The <code>Probe</code> object is the communication link between your device and the Internet with the following properties and methods.
+
+<h2>probe.item</h2>
+
+The list item object the <code>Probe</code> is currently handling.
+
+<pre data-lang="javascript">
+{
+    "text": "hello"
+}
+</pre>
+
+<h2>probe.log(message)</h2>
+
+Print to the connected user's <em>Log</em>, note that this does not save the log message.
+
+<pre data-lang="javascript">
+probe.log("Hello World");
+</pre>
+
+<h2>probe.error(message, [error])</h2>
+
+Print to the connected user's <em>Log</em> an error message, and if there are no search options left call <code>probe.next()</code>.
+
+<pre data-lang="javascript">
+probe.error("Grumpy Cat");
+</pre>
+
+<h2>probe.box(message)</h2>
+
+Send an <code>Infobox</code> object to the connected user's <em>List</em>, and a <em>Log</em> message.
+
+<pre data-lang="javascript">
+var box = {
+        fields: {
+            hello: {
+                type: 'info',
+                title: "Hello World",
+                text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
+                    The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+            }
+        }
+    };
+probe.item.infobox = {boxes:[box]};
+probe.box("Infobox");
+</pre>
+
+<h2>probe.remember(memory)</h2>
+
+Save to the user's Ghost, properties for the current list item.
+
+<pre data-lang="javascript">
+probe.log("Remembering {id:12345} for "+probe.item.text);
+probe.remember({id:12345});
+</pre>
+
+<h2>probe.get(args, callback)</h2>
+
+HTTP GET request.
+
+<pre data-lang="javascript">
+var url = 'https://www.google.ca/';
+probe.log("HTTP GET request for "+url);
+probe.get({url:url}, function (error, args) {
+    if (!error) {
+        probe.log("HTTP GET response, sending to console");
+        console.log("HTTP GET response: "+JSON.stringify(args));
+    } else {
+        probe.log("HTTP GET error: "+error);
+    }
+});
+</pre>
+
+<h2>probe.post(args, callback)</h2>
+
+HTTP POST request.
+
+<pre data-lang="javascript">
+var url = 'https://www.google.ca/upload',
+    data = 'data\n';
+probe.log("HTTP POST request for "+url+" with data: "+data);
+probe.post({url:url, data:data}, function (error, args) {
+    if (!error) {
+        probe.log("HTTP POST response, sending to console");
+        console.log("HTTP POST response: "+JSON.stringify(args));
+    } else {
+        probe.log("HTTP POST error: "+error);
+    }
+});
+</pre>
+
+<h2>probe.download(args, callback)</h2>
+
+Save to destination path.
+
+<pre data-lang="javascript">
+var url = 'https://www.google.ca/index.html';
+probe.log("Downloading "+url+" to "+shell.download.path);
+probe.download({url:url, dest:shell.download.path}, function (error, args) {
+    if (!error) {
+        probe.log("Download response: "+JSON.stringify(args));
+    } else {
+        probe.log("Download error: "+JSON.stringify(error));
+    }
+});
+</pre>
+
+<h2>probe.exec(args, callback)</h2>
+
+Runs a shell command.
+
+<pre data-lang="javascript">
+probe.exec({command:'cat *.js bad_file | wc -l'}, function (error, args) {
+    if (!error) {
+        probe.log("Exec response: "+JSON.stringify(args));
+    } else {
+        probe.log("Exec error: "+error);
+    }
+});
+</pre>
+
+<h2>probe.next(message)</h2>
+
+Move onto the next list item, and a <em>Log</em> message.
+
+<pre data-lang="javascript">
+probe.next("Done");
+</pre>
+
+<h2>probe.exit()</h2>
+
+Gracefully exit the <code>Probe</code> process, or in other words wait until all the threads have completed.
+<br>&nbsp;
+
+<h1>Ghost</h1>
+
+The <code>Ghost</code> object is your private user configuration stored in the <code>users</code> directory of your device. It contains your <code>view</code>, <code>files</code>, <code>list</code> memories and private <code>shell</code> configurations such as private keys.
+
+<h2>Ghost config</h2>
+
+<pre data-lang="javascript">
+{
+    "view": {
+        "list": false,
+        "lists": false,
+        "files": false,
+        "users": false,
+        "log": false
+    },
+    "files": [{
+        "name": "Ghost",
+        "path": "users/&lt;user&gt;"
+    }, {
+        "name": "Shell",
+        "path": "shell"
+    }, {
+        "name": "Headless",
+        "path": "."
+    }],
+    "memory": {
+        "list": {
+            "test": {
+                "id": 12345
+            }
+        },
+        "shell": {
+            "download": {
+                "path": "/share/Download"
+            },
+            "stripe": {
+                "key": "sk_test_BQokikJOvBiI2HlWgH4olfQ2"
+            }
+        }
+    }
+}
+</pre>
+
+The <code>shell</code> object of this configuration is merged with the <code>Shell</code> at runtime so you can override system values and access private keys for your scripts.
+
+<h2>Shell config</h2>
+
+<pre data-lang="javascript">
+{
+    "mothership": [
+        "aws-us-east-1.headless.io:443"
+    ],
+    "stripe": {
+        "key": "sk_test_BQokikJOvBiI2HlWgH4olfQ2"
+    }
+}
+</pre>
+
+Then just reference the key in your scripts.
+
+<pre data-lang="javascript">
+var stripe = require('stripe')(shell.stripe.key);
+</pre>
+&nbsp;
+
+<h1>Shell</h1>
+
+The <code>Shell</code> object stored in the <code>shell</code> directory defines the system configuration for all users, these can be overridden with your Ghost config. The only mandatory key needed at startup here is the <code>mothership</code> Array.
+
+<h2>Default shell config</h2>
+
+<pre data-lang="javascript">
+{
+    "mothership": [
+        "aws-us-east-1.headless.io:443"
+    ]
+}
+</pre>
+
+In addition to the Shell config there are a number of properties and methods.
+
+<h2>shell.path</h2>
+
+Headless shell path, or in other words your install directory.
+
+<pre data-lang="javascript">
+var utils = require(shell.path+'/modules/utils');
+</pre>
+
+<h2>shell.separator</h2>
+
+The platform-specific file separator. '\\' or '/'.
+
+<pre data-lang="javascript">
+probe.log('foo/bar/baz'.split(shell.separator));
+</pre>
+
+<h2>shell.basename(p, [ext])</h2>
+
+Path basename.
+
+<pre data-lang="javascript">
+probe.log(shell.basename('/foo/bar/baz/asdf/quux.html'));
+probe.log(shell.basename('/foo/bar/baz/asdf/quux.html', '.html'));
+</pre>
+
+<h2>shell.dirname(p)</h2>
+
+Path dirname.
+
+<pre data-lang="javascript">
+probe.log(shell.dirname('/foo/bar/baz/asdf/quux'));
+</pre>
+
+<h2>shell.join([path1], [path2], [...])</h2>
+
+Path join.
+
+<pre data-lang="javascript">
+probe.log(shell.join('/foo', 'bar', 'baz/asdf', 'quux', '..'));
+</pre>
+
+<h2>shell.exists(filepath)</h2>
+
+Check if path exists.
+
+<pre data-lang="javascript">
+probe.log(shell.exists('/etc/passwd') ? "it's there" : "no passwd!");
+</pre>
+
+<h2>shell.read(filename)</h2>
+
+Read file.
+
+<pre data-lang="javascript">
+probe.log(shell.exists('/etc/passwd') ? shell.read('/etc/passwd') : "no passwd!");
+</pre>
+
+<h2>shell.readdir(dir)</h2>
+
+Read directory.
+
+<pre data-lang="javascript">
+probe.log(shell.exists('/etc') ? shell.readdir('/etc') : "no etc!");
+</pre>
+
+<h2>shell.files(dir)</h2>
+
+Read directory and sub-directories.
+
+<pre data-lang="javascript">
+probe.log(shell.exists('/etc') ? shell.files('/etc') : "no etc!");
+</pre>
+
+<h2>shell.lists(dir)</h2>
+
+Read directory of JSON lists.
+
+<pre data-lang="javascript">
+var lists = shell.join('users', user, 'lists');
+probe.log(shell.exists(lists) ? JSON.stringify(shell.lists(lists)) : []);
+</pre>
+
+<h2>shell.move(src, dest)</h2>
+
+Move path.
+
+<h2>shell.write(filename, data)</h2>
+
+Write file.
+
+<h2>shell.mkdir(dir)</h2>
+
+Make directory recursively equivalent of <code>mkdir -p</code>.
+
+<h2>shell.cpdir(src, dest)</h2>
+
+Copy directory recursively equivalent of <code>cp -R</code>.
+
+<h2>shell.rmdir(dir, [empty])</h2>
+
+Remove directory recursively equivalent of <code>rm -Rf</code>.
+
+<h2>shell.rmdirEmpty(dir)</h2>
+
+Remove empty directory tree.
+
+<h2>shell.kill()</h2>
+
+Force exit the <code>Probe</code> process.
+
+<h2>shell.box(name, id, box)</h2>
+
+Send an <code>Infobox</code> object to the connected user's <em>interface</em>.
+
+<pre data-lang="javascript">
+var payload = probe.payload,
+    name = payload.name,
+    id = payload.id,
+    box = {
+        fields: {
+            hello: {
+                type: 'info',
+                title: exports.name,
+                text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
+                    The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+            },
+            payload: {
+                type: 'info',
+                title: "Payload",
+                text: JSON.stringify(payload)
+            }
+        }
+    };
+probe.log(exports.name);
+callback(shell.box(name, id, [box]));
+</pre>
+&nbsp;
+
+<h1>Utils</h1>
+
+Utility functions which can be inherited with your own.
+
+<h2>utils.clone(o)</h2>
+
+Clones an object.
+
+<h2>utils.inherits(ctor, superCtor)</h2>
+
+Inherit the prototype methods from one constructor into another.
+
+<h2>utils.extend(origin, add, [opts])</h2>
+
+Object recursive merging utility.
+
+<h2>utils.addslashes(str)</h2>
+
+Add slashes equivalent of PHP <code>addslashes()</code>.
+
+<h2>utils.filesize(input)</h2>
+
+Convert human readable file sizes to their byte equivalent.
+<br>&nbsp;
+
+<h1>Globals</h1>
+
+You can access these objects from any <code>Script</code> by default.
+
+<pre data-lang="javascript">
+fs = require('fs'),
+webpage = typeof phantom !== 'undefined' ? require('webpage') : null,
+probe = require('./modules/probe'),
+utils = require('./modules/utils'),
+shell = require('./modules/'+(typeof phantom !== 'undefined' ? 'phantom' : 'node')+'/shell'),
+user = shell.user,
+ghost = shell.ghost,
+list = shell.list,
+index = shell.index;
+</pre>
+&nbsp;
+
+<h1>Create your own API</h1>
+
+You may have noticed the default APIs list is empty, this is intentional as any script added to the list will make it available. APIs are the exact same scripts, use the <code>callback()</code> function to return your data.
+
+<h3>apis/hello.js</h3>
+
+<pre data-lang="javascript">
+var utils = require(shell.path+'/modules/utils'),
+    Script = utils.Script(module.id, "Hello World");
+
+function init(probe, callback) {
+    probe.log(exports.name);
+    callback({
+        title: exports.name,
+        text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
+            The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+    });
+}
+Script.prototype.init = init;
+
+module.exports = exports = new Script();
+</pre>
+
+Add the basename of the script (without <code>.js</code>) to your APIs list to make it available for use.
+<br>&nbsp;
+
+<h1>Headless community wiki</h1>
+
+For further reading and more API examples of sending and receiving data see <a href="https://github.com/pschroen/headless/wiki">The Wiki</a>.
+<br>&nbsp;
+<br>&nbsp;
+</div>
+
+</body>
+<script src="/lib/codemirror/codemirror.js"></script>
+<script src="/lib/codemirror/addon/runmode.js"></script>
+<script src="/lib/codemirror/addon/colorize.js"></script>
+<script src="/lib/codemirror/mode/javascript.js"></script>
+<script>
+/**
+ * Headless alien interface.
+ *
+ * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @license  MIT Licensed
+ */
+
+/*jshint
+ strict:true, eqeqeq:true, newcap:false,
+ loopfunc:true, shadow:true, browser:true, indent:4
+*/
+
+CodeMirror.colorize();
+
+var d = document,
+    page = 0,
+    pages = [],
+    alien = {},
+    interfaces = {};
+
+alien.element = function (element, node) {
+    "use strict";
+    node = node || d.body;
+    element.style.visibility = 'hidden';
+    element.style.position = 'absolute';
+    element.style.WebkitTransform = 'translateZ(0)';
+    element.style.MozTransform = 'translateZ(0)';
+    element.style.msTransform = 'translateZ(0)';
+    element.style.OTransform = 'translateZ(0)';
+    element.style.transform = 'translateZ(0)';
+    element.draggable = false;
+    node.appendChild(element);
+    this.element = element;
+    this.show = function () {
+        if (element.getAttribute('data-visible') !== 'hidden') element.style.visibility = 'visible';
+    };
+    this.hide = function () {
+        element.style.visibility = 'hidden';
+    };
+};
+
+alien.group = function (objects, node) {
+    "use strict";
+    this.objects = objects || [];
+    var element = d.createElement('div');
+    for (var i = 0; i < this.objects.length; i++) element.appendChild(this.objects[i].element);
+    var object = new alien.element(element, node);
+    object.addObject = function (obj) {
+        this.objects.push(obj);
+        var last = element.appendChild(obj.element);
+        element.style.width = last.offsetLeft+last.offsetWidth+'px';
+        element.style.height = last.offsetTop+last.offsetHeight+'px';
+        return last;
+    };
+    object.show = function () {
+        if (element.getAttribute('data-visible') !== 'hidden') {
+            element.style.visibility = 'visible';
+            for (var i = 0; i < this.objects.length; i++) this.objects[i].show();
+        }
+    };
+    object.hide = function () {
+        element.style.visibility = 'hidden';
+        for (var i = 0; i < this.objects.length; i++) this.objects[i].hide();
+    };
+    object.bounds = function () {
+        var width = 0,
+            height = 0;
+        for (var i = 0; i < this.objects.length; i++) {
+            var elm = this.objects[i].element,
+                boundswidth = elm.offsetLeft+elm.offsetWidth,
+                boundsheight = elm.offsetTop+elm.offsetHeight;
+            if (boundswidth > width) width = boundswidth;
+            if (boundsheight > height) height = boundsheight;
+        }
+        element.style.width = width+'px';
+        element.style.height = height+'px';
+    };
+    object.resize = function () {
+        for (var i = 0; i < this.objects.length; i++) if (this.objects[i].resize) this.objects[i].resize();
+    };
+    object.objects = this.objects;
+    if (object.objects.length) object.bounds();
+    return object;
+};
+
+alien.button = function (text, large) {
+    "use strict";
+    var element = d.createElement('a');
+    element.className = 'btn'+(!large ? ' small' : '');
+    var t = d.createTextNode(text);
+    element.appendChild(t);
+    var object = new alien.element(element);
+    return object;
+};
+
+alien.legal = function () {
+    "use strict";
+    var element = d.createElement('div');
+    element.className = 'legal';
+    var div = d.createElement('div');
+    div.innerHTML = 'TM & &copy; UFO Technologies Ltd.';
+    element.appendChild(div);
+    div = d.createElement('div');
+    div.innerHTML = '<a href="http://blog.ufotechnologies.com/" target="_blank">Made with &#10084; in Toronto, Canada</a>';
+    element.appendChild(div);
+    var object = new alien.element(element);
+    element.style.position = 'relative';
+    element.style.padding = '10px';
+    return object;
+};
+
+alien.github = function () {
+    "use strict";
+    var element = d.createElement('a');
+    element.href = 'https://github.com/pschroen/headless';
+    element.target = '_blank';
+    var forkme = d.createElement('img');
+    forkme.src = 'https://s3.amazonaws.com/github/ribbons/forkme_left_white_ffffff.png';
+    forkme.alt = 'Fork me on GitHub';
+    element.appendChild(forkme);
+    var object = new alien.element(element);
+    element.style.position = 'fixed';
+    element.style.left = '0px';
+    element.style.top = '0px';
+    return object;
+};
+
+var legal = alien.legal();
+legal.element.onclick = function () {};
+
+var github = alien.github();
+github.resize = function () {
+    "use strict";
+    this.element.style.display = d.documentElement.offsetWidth > 1023 ? 'block' : 'none';
+};
+interfaces.github = github;
+
+for (var x in interfaces) {
+    interfaces[x].resize();
+    interfaces[x].show();
+}
+legal.show();
+pages[0] = interfaces;
+
+
+var resize = function () {
+    "use strict";
+    for (var x in pages[page]) pages[page][x].resize();
+};
+window.onresize = window.onload = resize;
+</script>
+</html>

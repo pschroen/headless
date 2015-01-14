@@ -10,6 +10,14 @@
  loopfunc:true, shadow:true, browser:true, indent:4
 */
 
+CodeMirror.defaults = {
+    theme: 'headless',
+    mode: '',
+    styleActiveLine: true,
+    lineWrapping: true,
+    showCursorWhenSelecting: true
+};
+
 function pad(n) {
     "use strict";
     return n < 10 ? '0'+n.toString(10) : n.toString(10);
@@ -193,8 +201,10 @@ alien.hash = function (ghost, platform) {
                 for (var j = 0; j < filesgroup.objects.length; j++) filesgroup.objects[j].element.className = 'btn small';
                 mothership.element.className = 'btn small';
                 run.element.className = 'btn small';
+                run.element.setAttribute('data-visible', 'hidden');
                 save.element.setAttribute('data-visible', 'hidden');
                 restart.element.setAttribute('data-visible', 'hidden');
+                run.hide();
                 save.hide();
                 restart.hide();
                 listsbox.hide();
@@ -765,13 +775,7 @@ alien.listeditor = function () {
     var object = new alien.element(element);
     object.pos = null;
     object.lineCount = null;
-    var editor = CodeMirror(element, {
-        theme: 'headless',
-        mode: '',
-        styleActiveLine: true,
-        lineWrapping: true,
-        showCursorWhenSelecting: true
-    });
+    var editor = CodeMirror(element);
     editor.on('scroll', function () {
         listgutter.inner.style.top = '-'+editor.getScrollInfo().top+'px';
     });
@@ -1048,13 +1052,7 @@ alien.listslist = function () {
     object.items = [];
     object.pos = null;
     object.lineCount = null;
-    var editor = CodeMirror(element, {
-        theme: 'headless',
-        mode: '',
-        styleActiveLine: true,
-        lineWrapping: true,
-        showCursorWhenSelecting: true
-    });
+    var editor = CodeMirror(element);
     editor.on('keyHandled', function (editor, name, e) {
         console.log(name+','+editor.getCursor().line);
         if (name === 'Enter') {
@@ -1251,7 +1249,7 @@ alien.listseditor = function () {
                             type: 'input',
                             placeholder: "Run mode",
                             value: data.run ? data.run.toString() : '',
-                            info: '<pre>true</pre>, milliseconds or <pre>forever</pre>.'
+                            info: '<code>true</code>, milliseconds or <code>forever</code>.'
                         }
                     }
                 }, 0, element.id);
@@ -1296,13 +1294,7 @@ alien.fileslist = function () {
     object.items = [];
     object.pos = null;
     object.lineCount = null;
-    var editor = CodeMirror(element, {
-        theme: 'headless',
-        mode: '',
-        styleActiveLine: true,
-        lineWrapping: true,
-        showCursorWhenSelecting: true
-    });
+    var editor = CodeMirror(element);
     editor.on('keyHandled', function (editor, name, e) {
         console.log(name+','+editor.getCursor().line);
         if (name === 'Enter') {
@@ -1478,12 +1470,11 @@ alien.fileseditor = function () {
     element.id = 'fileseditor';
     var object = new alien.element(element);
     var editor = CodeMirror(element, {
-        theme: 'headless',
-        lineNumbers: true,
+        styleActiveLine: false,
         lineWrapping: false,
+        lineNumbers: true,
         indentUnit: 4,
         matchBrackets: true,
-        showCursorWhenSelecting: true,
         gutters: ['CodeMirror-linenumbers', 'breakpoints']
     });
     object.editor = editor;
@@ -1522,13 +1513,7 @@ alien.userslist = function () {
     object.items = [];
     object.pos = null;
     object.lineCount = null;
-    var editor = CodeMirror(element, {
-        theme: 'headless',
-        mode: '',
-        styleActiveLine: true,
-        lineWrapping: true,
-        showCursorWhenSelecting: true
-    });
+    var editor = CodeMirror(element);
     editor.on('keyHandled', function (editor, name, e) {
         console.log(name+','+editor.getCursor().line);
         if (name === 'Enter') {
@@ -2457,14 +2442,14 @@ run.element.onclick = function () {
     "use strict";
     if (this.className !== 'btn pressed small') {
         this.className = 'btn pressed small';
+        var text = listeditor.editor.getLine(listeditor.editor.getCursor().line);
         if (probes[0].lists[probes[0].view.list].list.shell === 'api') {
-            var text = listeditor.editor.getLine(listeditor.editor.getCursor().line);
             window.open('https://'+location.host+'/'+text);
             setTimeout(function () {
                 run.element.className = 'btn small';
             }, 100);
         } else {
-            probes[0].run();
+            probes[0].run(text !== '' ? text : undefined);
         }
     } else {
         this.className = 'btn small';
@@ -2501,7 +2486,8 @@ save.element.onclick = function () {
                 }, 100);
             }
         } else if (probes[0].view.files !== false) {
-            var text = fileslist.editor.getLine(fileslist.editor.getCursor().line);
+            var pos = fileslist.editor.getCursor().line,
+                text = fileslist.editor.getLine(pos);
             if (text !== '') {
                 save.element.setAttribute('data-visible', 'hidden');
                 save.hide();
@@ -2591,6 +2577,7 @@ save.element.onclick = function () {
                         }
                     }
                 }, 100);
+                fileslist.lineChange(pos);
             }
         } else if (probes[0].view.users) {
             var text = userslist.editor.getLine(userslist.editor.getCursor().line);

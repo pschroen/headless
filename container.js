@@ -309,7 +309,7 @@ function download(user, data, callback) {
             res.on('data', function (chunk) {
                 body += chunk;
             }).on('end', function (error) {
-                var dest = data.download.dest+'/'+(res.headers['content-disposition'] ? res.headers['content-disposition'].split('"')[1] : u.path.replace(/.*\//, ''));
+                var dest = args.dest+'/'+(res.headers['content-disposition'] ? res.headers['content-disposition'].split('"')[1] : uri.path.replace(/.*\//, ''));
                 if (!files.exists(dest)) {
                     fs.open(dest, "a", 755, function (error, fd) {
                         if (!error) {

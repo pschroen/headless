@@ -253,7 +253,7 @@ Shell.prototype.error = error;
 function remember(probe, memory) {
     "use strict";
     utils.extend(probe.memory.list[probe.item.text], memory);
-    shell.merge();
+    merge();
     return probe.memory.list[probe.item.text];
 }
 Shell.prototype.remember = remember;

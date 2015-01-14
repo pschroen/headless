@@ -8,7 +8,7 @@
     \ \_\ \_\ \____\ \__/.\_\ \___,_\/\____\ \____\/\____/\/\____/
      \/_/\/_/\/____/\/__/\/_/\/__,_ /\/____/\/____/\/___/  \/___/ 
                                                                   
-                                     >>headless.io. //+o: headless
+                             >>headless.io install. //+o: headless
 -->
 <html>
 <head>
@@ -78,32 +78,29 @@
         a:hover, a:active, input:focus, button {
             outline: none;
         }
-        h1 {
+        h1, h2, h3 {
             color: #eee;
             font-family: 'Open Sans', sans-serif;
-            font-size: 24px;
             font-weight: normal;
+        }
+        h1 {
+            font-size: 24px;
             line-height: 28px;
         }
+        h2 {
+            font-size: 20px;
+            line-height: 24px;
+        }
+        h3 {
+            font-size: 18px;
+            line-height: 22px;
+        }
         pre {
+            padding-left: 10px;
+            padding-bottom: 10px;
             font-family: monaco, monospace;
             font-size: 12px;
             line-height: 14px;
-            -webkit-user-select: auto;
-        }
-        .we-come-in-peace {
-            position: absolute;
-            left: 0;
-            right: 0;
-            padding: 0 12px;
-            color: #eee;
-            font-family: 'Open Sans', sans-serif;
-            font-size: 24px;
-            line-height: 28px;
-            text-align: center;
-            text-decoration: none;
-            word-break: break-all;
-            -webkit-user-select: auto;
         }
         .btn {
             position: absolute;
@@ -139,15 +136,62 @@
         .legal {
             position: absolute;
             display: block;
-            width: 210px;
             color: #ccc;
             font-size: 12px;
             line-height: 16px;
             text-align: right;
         }
+        .docs {
+            max-width: 1024px;
+            margin: 50px auto 10px;
+            padding: 0 10px;
+            -webkit-user-select: auto;
+        }
     </style>
 </head>
-<body></body>
+<body>
+
+<div class="docs">
+<a href="/headless.png" target="_blank"><img src="/apple-touch-icon-152x152.png" alt="Headless" style="height: 76px; width: 76px;"></a>
+
+<h1>Installation</h1>
+
+1. Install <a href="http://nodejs.org/" target="_blank">Node.js</a>, essentially anywhere you can get Node working you can run Headless, embedded computers, NAS and TV devices.
+<br>2. Visit <a href="https://headless.io/setup/" target="_blank">https://headless.io/setup/</a> with <a href="https://www.google.com/chrome/" target="_blank">Chrome</a>.
+
+<pre>
+curl -O -L https://github.com/pschroen/headless/archive/stable.zip
+unzip stable.zip
+cd headless-stable
+npm install
+npm start
+</pre>
+
+Return to the setup page and create your first user! :)
+<br>&nbsp;
+
+<h1>Downloads</h1>
+
+Headless - <a href="/headless.png" target="_blank">logo</a>.
+<br>
+<br>QPKG coming soon.
+<br>
+<br>RPi image coming soon.
+<br>&nbsp;
+
+<h1>Key features</h1>
+
+Inherit and chain together scripts
+<br>List-based approach to task management
+<br>Remotely access your device from anywhere
+<br>Multiple users per device with user management
+<br>Simple web IDE with built-in debugger and <a href="http://jshint.com/" target="_blank">JSHint</a>
+<br>Normalized shell functions for <a href="http://nodejs.org/" target="_blank">NodeJS</a> and <a href="http://phantomjs.org/" target="_blank">PhantomJS</a>
+<br>&nbsp;
+<br>&nbsp;
+</div>
+
+</body>
 <script>
 /**
  * Headless alien interface.
@@ -232,51 +276,6 @@ alien.group = function (objects, node) {
     return object;
 };
 
-alien.welcome = function () {
-    "use strict";
-    var element = d.createElement('div');
-    var headless = d.createElement('a');
-    headless.href = '/headless.png';
-    headless.target = '_blank';
-    var icon = d.createElement('img');
-    icon.src = '/apple-touch-icon-152x152.png';
-    icon.alt = 'Headless';
-    icon.style.height = '76px';
-    icon.style.width = '76px';
-    headless.appendChild(icon);
-    element.appendChild(headless);
-    var commandline = d.createElement('div');
-    commandline.innerHTML = '<h1>Installation</h1>Visit <a href="https://headless.io/setup/" target="_blank">https://headless.io/setup/</a> with <a href="https://www.google.com/chrome/" target="_blank">Chrome</a>.<pre>curl -O -L https://github.com/pschroen/headless/archive/stable.zip\nunzip stable.zip\ncd headless-stable\nnpm install\nnpm start</pre>Return to the setup page, create your first user and happy scripting! :)';
-    element.appendChild(commandline);
-    var downloads = d.createElement('div');
-    downloads.innerHTML = '<h1>Downloads</h1>Headless - <a href="/headless.png" target="_blank">logo</a>.<br>&nbsp;<br>Documentation coming soon.<br>&nbsp;<br>QPKG coming soon.<br>&nbsp;<br>RPi image coming soon.';
-    element.appendChild(downloads);
-    var object = new alien.element(element);
-    return object;
-};
-
-alien.mobile = function () {
-    "use strict";
-    var element = d.createElement('div');
-    element.className = 'we-come-in-peace';
-    var headless = d.createElement('a');
-    headless.href = '/headless.png';
-    headless.target = '_blank';
-    var icon = d.createElement('img');
-    icon.src = '/apple-touch-icon-152x152.png';
-    icon.alt = 'Headless';
-    icon.style.height = '76px';
-    icon.style.width = '76px';
-    headless.appendChild(icon);
-    element.appendChild(headless);
-    var commandline = d.createElement('div');
-    var t = d.createTextNode("Computer, Y U NO HAZ?");
-    commandline.appendChild(t);
-    element.appendChild(commandline);
-    var object = new alien.element(element);
-    return object;
-};
-
 alien.button = function (text, large) {
     "use strict";
     var element = d.createElement('a');
@@ -311,34 +310,52 @@ alien.github = function () {
     forkme.alt = 'Fork me on GitHub';
     element.appendChild(forkme);
     var object = new alien.element(element);
+    element.style.position = 'fixed';
+    element.style.left = '0px';
+    element.style.top = '0px';
     return object;
 };
 
-var welcome = alien.welcome();
-welcome.resize = function () {
+var docs = alien.button("Documentation");
+docs.element.style.top = '10px';
+docs.element.onclick = function () {
     "use strict";
-    this.element.style.display = d.documentElement.offsetWidth > 479 ? 'block' : 'none';
-    this.element.style.left = parseInt((d.documentElement.offsetWidth-this.element.offsetWidth)/2, 10)+'px';
-    this.element.style.top = parseInt((d.documentElement.offsetHeight-this.element.offsetHeight)/3, 10)+'px';
+    if (this.className !== 'btn pressed small') {
+        this.className = 'btn pressed small';
+        location.assign('https://'+location.host+'/docs/');
+        setTimeout(function () {
+            docs.element.className = 'btn small';
+        }, 100);
+    } else {
+        this.className = 'btn small';
+    }
 };
-interfaces.welcome = welcome;
-
-var mobile = alien.mobile();
-mobile.resize = function () {
+docs.resize = function () {
     "use strict";
-    this.element.style.display = d.documentElement.offsetWidth < 480 ? 'block' : 'none';
-    this.element.style.left = parseInt((d.documentElement.offsetWidth-this.element.offsetWidth)/2, 10)+'px';
-    this.element.style.top = parseInt((d.documentElement.offsetHeight-this.element.offsetHeight)/3, 10)+'px';
+    this.element.style.display = d.documentElement.offsetWidth > 1023 ? 'block' : 'none';
+    this.element.style.left = d.documentElement.offsetWidth-this.element.offsetWidth-10+'px';
 };
-interfaces.mobile = mobile;
+interfaces.docs = docs;
 
 var legal = alien.legal();
 legal.element.onclick = function () {};
 legal.resize = function () {
     "use strict";
-    this.element.style.left = d.documentElement.offsetWidth-this.element.offsetWidth-10+'px';
-    this.element.style.top = d.documentElement.offsetHeight-this.element.offsetHeight-10+'px';
+    if (d.documentElement.offsetWidth > 1023) {
+        d.getElementsByTagName('body')[0].style.overflow = d.getElementsByTagName('html')[0].style.overflow = 'hidden';
+        this.element.style.position = 'absolute';
+        this.element.style.padding = '0';
+        this.element.style.left = d.documentElement.offsetWidth-this.element.offsetWidth-10+'px';
+        this.element.style.top = d.documentElement.offsetHeight-this.element.offsetHeight-10+'px';
+    } else {
+        d.getElementsByTagName('body')[0].style.overflow = d.getElementsByTagName('html')[0].style.overflow = 'visible';
+        this.element.style.position = 'relative';
+        this.element.style.padding = '10px';
+        this.element.style.left = 'auto';
+        this.element.style.top = 'auto';
+    }
 };
+interfaces.legal = legal;
 
 var github = alien.github();
 github.resize = function () {
@@ -351,7 +368,6 @@ for (var x in interfaces) {
     interfaces[x].resize();
     interfaces[x].show();
 }
-legal.resize();
 legal.show();
 pages[0] = interfaces;
 
@@ -359,7 +375,6 @@ pages[0] = interfaces;
 var resize = function () {
     "use strict";
     for (var x in pages[page]) pages[page][x].resize();
-    legal.resize();
 };
 window.onresize = window.onload = resize;
 </script>

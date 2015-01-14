@@ -11,7 +11,7 @@
 */
 
 var utils = require(shell.path+'/modules/utils'),
-    Script = utils.Script(module.id, 'Hello World');
+    Script = utils.Script(module.id, "Hello World");
 
 /**
  * Initialize.
@@ -24,8 +24,9 @@ function init(probe, callback) {
     probe.log(exports.name);
     if (callback) callback();
 
-    // When you're done
-    probe.next("Done");
+    // When you're done, exit() or next()
+    probe.exit();
+    //probe.next("Done");
 }
 Script.prototype.init = init;
 

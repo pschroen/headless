@@ -215,7 +215,7 @@ Utils.prototype.Script = Script;
 /**
  * File size parser.
  *
- * Convert human readable filesizes to their byte equivalent.
+ * Convert human readable file sizes to their byte equivalent.
  *
  * Abducted from filesize-parser's index.js.
  *

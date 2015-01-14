@@ -11,7 +11,7 @@
 */
 
 var utils = require('./utils'),
-    Script = utils.Script(module.id, 'Script Init');
+    Script = utils.Script(module.id, "Script Init");
 
 /**
  * Initialize.

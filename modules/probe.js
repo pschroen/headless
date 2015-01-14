@@ -24,7 +24,8 @@ function Probe(id, i, load) {
     this.shell = list.list.shell;
     this.item = list.list.items[i];
     this.payload = load;
-    this.memory = ghost.memory ? ghost.memory : {};
+    if (!ghost.memory) ghost.memory = {};
+    this.memory = ghost.memory;
     if (!this.memory.list) this.memory.list = {};
     if (!this.memory.list[this.item.text]) this.memory.list[this.item.text] = {};
     this.search = [];

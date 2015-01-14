@@ -11,7 +11,7 @@
 */
 
 var utils = require(shell.path+'/modules/utils'),
-    Script = utils.Script(module.id, 'IP Address');
+    Script = utils.Script(module.id, "IP Address");
 
 /**
  * Initialize.
