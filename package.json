@@ -1,6 +1,6 @@
 {
     "name": "headless",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "NodeJS and PhantomJS shell",
     "homepage": "https://headless.io/",
     "keywords": [
