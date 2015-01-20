@@ -295,7 +295,7 @@ var init = function () {
                     if (socket.users) {
                         socket.users.forEach(function (user) {
                             var name = user.name;
-                            if (users[name].socket) users[name].socket.terminate();
+                            if (users[name] && users[name].socket) users[name].socket.terminate();
                             delete users[name];
                         });
                     }
