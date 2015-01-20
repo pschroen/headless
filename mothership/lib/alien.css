@@ -174,7 +174,7 @@ pre {
     position: absolute;
     width: 274px;
 }
-#listeditor .cm-s-default.CodeMirror {
+#listeditor .cm-s-headless.CodeMirror {
     font-family: sans-serif;
     font-size: 13px;
     line-height: 18px;
@@ -232,7 +232,7 @@ pre {
     position: absolute;
     width: 274px;
 }
-#listslist .cm-s-default.CodeMirror {
+#listslist .cm-s-headless.CodeMirror {
     font-family: sans-serif;
     font-size: 13px;
     line-height: 18px;
@@ -245,7 +245,7 @@ pre {
     position: absolute;
     width: 274px;
 }
-#fileslist .cm-s-default.CodeMirror {
+#fileslist .cm-s-headless.CodeMirror {
     font-family: sans-serif;
     font-size: 13px;
     line-height: 18px;
@@ -254,7 +254,7 @@ pre {
     position: absolute;
     width: 640px;
 }
-#fileseditor .cm-s-default.CodeMirror {
+#fileseditor .cm-s-headless.CodeMirror {
     font-family: monaco, monospace;
     font-size: 12px;
     line-height: 14px;
@@ -263,7 +263,7 @@ pre {
     position: absolute;
     width: 274px;
 }
-#userslist .cm-s-default.CodeMirror {
+#userslist .cm-s-headless.CodeMirror {
     font-family: sans-serif;
     font-size: 13px;
     line-height: 18px;

@@ -716,7 +716,7 @@ For further reading and more API examples of sending and receiving data see <a h
 </body>
 <script src="/lib/codemirror/codemirror.js"></script>
 <script src="/lib/codemirror/addon/runmode.js"></script>
-<script src="/lib/codemirror/addon/colorize.js"></script>
+<!--<script src="/lib/codemirror/addon/colorize.js"></script>-->
 <script src="/lib/codemirror/mode/javascript.js"></script>
 <script>
 /**
@@ -731,6 +731,29 @@ For further reading and more API examples of sending and receiving data see <a h
  loopfunc:true, shadow:true, browser:true, indent:4
 */
 
+// Replace CodeMirror.colorize()
+CodeMirror.colorize = function () {
+    "use strict";
+    var isBlock = /^(p|li|div|h\\d|pre|blockquote|td)$/;
+    var textContent = function (node, out) {
+        if (node.nodeType == 3) return out.push(node.nodeValue);
+        for (var ch = node.firstChild; ch; ch = ch.nextSibling) {
+            textContent(ch, out);
+            if (isBlock.test(node.nodeType)) out.push('\n');
+        }
+    };
+    var collection = document.body.getElementsByTagName('pre');
+    for (var i = 0; i < collection.length; i++) {
+        var node = collection[i];
+        var mode = node.getAttribute('data-lang');
+        if (!mode) continue;
+        var text = [];
+        textContent(node, text);
+        node.innerHTML = '';
+        CodeMirror.runMode(text.join(''), mode, node);
+        node.className = 'cm-s-headless';
+    }
+};
 CodeMirror.colorize();
 
 var d = document,

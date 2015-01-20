@@ -10,14 +10,6 @@
  loopfunc:true, shadow:true, browser:true, indent:4
 */
 
-CodeMirror.defaults = {
-    theme: 'headless',
-    mode: '',
-    styleActiveLine: true,
-    lineWrapping: true,
-    showCursorWhenSelecting: true
-};
-
 function pad(n) {
     "use strict";
     return n < 10 ? '0'+n.toString(10) : n.toString(10);
@@ -419,7 +411,6 @@ alien.mothership = function () {
                 }
                 if (probes[0].view.list === false && !probes[0].view.lists && probes[0].view.files === false && !probes[0].view.users)
                     probes[0].loading = false;
-                probes[0].pullout();
             } else {
                 loader.hide();
                 probe.element.className = 'btn';
@@ -478,18 +469,35 @@ alien.mothership = function () {
                                 var memory = probes[0].files[probes[0].view.files].memory.fileslist,
                                     editor = fileslist.editor,
                                     pos = memory.line;
-                                if (pos !== fileslist.pos) fileslist.lineChange(pos);
                                 editor.operation(function () {
                                     editor.scrollTo(memory.left, memory.top);
                                     editor.setCursor(memory.line, memory.ch);
                                 });
+                                fileslist.lineChange(pos);
                             } else if (x === 'fileseditor') {
                                 var memory = probes[0].files[probes[0].view.files].memory.fileseditor,
-                                    editor = fileseditor.editor;
-                                editor.operation(function () {
-                                    editor.scrollTo(memory.left, memory.top);
-                                    editor.setCursor(memory.line, memory.ch);
-                                });
+                                    editor = fileseditor.editor,
+                                    pos = fileslist.editor.getCursor().line;
+                                // TODO: Investigate CodeMirror's buggy scroll position
+                                if (pos !== memory.pos) {
+                                    editor.operation(function () {
+                                        editor.refresh();
+                                        editor.scrollTo(0, 0);
+                                        editor.setCursor(0, 0);
+                                    });
+                                    probes[0].files[probes[0].view.files].memory.fileseditor = {
+                                        pos: pos,
+                                        left: 0,
+                                        top: 0,
+                                        line: 0,
+                                        ch: 0
+                                    };
+                                } else {
+                                    editor.operation(function () {
+                                        editor.scrollTo(memory.left, memory.top);
+                                        editor.setCursor(memory.line, memory.ch);
+                                    });
+                                }
                             }
                         }
                     }
@@ -775,7 +783,13 @@ alien.listeditor = function () {
     var object = new alien.element(element);
     object.pos = null;
     object.lineCount = null;
-    var editor = CodeMirror(element);
+    var editor = CodeMirror(element, {
+        theme: 'headless',
+        mode: '',
+        styleActiveLine: true,
+        lineWrapping: true,
+        showCursorWhenSelecting: true
+    });
     editor.on('scroll', function () {
         listgutter.inner.style.top = '-'+editor.getScrollInfo().top+'px';
     });
@@ -894,7 +908,6 @@ alien.listeditor = function () {
             }
             list = i;
             probes[0].loading = false;
-            probes[0].pullout();
             editor.clearHistory();
         });
     };
@@ -1052,7 +1065,13 @@ alien.listslist = function () {
     object.items = [];
     object.pos = null;
     object.lineCount = null;
-    var editor = CodeMirror(element);
+    var editor = CodeMirror(element, {
+        theme: 'headless',
+        mode: '',
+        styleActiveLine: true,
+        lineWrapping: true,
+        showCursorWhenSelecting: true
+    });
     editor.on('keyHandled', function (editor, name, e) {
         console.log(name+','+editor.getCursor().line);
         if (name === 'Enter') {
@@ -1265,7 +1284,6 @@ alien.listseditor = function () {
         }
         listslist.editor.focus();
         probes[0].loading = false;
-        probes[0].pullout();
     };
     object.clear = function () {
         this.inner.innerHTML = '';
@@ -1294,7 +1312,13 @@ alien.fileslist = function () {
     object.items = [];
     object.pos = null;
     object.lineCount = null;
-    var editor = CodeMirror(element);
+    var editor = CodeMirror(element, {
+        theme: 'headless',
+        mode: '',
+        styleActiveLine: true,
+        lineWrapping: true,
+        showCursorWhenSelecting: true
+    });
     editor.on('keyHandled', function (editor, name, e) {
         console.log(name+','+editor.getCursor().line);
         if (name === 'Enter') {
@@ -1406,14 +1430,6 @@ alien.fileslist = function () {
     };
     object.lineChange = function (pos) {
         this.clear();
-        if (probes[0].files[probes[0].view.files].memory && pos !== probes[0].files[probes[0].view.files].memory.fileseditor.pos)
-            probes[0].files[probes[0].view.files].memory.fileseditor = {
-                pos: pos,
-                left: 0,
-                top: 0,
-                line: 0,
-                ch: 0
-            };
         var text = editor.getLine(pos);
         if (text !== '') {
             loader.resize = function () {
@@ -1428,6 +1444,7 @@ alien.fileslist = function () {
                 /\.js/.test(text) ? 'javascript' :
                 /\.html/.test(text) ? 'htmlmixed' :
                 /\.py/.test(text) ? 'python' :
+                /\.sh/.test(text) ? 'shell' :
                 ''
             );
         }
@@ -1442,7 +1459,6 @@ alien.fileslist = function () {
             editor.setValue(([''].concat(content).join('\n')+'\n').replace(pattern, ''));
             editor.clearHistory();
         });
-        fileseditor.load('');
         this.index();
     };
     object.clearError = function () {
@@ -1470,18 +1486,21 @@ alien.fileseditor = function () {
     element.id = 'fileseditor';
     var object = new alien.element(element);
     var editor = CodeMirror(element, {
+        theme: 'headless',
+        mode: '',
         styleActiveLine: false,
         lineWrapping: false,
         lineNumbers: true,
         indentUnit: 4,
         matchBrackets: true,
+        showCursorWhenSelecting: true,
         gutters: ['CodeMirror-linenumbers', 'breakpoints']
     });
     object.editor = editor;
     object.load = function (content) {
         editor.operation(function () {
-            editor.clearGutter('breakpoints');
             editor.setValue(content);
+            editor.refresh();
             editor.clearHistory();
         });
         var text = fileslist.editor.getLine(fileslist.editor.getCursor().line);
@@ -1498,6 +1517,7 @@ alien.fileseditor = function () {
         editor.operation(function () {
             CodeMirror.commands.clearSearch(editor);
             editor.setValue('');
+            editor.refresh();
             editor.setOption('mode', '');
             editor.clearHistory();
         });
@@ -1513,7 +1533,13 @@ alien.userslist = function () {
     object.items = [];
     object.pos = null;
     object.lineCount = null;
-    var editor = CodeMirror(element);
+    var editor = CodeMirror(element, {
+        theme: 'headless',
+        mode: '',
+        styleActiveLine: true,
+        lineWrapping: true,
+        showCursorWhenSelecting: true
+    });
     editor.on('keyHandled', function (editor, name, e) {
         console.log(name+','+editor.getCursor().line);
         if (name === 'Enter') {
@@ -1541,12 +1567,33 @@ alien.userslist = function () {
                     probes[0].move(obj);
                     object.items[pos] = path;
                 } else {
-                    obj[probes[0].join(path, 'auth.json')] = userseditor.data ? userseditor.data : {
-                        name: text,
-                        auth: '',
-                        key: '',
-                        host: true
-                    };
+                    if (userseditor.data) {
+                        obj[probes[0].join(path, 'auth.json')] = userseditor.data;
+                    } else {
+                        obj[probes[0].join(path, 'auth.json')] = {
+                            name: text,
+                            auth: '',
+                            key: '',
+                            host: true
+                        };
+                        obj[probes[0].join(path, 'config.json')] = {
+                            view: {
+                                list: false,
+                                lists: false,
+                                files: false,
+                                users: false,
+                                log: false
+                            },
+                            files: [{
+                                name: "Ghost",
+                                path: path
+                            }, {
+                                name: "Shell",
+                                path: 'shell'
+                            }],
+                            userAgent: navigator.userAgent
+                        };
+                    }
                     probes[0].save(obj);
                     object.items[pos] = path;
                 }
@@ -1697,7 +1744,6 @@ alien.userseditor = function () {
         }
         userslist.editor.focus();
         probes[0].loading = false;
-        probes[0].pullout();
     };
     object.clear = function () {
         this.inner.innerHTML = '';
@@ -2224,6 +2270,7 @@ log.element.onclick = function () {
         logbox.resize();
         actionbox.resize();
         if (infobox) infobox.resize();
+        logbox.element.scrollLeft = 0;
         logbox.show();
     } else {
         this.className = 'btn small';
@@ -2577,7 +2624,6 @@ save.element.onclick = function () {
                         }
                     }
                 }, 100);
-                fileslist.lineChange(pos);
             }
         } else if (probes[0].view.users) {
             var text = userslist.editor.getLine(userslist.editor.getCursor().line);
