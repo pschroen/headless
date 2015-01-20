@@ -69,7 +69,8 @@ if (config.http) {
     }).listen(config.http, config.ip);
 }
 
-var keys = [],
+var insert = [],
+    keys = [],
     users = {},
     callbacks = [],
     callbackid = 0,
@@ -331,7 +332,8 @@ var init = function () {
         }
     });
 
-    var insert = [];
+    insert = [],
+    keys = [];
     userslist.forEach(function (name) {
         var auth = path.join('users', name, 'auth.json');
         if (files.exists(auth)) {
@@ -770,9 +772,9 @@ function mothership(insert) {
 
 function reinsert() {
     "use strict";
-    var insert = [],
-        userskeys = [],
-        userslist = files.exists('users') ? files.readdir('users') : [];
+    insert = [],
+    keys = [];
+    var userslist = files.readdir('users');
     userslist.forEach(function (name) {
         if (!users[name]) users[name] = {name:name};
         var auth = path.join('users', name, 'auth.json');
@@ -785,12 +787,12 @@ function reinsert() {
                 keys: user.keys
             });
             if (user.keys) {
-                userskeys.push(user.keys);
+                keys.push(user.keys);
                 user.key = user.keys;
                 delete user.keys;
                 files.write(auth, JSON.stringify(user));
             } else {
-                userskeys.push(user.key);
+                keys.push(user.key);
             }
         }
     });
@@ -799,7 +801,7 @@ function reinsert() {
         util.log("Relinking with mothership wss://"+host);
         device(insert);
     });
-    keys = userskeys.join('|');
+    keys = keys.join('|');
 }
 
 function endpoint(data, callback) {
