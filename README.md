@@ -19,11 +19,6 @@ npm start
 Return to the setup page, create your first user and happy scripting! :)
 
 
-## Documentation
-
-Documentation coming soon.
-
-
 ## Running Forever
 
 ```sh
@@ -48,6 +43,8 @@ su - <user> -c "cd <install path> && forever start headless.js"
 * [The Wiki](https://github.com/pschroen/headless/wiki)
 * [Contributing](https://github.com/pschroen/headless/wiki/Contributing)
 * [Website](https://headless.io/)
+* [Documentation](https://headless.io/docs/)
+* [Twitter](https://twitter.com/HeadlessIO)
 
 
 ## Copyright & License
