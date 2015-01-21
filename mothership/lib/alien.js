@@ -746,6 +746,9 @@ alien.legal = function () {
     var element = d.createElement('div');
     element.className = 'legal';
     var div = d.createElement('div');
+    div.innerHTML = '<a href="https://twitter.com/HeadlessIO" target="_blank">@HeadlessIO</a>';
+    element.appendChild(div);
+    div = d.createElement('div');
     div.innerHTML = 'TM & &copy; UFO Technologies Ltd.';
     element.appendChild(div);
     div = d.createElement('div');
