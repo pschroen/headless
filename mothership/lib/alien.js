@@ -523,7 +523,9 @@ alien.mothership = function () {
                     group.element.style.left = '10px';
                     group.element.style.top = '50px';
                     group.resize = function () {
-                        this.element.style.width = (probes[0].view.log ? logbox.element.offsetLeft : d.documentElement.offsetWidth)-20+'px';
+                        this.element.style.width = (
+                            probes[0].view.log && logbox.element.offsetLeft > 10 ? logbox.element.offsetLeft : d.documentElement.offsetWidth
+                        )-20+'px';
                         this.element.style.height = logbox.element.offsetHeight+'px';
                         for (var i = 0; i < this.objects.length; i++) this.objects[i].resize();
                     };
@@ -1986,7 +1988,7 @@ alien.box = function (box, index, id) {
                             memory[text].item.infobox = infobox.data;
                             memory[text].item.infobox.index = index;
                             probes[0].run(text);
-                        } else {
+                        } else if (memory[text] && memory[text].item) {
                             delete memory[text].item.infobox;
                             delete memory[text].item.action;
                             delete memory[text].item.index;
