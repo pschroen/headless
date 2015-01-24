@@ -64,7 +64,12 @@ function receive(payload) {
             });
             var i = index > -1 ? index : 0,
                 length = index > -1 ? index+1 : list.list.items.length;
-            for (; i < length; i++) shell.threads.push(new probe(++shell.threadid, i, data.payload));
+            try {
+                for (; i < length; i++) shell.threads.push(new probe(++shell.threadid, i, data.payload));
+            } catch (err) {
+                shell.error(err);
+                shell.kill();
+            }
             shell.threadid = -1;
             shell.next();
             break;
