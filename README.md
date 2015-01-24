@@ -44,6 +44,7 @@ su - <user> -c "cd <install path> && forever start headless.js"
 * [Contributing](https://github.com/pschroen/headless/wiki/Contributing)
 * [Website](https://headless.io/)
 * [Documentation](https://headless.io/docs/)
+* [Shell scripts](https://github.com/pschroen/shell)
 * [Twitter](https://twitter.com/HeadlessIO)
 
 
