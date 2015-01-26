@@ -919,6 +919,7 @@ alien.listeditor = function () {
     object.clear = function () {
         run.element.setAttribute('data-visible', 'hidden');
         run.hide();
+        run.element.className = 'btn small';
     };
     return object;
 };
