@@ -706,6 +706,54 @@ module.exports = exports = new Script();
 Add the basename of the script (without <code>.js</code>) to your APIs list to make it available for use.
 <br>&nbsp;
 
+<h1>Mixin other frameworks</h1>
+
+You can use any Node.js and PhantomJS code in your scripts, here's the <a href="http://socket.io/" target="_blank">Socket.IO</a> example <a href="http://socket.io/docs/#using-with-express-3/4" target="_blank">Using with Express 3/4</a> as a Headless script.
+
+<h3>Install Express and Socket.IO</h3>
+
+<pre>
+npm install express
+npm install socket.io
+</pre>
+
+<h3>Shell or Ghost config</h3>
+
+<pre data-lang="javascript">
+...
+    "express": {
+        "port": 3000
+    }
+...
+</pre>
+
+<h3>scripts/server.js</h3>
+
+<pre data-lang="javascript">
+var utils = require(shell.path+'/modules/utils'),
+    Script = utils.Script(module.id, "Hello World");
+
+var app = require('express')(),
+    server = require('http').Server(app),
+    io = require('socket.io')(server);
+
+function init(probe, callback) {
+    server.listen(shell.express.port);
+    app.get('/', function (req, res) {
+        res.send(exports.name);
+    });
+    io.on('connection', function (socket) {
+        socket.emit(exports.name, {hello:'world'});
+    });
+    probe.log(exports.name+" server listening on port "+shell.express.port);
+    if (callback) callback();
+}
+Script.prototype.init = init;
+
+module.exports = exports = new Script();
+</pre>
+&nbsp;
+
 <h1>Headless community wiki</h1>
 
 For further reading and more API examples of sending and receiving data see <a href="https://github.com/pschroen/headless/wiki">The Wiki</a>.
