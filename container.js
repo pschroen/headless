@@ -102,18 +102,21 @@ var Shell = function (container, user, list, index, load) {
                         }
                     });
                 }
-                if (list.run === 'forever') {
-                    send(user.socket, {
-                        name: user.name,
-                        message: 'data',
-                        data: {
-                            args: {
-                                error: error,
-                                message: "Reinitializing, running forever",
-                                progress: 0
+                if (self.list.run === 'forever') {
+                    if (user) {
+                        util.log("Respawning "+list);
+                        send(user.socket, {
+                            name: user.name,
+                            message: 'data',
+                            data: {
+                                args: {
+                                    error: error,
+                                    message: "Respawning",
+                                    progress: 0
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                     var run = new Shell(container, user, list, index, load);
                 }
             });
@@ -173,15 +176,16 @@ var Shell = function (container, user, list, index, load) {
                         });
                     }
                     server.close(function () {
-                        if (list.run === 'forever') {
+                        if (self.list.run === 'forever') {
                             if (user) {
+                                util.log("Respawning "+list);
                                 send(user.socket, {
                                     name: user.name,
                                     message: 'data',
                                     data: {
                                         args: {
                                             error: error,
-                                            message: "Reinitializing, running forever",
+                                            message: "Respawning",
                                             progress: 0
                                         }
                                     }
