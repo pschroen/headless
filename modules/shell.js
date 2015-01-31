@@ -231,7 +231,7 @@ function load(id) {
         });
     } catch (err) {
         shell.error(err);
-        shell.kill();
+        shell.exit();
     }
 }
 Shell.prototype.load = load;
