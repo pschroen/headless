@@ -307,6 +307,6 @@ pre {
 .error {
     position: absolute;
     display: block;
-    line-height: 26px;
+    line-height: 30px;
     -webkit-user-select: auto;
 }
