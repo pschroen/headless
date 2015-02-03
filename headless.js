@@ -467,6 +467,28 @@ function receive(socket, payload, session) {
                                         var ghost = files.exists(key) ? JSON.parse(files.read(key)) : {};
                                         utils.extend(ghost, val);
                                         val = ghost;
+                                    } else if ((new RegExp(path.join('users', name, 'lists'))).test(key)) {
+                                        var list = JSON.parse(fs.readFileSync(key).toString());
+                                        if (!files.exists(path.join('shell', list.shell))) {
+                                            var git = config.gitPath ? config.gitPath : 'git',
+                                                command = !files.exists(path.join('shell', '.git')) ? 'cd shell && \
+                                                '+git+' init && \
+                                                '+git+' remote add origin https://github.com/pschroen/shell.git && \
+                                                '+git+' config core.sparsecheckout true && \
+                                                echo /'+list.shell+'/ >> .git/info/sparse-checkout && \
+                                                '+git+' pull origin stable' : 'cd shell && \
+                                                echo /'+list.shell+'/ >> .git/info/sparse-checkout && \
+                                                '+git+' read-tree -mu HEAD && \
+                                                '+git+' pull origin stable';
+                                            util.log("Installing shell "+list.shell);
+                                            cp.exec(command, function (error, stdout, stderr) {
+                                                if (!error) {
+                                                    util.log("Install of shell "+list.shell+" complete");
+                                                } else {
+                                                    util.log("Install of shell "+list.shell+" failed with "+error);
+                                                }
+                                            });
+                                        }
                                     } else {
                                         files.mkdir(path.dirname(key));
                                     }

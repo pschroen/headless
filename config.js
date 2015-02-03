@@ -14,3 +14,5 @@ exports.heartbeat = 240000;
 //exports.restart = '/etc/init.d/headless.sh restart';
 // Optional phantom path
 //exports.phantomPath = 'bin/phantomjs';
+// Optional git path
+//exports.gitPath = '/opt/bin/git';
