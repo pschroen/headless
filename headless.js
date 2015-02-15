@@ -37,9 +37,6 @@ uuid = require('node-uuid'),
 isbinaryfile = require("isbinaryfile"),
 beautify = require('js-beautify').js_beautify;
 
-// https://github.com/joyent/node/wiki/api-changes-between-v0.6-and-v0.8
-if (typeof fs.existsSync === 'undefined') fs.existsSync = path.existsSync;
-
 config = require('./config'),
 utils = require('./modules/utils'),
 files = require('./modules/node/files'),
@@ -48,10 +45,10 @@ shell = JSON.parse(files.read(path.join('shell', 'config.json'))),
 version = JSON.parse(files.read('package.json')).version,
 error = null;
 
-send = function (socket, data) {
+send = function (socket, data, flags) {
     "use strict";
-    if (socket) {
-        socket.send(JSON.stringify(data), function (err) {
+    if (socket && socket.send) {
+        socket.send(flags && flags.binary ? data : JSON.stringify(data), flags, function (err) {
             if (err && err.message !== 'not opened' && process.env.NODE_ENV !== 'production') util.error(err.stack);
         });
     }

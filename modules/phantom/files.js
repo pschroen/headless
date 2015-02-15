@@ -193,7 +193,7 @@ function mkdir(dir) {
 Shell.prototype.mkdir = mkdir;
 
 /**
- * Copy directory recursively equivalent of `cp -R`.
+ * Copy directory recursively equivalent of `cp -r`.
  *
  * @param    {string} src Path
  * @param    {string} dest Path
@@ -205,7 +205,7 @@ function cpdir(src, dest) {
 Shell.prototype.cpdir = cpdir;
 
 /**
- * Remove directory recursively equivalent of `rm -Rf`.
+ * Remove directory recursively equivalent of `rm -rf`.
  *
  * @param    {string} dir Path
  * @param    {undefined|boolean} [empty] Remove empty directory tree

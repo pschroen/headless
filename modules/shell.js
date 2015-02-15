@@ -137,7 +137,7 @@ function command(probe, name, args, callback) {
                 shell.next();
             }
         }
-    } else if (name === 'box') {
+    } else if (name === 'box' || name === 'stream') {
         shell.queue++;
         shell.callbacks[shell.callbackid] = function () {
             shell.exit(shell.queue);
@@ -146,7 +146,7 @@ function command(probe, name, args, callback) {
             message: 'data',
             data: {
                 id: shell.callbackid,
-                command: 'box',
+                command: name,
                 args: args
             }
         });
