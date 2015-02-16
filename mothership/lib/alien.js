@@ -2173,7 +2173,7 @@ user.element.onsubmit = function () {
 };
 
 var match = /(.*)\.headless\.io/.exec(location.hostname);
-if (match) user.input.value = match[1];
+user.input.value = match && /\./.test(match[1]) ? match[1].split('.')[0] : match ? match[1] : '';
 
 var pass = alien.input("Password", true);
 if (!match) pass.element.style.top = user.element.offsetTop+user.element.offsetHeight+10+'px';

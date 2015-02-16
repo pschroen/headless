@@ -94,7 +94,8 @@ var init = function () {
                 return;
             }
             if (!files.exists(filepath)) {
-                if (match && users[match[1]] && users[match[1]].host) {
+                var name = match && /\./.test(match[1]) ? match[1].split('.')[0] : match[1];
+                if (match && users[name] && users[name].host) {
                     var load = req.post ? JSON.parse(req.post) : {};
                     if (!load.remoteAddress) load.remoteAddress = req.connection.socket.remoteAddress;
                     callbacks[callbackid] = function (out) {
@@ -119,7 +120,7 @@ var init = function () {
                         }
                         if (!out.stream || out.stream === 'end') res.end();
                     };
-                    send(users[match[1]].host, {
+                    send(users[name].host, {
                         id: callbackid,
                         message: 'endpoint',
                         data: {
@@ -233,8 +234,9 @@ var init = function () {
                             }
                             break;
                         case 'endpoint':
-                            var match = /(.*)\.headless\.io/.exec(socket.upgradeReq.headers.host);
-                            if (match && users[match[1]] && users[match[1]].host) {
+                            var match = /(.*)\.headless\.io/.exec(socket.upgradeReq.headers.host),
+                                name = match && /\./.test(match[1]) ? match[1].split('.')[0] : match[1];
+                            if (match && users[name] && users[name].host) {
                                 if (!data.remoteAddress) data.remoteAddress = socket._socket.remoteAddress;
                                 callbacks[callbackid] = function (out) {
                                     send(socket, {
@@ -243,7 +245,7 @@ var init = function () {
                                         time: payload.time
                                     });
                                 };
-                                send(users[match[1]].host, {
+                                send(users[name].host, {
                                     id: callbackid,
                                     message: 'endpoint',
                                     data: {
