@@ -572,13 +572,14 @@ alien.mothership = function () {
                     audio.src = audioargs.src;
                     audio.type = audioargs.type;
                     audio.play();
-                    memory[audioargs.text].status.group.element.onclick = function () {
+                    memory[audioargs.text].status.onclick = function () {
                         if (!audio.paused) {
                             audio.pause();
                         } else {
                             audio.play();
                         }
                     };
+                    memory[audioargs.text].status.group.element.onclick = memory[audioargs.text].status.onclick;
                 } else {
                     var pre = d.createElement('pre');
                     pre.innerHTML = timestamp()+' - '+(data.args.text ? data.args.text+' → ' : '')+data.args.message;
@@ -977,6 +978,7 @@ alien.listgutter = function () {
             type: alien.type()
         };
         status.group = alien.group([status.loader, status.progress, status.type], this.inner);
+        if (status.onclick) status.group.element.onclick = status.onclick;
         this.items.push(status);
         if (!(memory[text] && memory[text].status)) {
             memory[text] = {
@@ -1045,7 +1047,7 @@ alien.listgutter = function () {
             this.inner.style.visibility = 'visible';
             for (var i = 0; i < this.items.length; i++) {
                 var item = this.items[i];
-                for (var x in item) item[x].show();
+                for (var x in item) if (item[x] && item[x].element) item[x].show();
             }
         }
     };
@@ -1054,7 +1056,7 @@ alien.listgutter = function () {
         this.inner.style.visibility = 'hidden';
         for (var i = 0; i < this.items.length; i++) {
             var item = this.items[i];
-            for (var x in item) item[x].hide();
+            for (var x in item) if (item[x] && item[x].element) item[x].hide();
         }
     };
     return object;
