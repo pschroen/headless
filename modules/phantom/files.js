@@ -21,6 +21,18 @@ Shell.prototype.path = fs.workingDirectory;
 Shell.prototype.separator = fs.separator;
 
 /**
+ * Path dirname.
+ *
+ * @param    {string} p Path
+ * @returns  {string}
+ */
+function dirname(p) {
+    "use strict";
+    return p.replace(/\\/g, '/').replace(/\/[^\/]*$/, '');
+}
+Shell.prototype.dirname = dirname;
+
+/**
  * Path basename.
  *
  * @param    {string} p Path
@@ -34,16 +46,17 @@ function basename(p, ext) {
 }
 
 /**
- * Path dirname.
+ * Path extname.
  *
  * @param    {string} p Path
  * @returns  {string}
  */
-function dirname(p) {
+function extname(p) {
     "use strict";
-    return p.replace(/\\/g, '/').replace(/\/[^\/]*$/, '');
+    var str = p.split('.').pop();
+    return str !== p ? '.'+str : '';
 }
-Shell.prototype.dirname = dirname;
+Shell.prototype.extname = extname;
 
 /**
  * Path join.

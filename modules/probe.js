@@ -81,8 +81,8 @@ function Probe(id, i, load) {
         this.next(message);
         shell.command(this, 'box', this.item.infobox);
     };
-    this.stream = function (path) {
-        shell.command(this, 'stream', path);
+    this.audio = function (args) {
+        shell.command(this, 'audio', args);
     };
 }
 module.exports = exports = Probe;

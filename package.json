@@ -28,9 +28,6 @@
   "scripts": {
     "start": "node headless"
   },
-  "engines": {
-    "node": ">=0.10.0"
-  },
   "dependencies": {
     "bcrypt": "*",
     "isbinaryfile": "*",
@@ -38,7 +35,6 @@
     "node-static": "*",
     "node-uuid": "*",
     "phantomjs": ">=1.9.8 <2.0.0",
-    "stream-throttle": "*",
     "uname": "*",
     "ws": "*"
   }

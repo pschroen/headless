@@ -21,8 +21,9 @@ if (utils.basename(module.parent.id) === 'shell') utils.inherits(Shell, require(
 
 Shell.prototype.path = process.cwd();
 Shell.prototype.separator = path.sep;
-Shell.prototype.basename = path.basename;
 Shell.prototype.dirname = path.dirname;
+Shell.prototype.basename = path.basename;
+Shell.prototype.extname = path.extname;
 Shell.prototype.join = path.join;
 
 /**

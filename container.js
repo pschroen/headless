@@ -57,14 +57,14 @@ var Shell = function (container, user, list, index, load) {
                         break;
                     case 'data':
                         var args = data.args;
-                        if (user && data.command !== 'stream') {
+                        if (user) {
                             send(user.socket, {
                                 name: user.name,
                                 message: 'data',
                                 data: data
                             });
                         }
-                        if (data.command === 'log' || data.command === 'box' || data.command === 'stream') {
+                        if (data.command === 'log' || data.command === 'box') {
                             node.send({
                                 message: 'response',
                                 data: {
@@ -74,7 +74,6 @@ var Shell = function (container, user, list, index, load) {
                                 }
                             });
                         }
-                        if (data.command === 'stream') stream(user, data);
                         if (args.error) error = args.error;
                         break;
                     case 'error':
@@ -217,14 +216,14 @@ var Shell = function (container, user, list, index, load) {
                                 break;
                             case 'data':
                                 var args = data.args;
-                                if (user && data.command !== 'stream') {
+                                if (user) {
                                     send(user.socket, {
                                         name: user.name,
                                         message: 'data',
                                         data: data
                                     });
                                 }
-                                if (data.command === 'log' || data.command === 'box' || data.command === 'stream') {
+                                if (data.command === 'log' || data.command === 'box') {
                                     send(socket, {
                                         message: 'response',
                                         data: {
@@ -234,7 +233,6 @@ var Shell = function (container, user, list, index, load) {
                                         }
                                     });
                                 }
-                                if (data.command === 'stream') stream(user, data);
                                 if (args.error) error = args.error;
                                 break;
                             case 'error':
@@ -413,72 +411,69 @@ function exec(user, data, callback) {
 }
 Shell.prototype.exec = exec;
 
-function stream(user, data) {
+function out(user, data, callback) {
     "use strict";
-    console.log(data);
-    var args = data.args;
-    if (user) {
-        fs.stat(args, function (err, stats) {
-            if (!err) {
-                var rate = 700*1024;
-                send(user.socket, {
-                    name: user.name,
-                    message: 'data',
-                    data: {
-                        command: data.command,
-                        args: {
-                            path: args,
-                            size: stats.size,
-                            message: "Streaming "+stats.size+" bytes of data at "+rate+" bytes per second"
-                        }
-                    }
-                });
-                var readstream = fs.createReadStream(args).pipe(new (require('stream-throttle').Throttle)({rate:rate}));
-                readstream.on('data', function (data) {
-                    send(user.socket, data, {binary:true});
-                });
-                readstream.on('end', function () {
+    /*jshint validthis:true */
+    var self = this,
+        args = data.args;
+    if (self.callback) {
+        if (user && args.stream) {
+            fs.stat(args.data, function (err, stats) {
+                if (!err) {
                     send(user.socket, {
                         name: user.name,
                         message: 'data',
                         data: {
-                            command: data.command,
                             args: {
-                                path: args,
-                                size: null,
-                                message: "Stream end"
+                                error: null,
+                                message: "Streaming "+stats.size+" bytes of data",
+                                progress: null
                             }
                         }
                     });
-                });
-            } else {
-                send(user.socket, {
-                    name: user.name,
-                    message: 'data',
-                    data: {
-                        command: data.command,
-                        args: {
-                            path: args,
-                            size: null,
-                            message: "Could not retrieve file "+args
+                    self.callback({stream:'start', type:args.type, size:stats.size});
+                    var stream = fs.createReadStream(args.data);
+                    stream.on('data', function (data) {
+                        self.callback({stream:'data', data:data.toString('base64')});
+                    });
+                    stream.on('end', function () {
+                        self.callback({stream:'end'});
+                        self.callback = null;
+                        send(user.socket, {
+                            name: user.name,
+                            message: 'data',
+                            data: {
+                                args: {
+                                    error: null,
+                                    message: "Stream end",
+                                    progress: null
+                                }
+                            }
+                        });
+                        callback(args);
+                    });
+                } else {
+                    self.callback = null;
+                    send(user.socket, {
+                        name: user.name,
+                        message: 'data',
+                        data: {
+                            args: {
+                                error: null,
+                                message: "Could not retrieve file "+args.data,
+                                progress: null
+                            }
                         }
-                    }
-                });
-            }
-        });
+                    });
+                    callback(args);
+                }
+            });
+        } else {
+            self.callback(args);
+            self.callback = null;
+            callback(args);
+        }
     }
-}
-Shell.prototype.stream = stream;
-
-function out(user, data, callback) {
-    "use strict";
-    /*jshint validthis:true */
-    var args = data.args;
-    if (this.callback) {
-        this.callback(args);
-        this.callback = null;
-    }
-    callback(args);
 }
 Shell.prototype.out = out;
 

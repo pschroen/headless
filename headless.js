@@ -45,10 +45,10 @@ shell = JSON.parse(files.read(path.join('shell', 'config.json'))),
 version = JSON.parse(files.read('package.json')).version,
 error = null;
 
-send = function (socket, data, flags) {
+send = function (socket, data) {
     "use strict";
-    if (socket && socket.send) {
-        socket.send(flags && flags.binary ? data : JSON.stringify(data), flags, function (err) {
+    if (socket) {
+        socket.send(JSON.stringify(data), function (err) {
             if (err && err.message !== 'not opened' && process.env.NODE_ENV !== 'production') util.error(err.stack);
         });
     }
@@ -98,14 +98,26 @@ var init = function () {
                     var load = req.post ? JSON.parse(req.post) : {};
                     if (!load.remoteAddress) load.remoteAddress = req.connection.socket.remoteAddress;
                     callbacks[callbackid] = function (out) {
-                        if (out.type) {
-                            res.writeHead(200, {'Content-Type':out.type});
-                            res.write(out.data);
-                        } else {
-                            res.writeHead(200, {'Content-Type':'application/json'});
-                            res.write(beautify(JSON.stringify(out.data)));
+                        var data = null;
+                        if (!out.stream) {
+                            if (out.type) {
+                                data = out.data;
+                            } else {
+                                data = beautify(JSON.stringify(out.data));
+                            }
                         }
-                        res.end();
+                        if (!out.stream || out.stream === 'start') {
+                            res.writeHead(200, {
+                                'Content-Type': out.type ? out.type : 'application/json',
+                                'Content-Length': out.size ? out.size : data.length
+                            });
+                        }
+                        if (!out.stream) {
+                            res.write(data);
+                        } else if (out.stream === 'data') {
+                            res.write(new Buffer(out.data, 'base64'));
+                        }
+                        if (!out.stream || out.stream === 'end') res.end();
                     };
                     send(users[match[1]].host, {
                         id: callbackid,
@@ -133,14 +145,26 @@ var init = function () {
                                             if (process.env.NODE_ENV !== 'production') util.log("Endpoint requested "+req.url+" > "+load.remoteAddress);
                                             var api = new container(list.list.container, users[name], list.path, i, load);
                                             api.callback = function (out) {
-                                                if (out.type) {
-                                                    res.writeHead(200, {'Content-Type':out.type});
-                                                    res.write(out.data);
-                                                } else {
-                                                    res.writeHead(200, {'Content-Type':'application/json'});
-                                                    res.write(beautify(JSON.stringify(out.data)));
+                                                var data = null;
+                                                if (!out.stream) {
+                                                    if (out.type) {
+                                                        data = out.data;
+                                                    } else {
+                                                        data = beautify(JSON.stringify(out.data));
+                                                    }
                                                 }
-                                                res.end();
+                                                if (!out.stream || out.stream === 'start') {
+                                                    res.writeHead(200, {
+                                                        'Content-Type': out.type ? out.type : 'application/json',
+                                                        'Content-Length': out.size ? out.size : data.length
+                                                    });
+                                                }
+                                                if (!out.stream) {
+                                                    res.write(data);
+                                                } else if (out.stream === 'data') {
+                                                    res.write(new Buffer(out.data, 'base64'));
+                                                }
+                                                if (!out.stream || out.stream === 'end') res.end();
                                             };
                                             break;
                                         }
@@ -230,9 +254,9 @@ var init = function () {
                                 });
                                 callbackid++;
                             } else {
-                                if (payload.id >= 0) {
+                                if (isFinite(payload.id)) {
                                     callbacks[payload.id](data);
-                                    delete callbacks[payload.id];
+                                    if (!data.stream || data.stream === 'end') delete callbacks[payload.id];
                                 } else {
                                     var userslist = files.readdir('users');
                                     userslist.forEach(function (name) {

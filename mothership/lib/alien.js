@@ -29,6 +29,18 @@ function timestamp() {
     return [d.getDate(), months[d.getMonth()], time].join(' ');
 }
 
+function toTimer(time) {
+    "use strict";
+    var h, m, s;
+    h = Math.floor(time/3600);
+    h = isNaN(h) ? '--' : h > 9 ? h : '0'+h;
+    m = Math.floor(time/60%60);
+    m = isNaN(m) ? '--' : m > 9 ? m : '0'+m;
+    s = Math.floor(time%60);
+    s = isNaN(s) ? '--' : s > 9 ? s : '0'+s;
+    return h+':'+m+':'+s;
+}
+
 // TODO: Multiple probes
 var d = document,
     page = 0,
@@ -43,7 +55,8 @@ var d = document,
     probes = [],
     memory = {},
     socket = null,
-    player = AV.Player.fromHeadless();
+    audio = d.createElement('audio'),
+    audioargs = null;
 
 alien.probe = function (ghost, platform) {
     "use strict";
@@ -122,7 +135,6 @@ alien.probe = function (ghost, platform) {
             },
             time: Date.now()
         }));
-        if (!probes[0].view.log) log.element.onclick();
     };
     this.kill = function () {
         this.command('kill', '');
@@ -318,7 +330,6 @@ alien.hash = function (ghost, platform) {
 alien.mothership = function () {
     "use strict";
     socket = new WebSocket('wss://'+location.host);
-    socket.binaryType = 'arraybuffer';
     socket.onopen = function (event) {
         console.log("Connected to mothership with 4 minute heartbeat");
         setInterval(function () {
@@ -469,20 +480,20 @@ alien.mothership = function () {
                                 }
                             } else if (probes[0].files[probes[0].view.files].memory) {
                                 if (x === 'fileslist') {
-                                    var memory = probes[0].files[probes[0].view.files].memory.fileslist,
+                                    var filesmemory = probes[0].files[probes[0].view.files].memory.fileslist,
                                         editor = fileslist.editor,
-                                        pos = memory.line;
+                                        pos = filesmemory.line;
                                     editor.operation(function () {
-                                        editor.scrollTo(memory.left, memory.top);
-                                        editor.setCursor(memory.line, memory.ch);
+                                        editor.scrollTo(filesmemory.left, filesmemory.top);
+                                        editor.setCursor(filesmemory.line, filesmemory.ch);
                                     });
                                     fileslist.lineChange(pos);
                                 } else if (x === 'fileseditor') {
-                                    var memory = probes[0].files[probes[0].view.files].memory.fileseditor,
+                                    var filesmemory = probes[0].files[probes[0].view.files].memory.fileseditor,
                                         editor = fileseditor.editor,
                                         pos = fileslist.editor.getCursor().line;
                                     // TODO: Investigate CodeMirror's buggy scroll position
-                                    if (pos !== memory.pos) {
+                                    if (pos !== filesmemory.pos) {
                                         editor.operation(function () {
                                             editor.refresh();
                                             editor.scrollTo(0, 0);
@@ -497,8 +508,8 @@ alien.mothership = function () {
                                         };
                                     } else {
                                         editor.operation(function () {
-                                            editor.scrollTo(memory.left, memory.top);
-                                            editor.setCursor(memory.line, memory.ch);
+                                            editor.scrollTo(filesmemory.left, filesmemory.top);
+                                            editor.setCursor(filesmemory.line, filesmemory.ch);
                                         });
                                     }
                                 }
@@ -542,15 +553,32 @@ alien.mothership = function () {
                             infobox.show();
                         }
                     }
-                } else if (data.command === 'stream') {
-                    // TODO: More stream types
+                // TODO: Video playback
+                } else if (data.command === 'audio') {
                     console.log(data.args);
-                    player.asset.source.fileName = data.args.path;
-                    player.asset.source.length = data.args.size;
-                    player.play();
-                    player.on('error', function (err) {
-                        console.log(err);
-                    });
+                    audio.pause();
+                    if (audioargs) {
+                        audioargs.progress = null;
+                        audioargs.status = null;
+                        listgutter.updateItem(audioargs);
+                    } else {
+                        audio.ontimeupdate = function () {
+                            audioargs.progress = isFinite(audio.duration) ? Math.round((audio.currentTime/audio.duration)*100) : null;
+                            audioargs.status = toTimer(audio.currentTime);
+                            listgutter.updateItem(audioargs);
+                        };
+                    }
+                    audioargs = data.args;
+                    audio.src = audioargs.src;
+                    audio.type = audioargs.type;
+                    audio.play();
+                    memory[audioargs.text].status.group.element.onclick = function () {
+                        if (!audio.paused) {
+                            audio.pause();
+                        } else {
+                            audio.play();
+                        }
+                    };
                 } else {
                     var pre = d.createElement('pre');
                     pre.innerHTML = timestamp()+' - '+(data.args.text ? data.args.text+' → ' : '')+data.args.message;
@@ -624,9 +652,6 @@ alien.mothership = function () {
                 console.log("Heartbeat with "+(Date.now()-payload.time)+"ms latency");
                 break;
             }
-        } else {
-            // TODO: More stream types
-            player.asset.source.buffer(event.data);
         }
     };
     socket.onerror = socket.onclose = function () {
@@ -827,11 +852,7 @@ alien.listeditor = function () {
                 });
                 text = editor.getLine(pos);
                 run.element.className = 'btn pressed small';
-                memory[text] = {
-                    item: {
-                        text: text
-                    }
-                };
+                memory[text] = {item:{text:text}};
                 listgutter.addItem(text, memory[text].item);
                 listgutter.index();
                 object.lineChange(pos);
@@ -986,6 +1007,7 @@ alien.listgutter = function () {
                 status.type.element.style.left = '132px';
                 status.progress.setPercent(data.progress);
                 status.progress.element.setAttribute('data-visible', 'data');
+                if (data.progress === 0) status.type.element.className = 'type';
                 if (probes[0].view.list !== false && !infobox) status.progress.show();
             } else {
                 status.progress.element.setAttribute('data-visible', 'hidden');
@@ -2520,6 +2542,7 @@ run.element.onclick = function () {
         } else {
             probes[0].run(text !== '' ? text : undefined);
         }
+        if (!probes[0].view.log) log.element.onclick();
     } else {
         this.className = 'btn small';
         probes[0].kill();
