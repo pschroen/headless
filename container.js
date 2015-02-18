@@ -426,13 +426,13 @@ function out(user, data, callback) {
                         data: {
                             args: {
                                 error: null,
-                                message: "Streaming "+stats.size+" bytes of data",
+                                message: "Streaming "+stats.size+" bytes of data at "+config.streamrate+" bytes per second",
                                 progress: null
                             }
                         }
                     });
                     self.callback({stream:'start', type:args.type, size:stats.size});
-                    var stream = fs.createReadStream(args.data);
+                    var stream = fs.createReadStream(args.data).pipe(new (require('stream-throttle').Throttle)({rate:config.streamrate}));
                     stream.on('data', function (data) {
                         self.callback({stream:'data', data:data.toString('base64')});
                     });
