@@ -23,8 +23,8 @@ function init(probe, callback) {
     "use strict";
     probe.log("["+exports.id+"] Loading "+exports.name);
     probe.script = require(shell.path+'/users/'+user+'/apis/'+probe.item.text+'.js');
-    probe.script.init(probe, function (out, type) {
-        callback(out, type);
+    probe.script.init(probe, function (out, type, stream) {
+        callback(out, type, stream);
     });
 }
 Script.prototype.init = init;

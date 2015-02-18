@@ -185,7 +185,7 @@ var init = function () {
             if (socket.upgradeReq.headers['user-agent']) {
                 if (process.env.NODE_ENV !== 'production') util.log("Hello "+socket._socket.remoteAddress);
                 socket.on('message', function (payload) {
-                    receive(socket, payload, true);
+                    receive(socket, payload);
                 });
                 socket.on('close', function () {
                     if (users[socket._socket.remoteAddress] && users[socket._socket.remoteAddress].socket) delete users[socket._socket.remoteAddress].socket;
@@ -305,7 +305,8 @@ var init = function () {
                             });
                             break;
                         default:
-                            if (payload.name && users[payload.name] && users[payload.name].socket) send(users[payload.name].socket, payload);
+                            if (payload.name && users[payload.name] && users[payload.name].socket)
+                                send(users[payload.name].socket, payload);
                             break;
                     }
                 });
@@ -319,7 +320,6 @@ var init = function () {
                         socket.users.forEach(function (user) {
                             var name = user.name;
                             if (users[name] && users[name].socket) users[name].socket.terminate();
-                            delete users[name];
                         });
                     }
                 });
@@ -374,7 +374,7 @@ var init = function () {
     keys = keys.join('|');
 };
 
-function receive(socket, payload, session) {
+function receive(socket, payload, upstream) {
     "use strict";
     payload = JSON.parse(payload);
     var message = payload.message,
@@ -386,7 +386,7 @@ function receive(socket, payload, session) {
                     auth = path.join('users', name, 'auth.json'),
                     user = files.exists(auth) ? JSON.parse(files.read(auth)) : null;
                 if (user && bcrypt.compareSync(data.auth, '$2a$08$'+user.auth)) {
-                    if (session) socket.user = user;
+                    if (!upstream) socket.user = user;
                     if (!socket.users) socket.users = {};
                     if (!socket.users[name]) socket.users[name] = {};
                     socket.users[name].handshake = true;
@@ -577,7 +577,7 @@ function receive(socket, payload, session) {
                                 if (contain) contain.kill();
                                 break;
                             case 'restart':
-                                if (!session) {
+                                if (upstream) {
                                     socket.removeAllListeners('close');
                                     socket.terminate();
                                 }
@@ -653,17 +653,29 @@ function receive(socket, payload, session) {
                             for (var i = 0; i < list.list.items.length; i++) {
                                 var item = list.list.items[i];
                                 if (item.text === data.submit) {
+                                    var url = upstream,
+                                        callback = new ws(url);
                                     if (!data.payload.remoteAddress) data.payload.remoteAddress = socket._socket.remoteAddress;
-                                    if (process.env.NODE_ENV !== 'production') util.log("Endpoint received /"+data.submit+" > "+data.payload.remoteAddress);
-                                    var api = new container(list.list.container, users[name], list.path, i, data.payload);
-                                    api.callback = function (out) {
-                                        send(socket, {
-                                            id: payload.id,
-                                            message: 'endpoint',
-                                            data: out,
-                                            time: payload.time
-                                        });
-                                    };
+                                    if (process.env.NODE_ENV !== 'production') util.log("Endpoint received from "+url+"/"+data.submit+" > "+data.payload.remoteAddress);
+                                    callback.on('open', function () {
+                                        if (process.env.NODE_ENV !== 'production') util.log("Sending data to callback "+url);
+                                        var api = new container(list.list.container, users[name], list.path, i, data.payload);
+                                        api.callback = function (out) {
+                                            send(callback, {
+                                                id: payload.id,
+                                                message: 'endpoint',
+                                                data: out,
+                                                time: payload.time
+                                            });
+                                            if (!out.stream || out.stream === 'end') {
+                                                if (process.env.NODE_ENV !== 'production') util.log("Send complete, closing connection");
+                                                callback.terminate();
+                                            }
+                                        };
+                                    });
+                                    callback.on('error', function (err) {
+                                        if (process.env.NODE_ENV !== 'production') util.log("Callback "+url+" failed with "+err);
+                                    });
                                     break;
                                 }
                             }
@@ -673,7 +685,7 @@ function receive(socket, payload, session) {
             });
             break;
         case 'heartbeat':
-            if (session) {
+            if (!upstream) {
                 send(socket, {
                     message: 'heartbeat',
                     time: payload.time
@@ -683,7 +695,7 @@ function receive(socket, payload, session) {
             }
             break;
         case 'setup':
-            if (session) {
+            if (!upstream) {
                 if (!data) {
                     if (process.env.NODE_ENV !== 'production') util.log("Setup "+socket._socket.remoteAddress+" socket");
                     if (!users[socket._socket.remoteAddress]) users[socket._socket.remoteAddress] = {};
@@ -774,7 +786,7 @@ function mothership(insert) {
             }, config.heartbeat);
         });
         socket.on('message', function (payload) {
-            receive(socket, payload);
+            receive(socket, payload, url);
         });
         socket.on('error', function (err) {
             util.log("Call home to "+url+" failed with "+err+", reconnecting in 20 seconds");
