@@ -145,7 +145,7 @@ var Shell = function (container, user, list, index, load) {
                                 version: '"+process.version.substring(1)+"',\n\
                                 arch: '"+os.platform()+"-"+utsname.machine+"',\n\
                                 hostname: '"+os.hostname()+"',\n\
-                                payload: JSON.parse("+JSON.stringify(load)+")\n\
+                                payload: JSON.parse('"+utils.addslashes(JSON.stringify(load))+"')\n\
                             }\n\
                         }));\n\
                     };\n\
