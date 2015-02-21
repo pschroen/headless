@@ -471,7 +471,7 @@ function receive(socket, payload, session) {
                                         if (files.exists(key)) {
                                             var list = JSON.parse(fs.readFileSync(key).toString());
                                             if (!files.exists(path.join('shell', list.shell))) {
-                                                var git = config.gitPath ? config.gitPath : 'git',
+                                                var git = config.git ? config.git : 'git',
                                                     command = !files.exists(path.join('shell', '.git')) ? 'cd shell && \
                                                     '+git+' init && \
                                                     '+git+' remote add origin https://github.com/pschroen/shell.git && \

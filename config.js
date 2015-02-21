@@ -15,4 +15,4 @@ exports.heartbeat = 240000;
 // Optional phantom path
 //exports.phantomPath = 'bin/phantomjs';
 // Optional git path
-//exports.gitPath = '/opt/bin/git';
+//exports.git = '/opt/bin/git';
