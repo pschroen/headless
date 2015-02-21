@@ -569,7 +569,7 @@ alien.mothership = function () {
                         };
                     }
                     audioargs = data.args;
-                    audio.src = audioargs.src;
+                    audio.src = /http:/.test(audioargs.src) ? audioargs.src : '/stream?src='+encodeURIComponent(audioargs.src);
                     audio.type = audioargs.type;
                     audio.play();
                     memory[audioargs.text].status.onclick = function () {

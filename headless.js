@@ -30,6 +30,7 @@ http = require('http'),
 https = require('https'),
 util = require("util"),
 url = require('url'),
+querystring = require('querystring'),
 file = new (require('node-static')).Server('./mothership'),
 ws = require('ws'),
 bcrypt = require('bcrypt'),
@@ -71,8 +72,8 @@ var insert = [],
     users = {},
     callbacks = [],
     callbackid = 0,
-    minutes = (config.heartbeat/1000/60) << 0,
-    seconds = (config.heartbeat/1000) % 60,
+    minutes = (config.heartbeat/1000/60)<<0,
+    seconds = (config.heartbeat/1000)%60,
     device = null,
     setup = null,
     heartbeat = null,
@@ -96,7 +97,9 @@ var init = function () {
             if (!files.exists(filepath)) {
                 var name = match && /\./.test(match[1]) ? match[1].split('.')[0] : match ? match[1] : null;
                 if (match && users[name] && users[name].host) {
-                    var load = req.post ? JSON.parse(req.post) : {};
+                    var uri = url.parse(req.url),
+                        load = req.post ? JSON.parse(req.post) : {};
+                    utils.extend(load, querystring.parse(uri.query));
                     if (!load.remoteAddress) load.remoteAddress = req.connection.socket.remoteAddress;
                     callbacks[callbackid] = function (out) {
                         var data = null;
@@ -124,7 +127,7 @@ var init = function () {
                         id: callbackid,
                         message: 'endpoint',
                         data: {
-                            submit: req.url.substring(1),
+                            submit: uri.pathname.substring(1),
                             payload: load
                         },
                         time: Date.now()
@@ -139,11 +142,13 @@ var init = function () {
                             listslist.forEach(function (list) {
                                 if (list.list.shell === 'api') {
                                     for (var i = 0; i < list.list.items.length; i++) {
-                                        var item = list.list.items[i];
-                                        if ('/'+item.text === req.url) {
+                                        var item = list.list.items[i],
+                                            uri = url.parse(req.url);
+                                        if ('/'+item.text === uri.pathname) {
                                             var load = req.post ? JSON.parse(req.post) : {};
+                                            utils.extend(load, querystring.parse(uri.query));
                                             if (!load.remoteAddress) load.remoteAddress = req.connection.socket.remoteAddress;
-                                            if (process.env.NODE_ENV !== 'production') util.log("Endpoint requested "+req.url+" > "+load.remoteAddress);
+                                            if (process.env.NODE_ENV !== 'production') util.log("Endpoint requested "+uri.pathname+" > "+load.remoteAddress);
                                             var api = new container(list.list.container, users[name], list.path, i, load);
                                             api.callback = function (out) {
                                                 var data = null;
@@ -337,9 +342,9 @@ var init = function () {
             listslist.forEach(function (list) {
                 if (list.list.run) {
                     if (list.list.run.constructor === Number) {
-                        var hours = (list.list.run/1000/60/60) << 0,
-                            minutes = (list.list.run/1000/60) % 60*60,
-                            seconds = (list.list.run/1000) % 60;
+                        var hours = (list.list.run/1000/60/60)<<0,
+                            minutes = (list.list.run/1000/60)%60*60,
+                            seconds = (list.list.run/1000)%60;
                         var loop = function () {
                             util.log("Running "+list.path+" with "+hours+" hour"+(minutes ? " "+minutes+" minute" : "")+(seconds ? " "+seconds+" second" : "")+" interval");
                             var run = new container(list.list.container, users[name], list.path, -1, null);

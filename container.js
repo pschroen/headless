@@ -154,7 +154,7 @@ var Shell = function (container, user, list, index, load) {
                     };\n\
                 </script></head><body></body></html>");
             }).listen(function () {
-                var phantom = cp.spawn(config.phantomPath ? config.phantomPath : require('phantomjs').path, ['--ignore-ssl-errors=true', 'shell.js', server.address().port, list, index]);
+                var phantom = cp.spawn(config.phantomjs ? config.phantomjs : require('phantomjs').path, ['--ignore-ssl-errors=true', 'shell.js', server.address().port, list, index]);
                 phantom.stdout.on('data', function (data) {
                     util.log("Phantom stdout: "+data);
                 });
