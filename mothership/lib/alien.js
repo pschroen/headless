@@ -135,6 +135,7 @@ alien.probe = function (ghost, platform) {
             },
             time: Date.now()
         }));
+        if (!probes[0].view.log) log.element.onclick();
     };
     this.kill = function () {
         this.command('kill', '');
@@ -865,15 +866,10 @@ alien.listeditor = function () {
             if (pos !== object.pos) {
                 if (!editor.somethingSelected()) {
                     object.lineChange(pos);
-                } else {
+                } else if (editor.getSelection('|').split('|').length > 2) {
                     object.clear();
                     object.pos = pos;
                 }
-            }
-        } else if (name === 'Backspace' || name === 'Delete') {
-            if (editor.lineCount() !== object.lineCount) {
-                object.lineChange(editor.getCursor().line);
-                listgutter.index();
             }
         }
     });
@@ -882,7 +878,7 @@ alien.listeditor = function () {
         if (pos !== object.pos) {
             if (!editor.somethingSelected()) {
                 object.lineChange(pos);
-            } else {
+            } else if (editor.getSelection('|').split('|').length > 2) {
                 object.clear();
                 object.pos = pos;
             }
@@ -900,6 +896,7 @@ alien.listeditor = function () {
                 }
                 probes[0].merge();
             }
+            object.lineChange(editor.getCursor().line);
             listgutter.index();
         }
     });
@@ -916,7 +913,7 @@ alien.listeditor = function () {
     object.lineChange = function (pos) {
         this.clear();
         var text = editor.getLine(pos);
-        if (text !== '') {
+        if (text !== '' || editor.lineCount() > 2) {
             run.element.setAttribute('data-visible', 'visible');
             actionbox.resize();
             run.show();
@@ -937,7 +934,7 @@ alien.listeditor = function () {
             editor.setValue([''].concat(content).join('\n')+'\n');
             if (probes[0].view.list !== false) {
                 var text = editor.getLine(editor.getCursor().line);
-                if (text !== '') {
+                if (text !== '' || editor.lineCount() > 2) {
                     run.element.setAttribute('data-visible', 'visible');
                     actionbox.resize();
                     run.show();
@@ -1162,15 +1159,10 @@ alien.listslist = function () {
             if (pos !== object.pos) {
                 if (!editor.somethingSelected()) {
                     object.lineChange(pos);
-                } else {
+                } else if (editor.getSelection('|').split('|').length > 2) {
                     object.clear();
                     object.pos = pos;
                 }
-            }
-        } else if (name === 'Backspace' || name === 'Delete') {
-            if (editor.lineCount() !== object.lineCount) {
-                object.lineChange(editor.getCursor().line);
-                object.index();
             }
         }
     });
@@ -1179,7 +1171,7 @@ alien.listslist = function () {
         if (pos !== object.pos) {
             if (!editor.somethingSelected()) {
                 object.lineChange(pos);
-            } else {
+            } else if (editor.getSelection('|').split('|').length > 2) {
                 object.clear();
                 object.pos = pos;
             }
@@ -1210,8 +1202,8 @@ alien.listslist = function () {
             if (change.text.length > 1) {
                 for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
             }
-            object.pos = editor.getCursor().line;
-            object.lineCount = editor.lineCount();
+            object.lineChange(editor.getCursor().line);
+            object.index();
         }
     });
     object.editor = editor;
@@ -1404,15 +1396,10 @@ alien.fileslist = function () {
             if (pos !== object.pos) {
                 if (!editor.somethingSelected()) {
                     object.lineChange(pos);
-                } else {
+                } else if (editor.getSelection('|').split('|').length > 2) {
                     object.clear();
                     object.pos = pos;
                 }
-            }
-        } else if (name === 'Backspace' || name === 'Delete') {
-            if (editor.lineCount() !== object.lineCount) {
-                object.lineChange(editor.getCursor().line);
-                object.index();
             }
         }
     });
@@ -1421,7 +1408,7 @@ alien.fileslist = function () {
         if (pos !== object.pos) {
             if (!editor.somethingSelected()) {
                 object.lineChange(pos);
-            } else {
+            } else if (editor.getSelection('|').split('|').length > 2) {
                 object.clear();
                 object.pos = pos;
             }
@@ -1452,8 +1439,8 @@ alien.fileslist = function () {
             if (change.text.length > 1) {
                 for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
             }
-            object.pos = editor.getCursor().line;
-            object.lineCount = editor.lineCount();
+            object.lineChange(editor.getCursor().line);
+            object.index();
         }
     });
     object.editor = editor;
@@ -1651,15 +1638,10 @@ alien.userslist = function () {
             if (pos !== object.pos) {
                 if (!editor.somethingSelected()) {
                     object.lineChange(pos);
-                } else {
+                } else if (editor.getSelection('|').split('|').length > 2) {
                     object.clear();
                     object.pos = pos;
                 }
-            }
-        } else if (name === 'Backspace' || name === 'Delete') {
-            if (editor.lineCount() !== object.lineCount) {
-                object.lineChange(editor.getCursor().line);
-                object.index();
             }
         }
     });
@@ -1668,7 +1650,7 @@ alien.userslist = function () {
         if (pos !== object.pos) {
             if (!editor.somethingSelected()) {
                 object.lineChange(pos);
-            } else {
+            } else if (editor.getSelection('|').split('|').length > 2) {
                 object.clear();
                 object.pos = pos;
             }
@@ -1699,8 +1681,8 @@ alien.userslist = function () {
             if (change.text.length > 1) {
                 for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
             }
-            object.pos = editor.getCursor().line;
-            object.lineCount = editor.lineCount();
+            object.lineChange(editor.getCursor().line);
+            object.index();
         }
     });
     object.editor = editor;
@@ -2541,10 +2523,10 @@ run.element.onclick = function () {
             setTimeout(function () {
                 run.element.className = 'btn small';
             }, 100);
+            if (!probes[0].view.log) log.element.onclick();
         } else {
             probes[0].run(text !== '' ? text : undefined);
         }
-        if (!probes[0].view.log) log.element.onclick();
     } else {
         this.className = 'btn small';
         probes[0].kill();
@@ -2592,8 +2574,46 @@ save.element.onclick = function () {
                 loader.show();
                 var obj = {},
                     ghostconfig = probes[0].join('users', user.input.value, 'config.json'),
-                    ghosthash = probes[0].join(probes[0].files[probes[0].view.files].path, text).replace('.'+this.separator, '') === ghostconfig;
-                if (ghosthash) {
+                    ghosthash = probes[0].join(probes[0].files[probes[0].view.files].path, text).replace('.'+this.separator, '') === ghostconfig,
+                    jshint = function (value) {
+                        JSHINT(fileseditor.editor.getValue());
+                        if (JSHINT.errors.length) {
+                            var err = JSHINT.errors[0];
+                            if (err) {
+                                error = {
+                                    path: text,
+                                    line: err.line-1,
+                                    ch: err.character-1,
+                                    message: err.reason,
+                                    stack: null
+                                };
+                                fileslist.editor.addLineClass(fileslist.editor.getCursor().line, 'background', 'error');
+                                var makeMarker = function () {
+                                    var marker = d.createElement('div');
+                                    marker.style.color = '#822';
+                                    marker.innerHTML = '●';
+                                    return marker;
+                                };
+                                var editor = fileseditor.editor;
+                                editor.operation(function () {
+                                    editor.clearGutter('breakpoints');
+                                    if (marker) marker.clear();
+                                    editor.setGutterMarker(error.line, 'breakpoints', makeMarker());
+                                    marker = editor.markText({line:error.line, ch:error.ch}, {line:error.line, ch:error.ch+1}, {className:'CodeMirror-headless-mark-error'});
+                                    editor.scrollIntoView({line:error.line}, 200);
+                                    editor.setCursor(error.line, error.ch);
+                                });
+                                errmsg.element.innerHTML = error.message;
+                                errmsg.show();
+                                error = null;
+                            }
+                            return false;
+                        } else {
+                            fileslist.clearError();
+                            return true;
+                        }
+                    };
+                if (ghosthash && jshint(fileseditor.editor.getValue())) {
                     probes[0].ghost = JSON.parse(fileseditor.editor.getValue());
                 } else {
                     obj[probes[0].join(probes[0].files[probes[0].view.files].path, text)] = fileseditor.editor.getValue();
@@ -2634,42 +2654,7 @@ save.element.onclick = function () {
                         actionbox.resize();
                         restart.show();
                     }
-                    if (/\.js/.test(text)) {
-                        JSHINT(fileseditor.editor.getValue());
-                        if (JSHINT.errors.length) {
-                            var err = JSHINT.errors[0];
-                            if (err) {
-                                error = {
-                                    path: text,
-                                    line: err.line-1,
-                                    ch: err.character-1,
-                                    message: err.reason,
-                                    stack: null
-                                };
-                                fileslist.editor.addLineClass(fileslist.editor.getCursor().line, 'background', 'error');
-                                var makeMarker = function () {
-                                    var marker = d.createElement('div');
-                                    marker.style.color = '#822';
-                                    marker.innerHTML = '●';
-                                    return marker;
-                                };
-                                var editor = fileseditor.editor;
-                                editor.operation(function () {
-                                    editor.clearGutter('breakpoints');
-                                    if (marker) marker.clear();
-                                    editor.setGutterMarker(error.line, 'breakpoints', makeMarker());
-                                    marker = editor.markText({line:error.line, ch:error.ch}, {line:error.line, ch:error.ch+1}, {className:'CodeMirror-headless-mark-error'});
-                                    editor.scrollIntoView({line:error.line}, 200);
-                                    editor.setCursor(error.line, error.ch);
-                                });
-                                errmsg.element.innerHTML = error.message;
-                                errmsg.show();
-                                error = null;
-                            }
-                        } else {
-                            fileslist.clearError();
-                        }
-                    }
+                    if (/\.js/.test(text)) jshint(fileseditor.editor.getValue());
                 }, 100);
             }
         } else if (probes[0].view.users) {
