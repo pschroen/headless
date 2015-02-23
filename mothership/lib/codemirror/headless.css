@@ -2,6 +2,8 @@
 
 .cm-s-headless.CodeMirror {height: 100%; background: #111; color: #f8f8f2;}
 .cm-s-headless div.CodeMirror-selected {background: #49483E !important;}
+.cm-s-headless.CodeMirror ::selection { background: rgba(73, 72, 62, .99); }
+.cm-s-headless.CodeMirror ::-moz-selection { background: rgba(73, 72, 62, .99); }
 .cm-s-headless .CodeMirror-gutters {background: #111; border-right: 0px;}
 .cm-s-headless .CodeMirror-guttermarker { color: white; }
 .cm-s-headless .CodeMirror-guttermarker-subtle { color: #d0d0d0; }
