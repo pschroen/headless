@@ -213,7 +213,7 @@ var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(require('./inherit2').Script, module.id, "Inherit 1");
 
 function init(probe, callback) {
-    probe.log("Inheritance "+this.sanity+" "+this.check);
+    probe.log("Inheritance "+exports.sanity+" "+exports.check);
     probe.exit();
 }
 Script.prototype.init = init;
@@ -321,15 +321,19 @@ var box = {
         fields: {
             hello: {
                 type: 'info',
-                title: "Hello World",
-                text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
-                    The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+                title: exports.name,
+                text: 'The Headless framework simply receives and sends JavaScript Objects as input and output.',
+                buttons: [{
+                    label: "Escape (esc)"
+                }]
             }
         }
     };
 probe.item.infobox = {boxes:[box]};
 probe.box("Infobox");
 </pre>
+
+More <code>Infobox</code> examples can be found on <a href="https://github.com/pschroen/headless/wiki">The Wiki</a>.
 
 <h2>probe.remember(memory)</h2>
 
@@ -643,10 +647,12 @@ var payload = probe.payload,
             }
         }
     };
-probe.log(exports.name);
+probe.log("Infobox");
 callback(shell.box(name, id, [box]));
 </pre>
-&nbsp;
+
+More <code>Infobox</code> examples can be found on <a href="https://github.com/pschroen/headless/wiki">The Wiki</a>.
+<br>&nbsp;
 
 <h1>Utils</h1>
 
@@ -667,6 +673,14 @@ Object recursive merging utility.
 <h2>utils.addslashes(str)</h2>
 
 Add slashes equivalent of PHP <code>addslashes()</code>.
+
+<h2>utils.termsToPattern(str)</h2>
+
+Convert space delimited list of terms to a regular expression. Lookahead and negated lookahead are supported. Alternatives can be specified in the terms.
+
+<h2>utils.textToPattern(str)</h2>
+
+Convert date or number ranges in string to a regular expression. Currently only greater than or equal to ranges are supported. Greater than or equal to date, <code>YYYY-MM-DD</code> format. Greater than or equal to integer.
 
 <h2>utils.filesize(input)</h2>
 
