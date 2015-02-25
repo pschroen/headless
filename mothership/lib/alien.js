@@ -896,7 +896,7 @@ alien.listeditor = function () {
                 }
                 probes[0].merge();
             }
-            object.lineChange(editor.getCursor().line);
+            if (!(change.origin === 'paste' && change.text.length === 1)) object.lineChange(editor.getCursor().line);
             listgutter.index();
         }
     });
@@ -1199,11 +1199,10 @@ alien.listslist = function () {
                     probes[0].move(obj);
                 }
             }
-            if (change.text.length > 1) {
-                for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
-            }
-            object.lineChange(editor.getCursor().line);
-            object.index();
+            if (change.text.length > 1) for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
+            if (!(change.origin === 'paste' && change.text.length === 1)) object.lineChange(editor.getCursor().line);
+            object.pos = editor.getCursor().line;
+            object.lineCount = editor.lineCount();
         }
     });
     object.editor = editor;
@@ -1436,11 +1435,10 @@ alien.fileslist = function () {
                     probes[0].move(obj);
                 }
             }
-            if (change.text.length > 1) {
-                for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
-            }
-            object.lineChange(editor.getCursor().line);
-            object.index();
+            if (change.text.length > 1) for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
+            if (!((change.origin === 'paste' || change.origin === '+delete') && change.text.length === 1)) object.lineChange(editor.getCursor().line);
+            object.pos = editor.getCursor().line;
+            object.lineCount = editor.lineCount();
         }
     });
     object.editor = editor;
@@ -1678,11 +1676,10 @@ alien.userslist = function () {
                     probes[0].move(obj);
                 }
             }
-            if (change.text.length > 1) {
-                for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
-            }
-            object.lineChange(editor.getCursor().line);
-            object.index();
+            if (change.text.length > 1) for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
+            if (!(change.origin === 'paste' && change.text.length === 1)) object.lineChange(editor.getCursor().line);
+            object.pos = editor.getCursor().line;
+            object.lineCount = editor.lineCount();
         }
     });
     object.editor = editor;
@@ -1915,7 +1912,6 @@ alien.box = function (box, index, id) {
             for (var i = 0; i < field.buttons.length; i++) {
                 var button = alien.button(field.buttons[i].label);
                 button.element.style.left = (buttons.length ? buttons[buttons.length-1].element.offsetLeft+buttons[buttons.length-1].element.offsetWidth+10 : 0)+'px';
-                button.element.className = 'btn'+(field.buttons[i].value === field.value ? ' pressed' : '')+' small';
                 button.element.setAttribute('data-value', JSON.stringify(field.buttons[i].value));
                 button.element.setAttribute('data-name', field.buttons[i].name);
                 button.element.setAttribute('data-key', key);
