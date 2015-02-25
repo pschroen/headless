@@ -16,3 +16,5 @@ exports.streamrate = 51200;
 //exports.restart = '/etc/init.d/headless.sh restart';
 // Optional phantomjs path
 //exports.phantomjs = 'bin/phantomjs';
+// Optional git path
+//exports.git = '/opt/bin/git';

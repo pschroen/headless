@@ -501,17 +501,85 @@ function receive(socket, payload, upstream) {
                                     if (/\.json$/.exec(key) && typeof val === 'object') val = JSON.stringify(val);
                                     files.write(key, val);
                                 }
-                                send(socket, {
-                                    name: name,
-                                    message: 'data',
-                                    data: {
-                                        args: {
-                                            error: null,
-                                            loading: false,
-                                            message: "Merged"
+                                var operation = false;
+                                for (var key in data.save) {
+                                    var val = data.save[key];
+                                    if ((new RegExp(path.join('users', name, 'lists'))).test(key)) {
+                                        if (files.exists(key)) {
+                                            var list = JSON.parse(fs.readFileSync(key).toString());
+                                            if (!files.exists(path.join('shell', list.shell))) {
+                                                var git = config.git ? config.git : 'git',
+                                                    command = !files.exists(path.join('shell', '.git')) ? 'cd shell && \
+                                                    '+git+' init && \
+                                                    '+git+' remote add origin https://github.com/pschroen/shell.git && \
+                                                    '+git+' config core.sparsecheckout true && \
+                                                    echo /'+list.shell+'/ >> .git/info/sparse-checkout && \
+                                                    '+git+' pull origin stable' : 'cd shell && \
+                                                    echo /'+list.shell+'/ >> .git/info/sparse-checkout && \
+                                                    '+git+' read-tree -mu HEAD && \
+                                                    '+git+' pull origin stable';
+                                                var log = "Installing shell "+list.shell;
+                                                util.log(log);
+                                                send(socket, {
+                                                    name: name,
+                                                    message: 'data',
+                                                    data: {
+                                                        args: {
+                                                            error: null,
+                                                            loading: true,
+                                                            message: log
+                                                        }
+                                                    }
+                                                });
+                                                operation = true;
+                                                cp.exec(command, function (error, stdout, stderr) {
+                                                    if (!error) {
+                                                        var log = "Install of shell "+list.shell+" complete";
+                                                        util.log(log);
+                                                        send(socket, {
+                                                            name: name,
+                                                            message: 'data',
+                                                            data: {
+                                                                args: {
+                                                                    error: null,
+                                                                    loading: false,
+                                                                    message: log
+                                                                }
+                                                            }
+                                                        });
+                                                    } else {
+                                                        var log = "Install of shell "+list.shell+" failed with "+error;
+                                                        util.log(log);
+                                                        send(socket, {
+                                                            name: name,
+                                                            message: 'data',
+                                                            data: {
+                                                                args: {
+                                                                    error: true,
+                                                                    loading: false,
+                                                                    message: log
+                                                                }
+                                                            }
+                                                        });
+                                                    }
+                                                });
+                                            }
                                         }
                                     }
-                                });
+                                }
+                                if (!operation) {
+                                    send(socket, {
+                                        name: name,
+                                        message: 'data',
+                                        data: {
+                                            args: {
+                                                error: null,
+                                                loading: false,
+                                                message: "Merged"
+                                            }
+                                        }
+                                    });
+                                }
                                 break;
                             case 'move':
                                 var count = 0;
