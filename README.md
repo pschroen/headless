@@ -5,7 +5,7 @@ Headless is a web 3.0 framework for managing Internet connected devices and scri
 
 ## Installation
 
-1. Install [Node.js](http://nodejs.org/) - >=0.6.x, essentially anywhere you can get Node working you can run Headless, embedded computers, NAS and TV devices.
+1. Install [Node.js](http://nodejs.org/) - >=0.10.0, essentially anywhere you can get Node working you can run Headless, embedded computers, NAS and TV devices.
 1. Visit [https://headless.io/setup/](https://headless.io/setup/) with [Chrome](https://www.google.com/chrome/).
 
 ```sh
