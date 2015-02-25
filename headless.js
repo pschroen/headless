@@ -467,7 +467,16 @@ function receive(socket, payload, session) {
                                         var ghost = files.exists(key) ? JSON.parse(files.read(key)) : {};
                                         utils.extend(ghost, val);
                                         val = ghost;
-                                    } else if ((new RegExp(path.join('users', name, 'lists'))).test(key)) {
+                                    } else {
+                                        files.mkdir(path.dirname(key));
+                                    }
+                                    if (/\.json$/.exec(key) && typeof val === 'object') val = JSON.stringify(val);
+                                    files.write(key, val);
+                                }
+                                var operation = false;
+                                for (var key in data.save) {
+                                    var val = data.save[key];
+                                    if ((new RegExp(path.join('users', name, 'lists'))).test(key)) {
                                         if (files.exists(key)) {
                                             var list = JSON.parse(fs.readFileSync(key).toString());
                                             if (!files.exists(path.join('shell', list.shell))) {
@@ -481,33 +490,68 @@ function receive(socket, payload, session) {
                                                     echo /'+list.shell+'/ >> .git/info/sparse-checkout && \
                                                     '+git+' read-tree -mu HEAD && \
                                                     '+git+' pull origin stable';
-                                                util.log("Installing shell "+list.shell);
+                                                var log = "Installing shell "+list.shell;
+                                                util.log(log);
+                                                send(socket, {
+                                                    name: name,
+                                                    message: 'data',
+                                                    data: {
+                                                        args: {
+                                                            error: null,
+                                                            loading: true,
+                                                            message: log
+                                                        }
+                                                    }
+                                                });
+                                                operation = true;
                                                 cp.exec(command, function (error, stdout, stderr) {
                                                     if (!error) {
-                                                        util.log("Install of shell "+list.shell+" complete");
+                                                        var log = "Install of shell "+list.shell+" complete";
+                                                        util.log(log);
+                                                        send(socket, {
+                                                            name: name,
+                                                            message: 'data',
+                                                            data: {
+                                                                args: {
+                                                                    error: null,
+                                                                    loading: false,
+                                                                    message: log
+                                                                }
+                                                            }
+                                                        });
                                                     } else {
-                                                        util.log("Install of shell "+list.shell+" failed with "+error);
+                                                        var log = "Install of shell "+list.shell+" failed with "+error;
+                                                        util.log(log);
+                                                        send(socket, {
+                                                            name: name,
+                                                            message: 'data',
+                                                            data: {
+                                                                args: {
+                                                                    error: true,
+                                                                    loading: false,
+                                                                    message: log
+                                                                }
+                                                            }
+                                                        });
                                                     }
                                                 });
                                             }
                                         }
-                                    } else {
-                                        files.mkdir(path.dirname(key));
                                     }
-                                    if (/\.json$/.exec(key) && typeof val === 'object') val = JSON.stringify(val);
-                                    files.write(key, val);
                                 }
-                                send(socket, {
-                                    name: name,
-                                    message: 'data',
-                                    data: {
-                                        args: {
-                                            error: null,
-                                            loading: false,
-                                            message: "Merged"
+                                if (!operation) {
+                                    send(socket, {
+                                        name: name,
+                                        message: 'data',
+                                        data: {
+                                            args: {
+                                                error: null,
+                                                loading: false,
+                                                message: "Merged"
+                                            }
                                         }
-                                    }
-                                });
+                                    });
+                                }
                                 break;
                             case 'move':
                                 var count = 0;
