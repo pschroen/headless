@@ -30,15 +30,13 @@ http = require('http'),
 https = require('https'),
 util = require("util"),
 url = require('url'),
+querystring = require('querystring'),
 file = new (require('node-static')).Server('./mothership'),
 ws = require('ws'),
 bcrypt = require('bcrypt'),
 uuid = require('node-uuid'),
 isbinaryfile = require("isbinaryfile"),
 beautify = require('js-beautify').js_beautify;
-
-// https://github.com/joyent/node/wiki/api-changes-between-v0.6-and-v0.8
-if (typeof fs.existsSync === 'undefined') fs.existsSync = path.existsSync;
 
 config = require('./config'),
 utils = require('./modules/utils'),
@@ -74,8 +72,8 @@ var insert = [],
     users = {},
     callbacks = [],
     callbackid = 0,
-    minutes = (config.heartbeat/1000/60) << 0,
-    seconds = (config.heartbeat/1000) % 60,
+    minutes = (config.heartbeat/1000/60)<<0,
+    seconds = (config.heartbeat/1000)%60,
     device = null,
     setup = null,
     heartbeat = null,
@@ -97,24 +95,39 @@ var init = function () {
                 return;
             }
             if (!files.exists(filepath)) {
-                if (match && users[match[1]] && users[match[1]].host) {
-                    var load = req.post ? JSON.parse(req.post) : {};
+                var name = match && /\./.test(match[1]) ? match[1].split('.')[0] : match ? match[1] : null;
+                if (match && users[name] && users[name].host) {
+                    var uri = url.parse(req.url),
+                        load = req.post ? JSON.parse(req.post) : {};
+                    utils.extend(load, querystring.parse(uri.query));
                     if (!load.remoteAddress) load.remoteAddress = req.connection.socket.remoteAddress;
                     callbacks[callbackid] = function (out) {
-                        if (out.type) {
-                            res.writeHead(200, {'Content-Type':out.type});
-                            res.write(out.data);
-                        } else {
-                            res.writeHead(200, {'Content-Type':'application/json'});
-                            res.write(beautify(JSON.stringify(out.data)));
+                        var data = null;
+                        if (!out.stream) {
+                            if (out.type) {
+                                data = out.data;
+                            } else {
+                                data = beautify(JSON.stringify(out.data));
+                            }
                         }
-                        res.end();
+                        if (!out.stream || out.stream === 'start') {
+                            res.writeHead(200, {
+                                'Content-Type': out.type ? out.type : 'application/json',
+                                'Content-Length': out.size ? out.size : data.length
+                            });
+                        }
+                        if (!out.stream) {
+                            res.write(data);
+                        } else if (out.stream === 'data') {
+                            res.write(new Buffer(out.data, 'base64'));
+                        }
+                        if (!out.stream || out.stream === 'end') res.end();
                     };
-                    send(users[match[1]].host, {
+                    send(users[name].host, {
                         id: callbackid,
                         message: 'endpoint',
                         data: {
-                            submit: req.url.substring(1),
+                            submit: uri.pathname.substring(1),
                             payload: load
                         },
                         time: Date.now()
@@ -129,21 +142,35 @@ var init = function () {
                             listslist.forEach(function (list) {
                                 if (list.list.shell === 'api') {
                                     for (var i = 0; i < list.list.items.length; i++) {
-                                        var item = list.list.items[i];
-                                        if ('/'+item.text === req.url) {
+                                        var item = list.list.items[i],
+                                            uri = url.parse(req.url);
+                                        if ('/'+item.text === uri.pathname) {
                                             var load = req.post ? JSON.parse(req.post) : {};
+                                            utils.extend(load, querystring.parse(uri.query));
                                             if (!load.remoteAddress) load.remoteAddress = req.connection.socket.remoteAddress;
-                                            if (process.env.NODE_ENV !== 'production') util.log("Endpoint requested "+req.url+" > "+load.remoteAddress);
+                                            if (process.env.NODE_ENV !== 'production') util.log("Endpoint requested "+uri.pathname+" > "+load.remoteAddress);
                                             var api = new container(list.list.container, users[name], list.path, i, load);
                                             api.callback = function (out) {
-                                                if (out.type) {
-                                                    res.writeHead(200, {'Content-Type':out.type});
-                                                    res.write(out.data);
-                                                } else {
-                                                    res.writeHead(200, {'Content-Type':'application/json'});
-                                                    res.write(beautify(JSON.stringify(out.data)));
+                                                var data = null;
+                                                if (!out.stream) {
+                                                    if (out.type) {
+                                                        data = out.data;
+                                                    } else {
+                                                        data = beautify(JSON.stringify(out.data));
+                                                    }
                                                 }
-                                                res.end();
+                                                if (!out.stream || out.stream === 'start') {
+                                                    res.writeHead(200, {
+                                                        'Content-Type': out.type ? out.type : 'application/json',
+                                                        'Content-Length': out.size ? out.size : data.length
+                                                    });
+                                                }
+                                                if (!out.stream) {
+                                                    res.write(data);
+                                                } else if (out.stream === 'data') {
+                                                    res.write(new Buffer(out.data, 'base64'));
+                                                }
+                                                if (!out.stream || out.stream === 'end') res.end();
                                             };
                                             break;
                                         }
@@ -163,7 +190,7 @@ var init = function () {
             if (socket.upgradeReq.headers['user-agent']) {
                 if (process.env.NODE_ENV !== 'production') util.log("Hello "+socket._socket.remoteAddress);
                 socket.on('message', function (payload) {
-                    receive(socket, payload, true);
+                    receive(socket, payload);
                 });
                 socket.on('close', function () {
                     if (users[socket._socket.remoteAddress] && users[socket._socket.remoteAddress].socket) delete users[socket._socket.remoteAddress].socket;
@@ -212,8 +239,9 @@ var init = function () {
                             }
                             break;
                         case 'endpoint':
-                            var match = /(.*)\.headless\.io/.exec(socket.upgradeReq.headers.host);
-                            if (match && users[match[1]] && users[match[1]].host) {
+                            var match = /(.*)\.headless\.io/.exec(socket.upgradeReq.headers.host),
+                                name = match && /\./.test(match[1]) ? match[1].split('.')[0] : match ? match[1] : null;
+                            if (match && users[name] && users[name].host) {
                                 if (!data.remoteAddress) data.remoteAddress = socket._socket.remoteAddress;
                                 callbacks[callbackid] = function (out) {
                                     send(socket, {
@@ -222,7 +250,7 @@ var init = function () {
                                         time: payload.time
                                     });
                                 };
-                                send(users[match[1]].host, {
+                                send(users[name].host, {
                                     id: callbackid,
                                     message: 'endpoint',
                                     data: {
@@ -233,9 +261,9 @@ var init = function () {
                                 });
                                 callbackid++;
                             } else {
-                                if (payload.id >= 0) {
+                                if (isFinite(payload.id)) {
                                     callbacks[payload.id](data);
-                                    delete callbacks[payload.id];
+                                    if (!data.stream || data.stream === 'end') delete callbacks[payload.id];
                                 } else {
                                     var userslist = files.readdir('users');
                                     userslist.forEach(function (name) {
@@ -282,7 +310,8 @@ var init = function () {
                             });
                             break;
                         default:
-                            if (payload.name && users[payload.name] && users[payload.name].socket) send(users[payload.name].socket, payload);
+                            if (payload.name && users[payload.name] && users[payload.name].socket)
+                                send(users[payload.name].socket, payload);
                             break;
                     }
                 });
@@ -296,7 +325,6 @@ var init = function () {
                         socket.users.forEach(function (user) {
                             var name = user.name;
                             if (users[name] && users[name].socket) users[name].socket.terminate();
-                            delete users[name];
                         });
                     }
                 });
@@ -314,9 +342,9 @@ var init = function () {
             listslist.forEach(function (list) {
                 if (list.list.run) {
                     if (list.list.run.constructor === Number) {
-                        var hours = (list.list.run/1000/60/60) << 0,
-                            minutes = (list.list.run/1000/60) % 60*60,
-                            seconds = (list.list.run/1000) % 60;
+                        var hours = (list.list.run/1000/60/60)<<0,
+                            minutes = (list.list.run/1000/60)%60*60,
+                            seconds = (list.list.run/1000)%60;
                         var loop = function () {
                             util.log("Running "+list.path+" with "+hours+" hour"+(minutes ? " "+minutes+" minute" : "")+(seconds ? " "+seconds+" second" : "")+" interval");
                             var run = new container(list.list.container, users[name], list.path, -1, null);
@@ -351,7 +379,7 @@ var init = function () {
     keys = keys.join('|');
 };
 
-function receive(socket, payload, session) {
+function receive(socket, payload, upstream) {
     "use strict";
     payload = JSON.parse(payload);
     var message = payload.message,
@@ -363,7 +391,7 @@ function receive(socket, payload, session) {
                     auth = path.join('users', name, 'auth.json'),
                     user = files.exists(auth) ? JSON.parse(files.read(auth)) : null;
                 if (user && bcrypt.compareSync(data.auth, '$2a$08$'+user.auth)) {
-                    if (session) socket.user = user;
+                    if (!upstream) socket.user = user;
                     if (!socket.users) socket.users = {};
                     if (!socket.users[name]) socket.users[name] = {};
                     socket.users[name].handshake = true;
@@ -473,17 +501,85 @@ function receive(socket, payload, session) {
                                     if (/\.json$/.exec(key) && typeof val === 'object') val = JSON.stringify(val);
                                     files.write(key, val);
                                 }
-                                send(socket, {
-                                    name: name,
-                                    message: 'data',
-                                    data: {
-                                        args: {
-                                            error: null,
-                                            loading: false,
-                                            message: "Merged"
+                                var operation = false;
+                                for (var key in data.save) {
+                                    var val = data.save[key];
+                                    if ((new RegExp(path.join('users', name, 'lists'))).test(key)) {
+                                        if (files.exists(key)) {
+                                            var list = JSON.parse(fs.readFileSync(key).toString());
+                                            if (!files.exists(path.join('shell', list.shell))) {
+                                                var git = config.git ? config.git : 'git',
+                                                    command = !files.exists(path.join('shell', '.git')) ? 'cd shell && \
+                                                    '+git+' init && \
+                                                    '+git+' remote add origin https://github.com/pschroen/shell.git && \
+                                                    '+git+' config core.sparsecheckout true && \
+                                                    echo /'+list.shell+'/ >> .git/info/sparse-checkout && \
+                                                    '+git+' pull origin stable' : 'cd shell && \
+                                                    echo /'+list.shell+'/ >> .git/info/sparse-checkout && \
+                                                    '+git+' read-tree -mu HEAD && \
+                                                    '+git+' pull origin stable';
+                                                var log = "Installing shell "+list.shell;
+                                                util.log(log);
+                                                send(socket, {
+                                                    name: name,
+                                                    message: 'data',
+                                                    data: {
+                                                        args: {
+                                                            error: null,
+                                                            loading: true,
+                                                            message: log
+                                                        }
+                                                    }
+                                                });
+                                                operation = true;
+                                                cp.exec(command, function (error, stdout, stderr) {
+                                                    if (!error) {
+                                                        var log = "Install of shell "+list.shell+" complete";
+                                                        util.log(log);
+                                                        send(socket, {
+                                                            name: name,
+                                                            message: 'data',
+                                                            data: {
+                                                                args: {
+                                                                    error: null,
+                                                                    loading: false,
+                                                                    message: log
+                                                                }
+                                                            }
+                                                        });
+                                                    } else {
+                                                        var log = "Install of shell "+list.shell+" failed with "+error;
+                                                        util.log(log);
+                                                        send(socket, {
+                                                            name: name,
+                                                            message: 'data',
+                                                            data: {
+                                                                args: {
+                                                                    error: true,
+                                                                    loading: false,
+                                                                    message: log
+                                                                }
+                                                            }
+                                                        });
+                                                    }
+                                                });
+                                            }
                                         }
                                     }
-                                });
+                                }
+                                if (!operation) {
+                                    send(socket, {
+                                        name: name,
+                                        message: 'data',
+                                        data: {
+                                            args: {
+                                                error: null,
+                                                loading: false,
+                                                message: "Merged"
+                                            }
+                                        }
+                                    });
+                                }
                                 break;
                             case 'move':
                                 var count = 0;
@@ -554,7 +650,7 @@ function receive(socket, payload, session) {
                                 if (contain) contain.kill();
                                 break;
                             case 'restart':
-                                if (!session) {
+                                if (upstream) {
                                     socket.removeAllListeners('close');
                                     socket.terminate();
                                 }
@@ -630,17 +726,29 @@ function receive(socket, payload, session) {
                             for (var i = 0; i < list.list.items.length; i++) {
                                 var item = list.list.items[i];
                                 if (item.text === data.submit) {
+                                    var url = upstream,
+                                        callback = new ws(url);
                                     if (!data.payload.remoteAddress) data.payload.remoteAddress = socket._socket.remoteAddress;
-                                    if (process.env.NODE_ENV !== 'production') util.log("Endpoint received /"+data.submit+" > "+data.payload.remoteAddress);
-                                    var api = new container(list.list.container, users[name], list.path, i, data.payload);
-                                    api.callback = function (out) {
-                                        send(socket, {
-                                            id: payload.id,
-                                            message: 'endpoint',
-                                            data: out,
-                                            time: payload.time
-                                        });
-                                    };
+                                    if (process.env.NODE_ENV !== 'production') util.log("Endpoint received from "+url+"/"+data.submit+" > "+data.payload.remoteAddress);
+                                    callback.on('open', function () {
+                                        if (process.env.NODE_ENV !== 'production') util.log("Sending data to callback "+url);
+                                        var api = new container(list.list.container, users[name], list.path, i, data.payload);
+                                        api.callback = function (out) {
+                                            send(callback, {
+                                                id: payload.id,
+                                                message: 'endpoint',
+                                                data: out,
+                                                time: payload.time
+                                            });
+                                            if (!out.stream || out.stream === 'end') {
+                                                if (process.env.NODE_ENV !== 'production') util.log("Send complete, closing connection");
+                                                callback.terminate();
+                                            }
+                                        };
+                                    });
+                                    callback.on('error', function (err) {
+                                        if (process.env.NODE_ENV !== 'production') util.log("Callback "+url+" failed with "+err);
+                                    });
                                     break;
                                 }
                             }
@@ -650,7 +758,7 @@ function receive(socket, payload, session) {
             });
             break;
         case 'heartbeat':
-            if (session) {
+            if (!upstream) {
                 send(socket, {
                     message: 'heartbeat',
                     time: payload.time
@@ -660,7 +768,7 @@ function receive(socket, payload, session) {
             }
             break;
         case 'setup':
-            if (session) {
+            if (!upstream) {
                 if (!data) {
                     if (process.env.NODE_ENV !== 'production') util.log("Setup "+socket._socket.remoteAddress+" socket");
                     if (!users[socket._socket.remoteAddress]) users[socket._socket.remoteAddress] = {};
@@ -751,7 +859,7 @@ function mothership(insert) {
             }, config.heartbeat);
         });
         socket.on('message', function (payload) {
-            receive(socket, payload);
+            receive(socket, payload, url);
         });
         socket.on('error', function (err) {
             util.log("Call home to "+url+" failed with "+err+", reconnecting in 20 seconds");

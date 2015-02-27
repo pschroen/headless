@@ -137,7 +137,8 @@ function command(probe, name, args, callback) {
                 shell.next();
             }
         }
-    } else if (name === 'box') {
+    } else if (name === 'box' || name === 'audio') {
+        args.text = probe.item.text;
         shell.queue++;
         shell.callbacks[shell.callbackid] = function () {
             shell.exit(shell.queue);
@@ -146,7 +147,7 @@ function command(probe, name, args, callback) {
             message: 'data',
             data: {
                 id: shell.callbackid,
-                command: 'box',
+                command: name,
                 args: args
             }
         });
@@ -220,12 +221,13 @@ function load(id) {
  * Init callback.
  *
  * @callback initCallback
- * @param    {undefined|Object} [out]
+ * @param    {undefined|Object|string} [out]
  * @param    {undefined|string} [type=application/json] Content-Type
+ * @param    {undefined|boolean} [stream] Stream out
  */
-        probe.config.init(probe, function (out, type) {
+        probe.config.init(probe, function (out, type, stream) {
             if (typeof out !== 'undefined') {
-                shell.command(probe, 'out', {data:out, type:type});
+                shell.command(probe, 'out', {data:out, type:type, stream:stream});
                 shell.exit();
             }
         });

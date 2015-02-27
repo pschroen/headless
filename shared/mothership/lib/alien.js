@@ -29,6 +29,18 @@ function timestamp() {
     return [d.getDate(), months[d.getMonth()], time].join(' ');
 }
 
+function toTimer(time) {
+    "use strict";
+    var h, m, s;
+    h = Math.floor(time/3600);
+    h = isNaN(h) ? '--' : h > 9 ? h : '0'+h;
+    m = Math.floor(time/60%60);
+    m = isNaN(m) ? '--' : m > 9 ? m : '0'+m;
+    s = Math.floor(time%60);
+    s = isNaN(s) ? '--' : s > 9 ? s : '0'+s;
+    return h+':'+m+':'+s;
+}
+
 // TODO: Multiple probes
 var d = document,
     page = 0,
@@ -42,7 +54,9 @@ var d = document,
     marker = null,
     probes = [],
     memory = {},
-    socket = null;
+    socket = null,
+    audio = d.createElement('audio'),
+    audioargs = null;
 
 alien.probe = function (ghost, platform) {
     "use strict";
@@ -117,7 +131,7 @@ alien.probe = function (ghost, platform) {
                 save: this.merge(true),
                 container: this.lists[this.view.list].list.container,
                 list: this.lists[this.view.list].path,
-                index: index !== undefined ? index.constructor === String ? listeditor.line(index) : index : -1
+                index: index !== undefined ? typeof index === "string" ? listeditor.line(index) : index : -1
             },
             time: Date.now()
         }));
@@ -136,7 +150,7 @@ alien.probe = function (ghost, platform) {
         this.command('api', data);
     };
     this.pullout = function () {
-        if (!this.loading && error && error.constructor === Object) {
+        if (!this.loading && error && typeof error === "object") {
             if (!error.text) {
                 for (var i = 0; i < this.files.length; i++) {
                     var pattern = new RegExp((this.files[i].path+this.separator).replace('.'+this.separator, ''));
@@ -327,290 +341,319 @@ alien.mothership = function () {
         }, 240000);
     };
     socket.onmessage = function (event) {
-        var payload = JSON.parse(event.data),
-            message = payload.message,
-            data = payload.data;
-        switch (message) {
-        case 'response':
-            if (data.auth && data.ghost) {
-                loader.hide();
-                console.log("Authorized in "+(Date.now()-payload.time)+"ms with localhost of "+data.localhost);
-                probename.element.innerHTML = data.hostname;
-                var ghost = data.ghost;
-                ghost.lists = data.lists;
-                alien.hash(ghost, data.platform);
-                for (var x in pages[page]) pages[page][x].hide();
-                page++;
-                for (var x in pages[page]) {
-                    var object = pages[page][x];
-                    object.resize();
-                    switch (x) {
-                    case 'listgroup':
-                        object.show();
-                        if (probes[0].view.list !== false && probes[0].lists[probes[0].view.list]) {
-                            listbox.show();
-                            listeditor.load(probes[0].view.list);
+        if (typeof event.data === 'string') {
+            var payload = JSON.parse(event.data),
+                message = payload.message,
+                data = payload.data;
+            switch (message) {
+            case 'response':
+                if (data.auth && data.ghost) {
+                    loader.hide();
+                    console.log("Authorized in "+(Date.now()-payload.time)+"ms with localhost of "+data.localhost);
+                    probename.element.innerHTML = data.hostname;
+                    var ghost = data.ghost;
+                    ghost.lists = data.lists;
+                    alien.hash(ghost, data.platform);
+                    for (var x in pages[page]) pages[page][x].hide();
+                    page++;
+                    for (var x in pages[page]) {
+                        var object = pages[page][x];
+                        object.resize();
+                        switch (x) {
+                        case 'listgroup':
+                            object.show();
+                            if (probes[0].view.list !== false && probes[0].lists[probes[0].view.list]) {
+                                listbox.show();
+                                listeditor.load(probes[0].view.list);
+                            }
+                            break;
+                        case 'listbox':
+                            break;
+                        case 'lists':
+                            object.show();
+                            if (probes[0].view.lists) {
+                                listsbox.show();
+                                loader.resize = function () {
+                                    this.element.style.left = '10px';
+                                    this.element.style.top = d.documentElement.offsetHeight-loader.element.offsetHeight-13+'px';
+                                };
+                                loader.show();
+                                probes[0].load({listslist:probes[0].join('users', user.input.value, 'lists')});
+                            }
+                            break;
+                        case 'listsbox':
+                            break;
+                        case 'filesgroup':
+                            object.show();
+                            if (probes[0].view.files !== false && probes[0].files[probes[0].view.files]) {
+                                filesbox.show();
+                                loader.resize = function () {
+                                    this.element.style.left = '10px';
+                                    this.element.style.top = d.documentElement.offsetHeight-loader.element.offsetHeight-13+'px';
+                                };
+                                loader.show();
+                                probes[0].load({fileslist:probes[0].files[probes[0].view.files].path});
+                            }
+                            break;
+                        case 'filesbox':
+                            break;
+                        case 'log':
+                            object.show();
+                            if (probes[0].view.log) {
+                                listeditor.editor.setOption('lineNumbers', true);
+                                logbox.show();
+                            }
+                            break;
+                        case 'logbox':
+                            break;
+                        case 'mothership':
+                            object.show();
+                            if (probes[0].view.users) {
+                                usersbox.show();
+                                loader.resize = function () {
+                                    this.element.style.left = '10px';
+                                    this.element.style.top = d.documentElement.offsetHeight-loader.element.offsetHeight-13+'px';
+                                };
+                                loader.show();
+                                probes[0].load({userslist:'users'});
+                            }
+                            break;
+                        case 'usersbox':
+                            break;
+                        default:
+                            object.show();
                         }
-                        break;
-                    case 'listbox':
-                        break;
-                    case 'lists':
-                        object.show();
-                        if (probes[0].view.lists) {
-                            listsbox.show();
-                            loader.resize = function () {
-                                this.element.style.left = '10px';
-                                this.element.style.top = d.documentElement.offsetHeight-loader.element.offsetHeight-13+'px';
-                            };
-                            loader.show();
-                            probes[0].load({listslist:probes[0].join('users', user.input.value, 'lists')});
-                        }
-                        break;
-                    case 'listsbox':
-                        break;
-                    case 'filesgroup':
-                        object.show();
-                        if (probes[0].view.files !== false && probes[0].files[probes[0].view.files]) {
-                            filesbox.show();
-                            loader.resize = function () {
-                                this.element.style.left = '10px';
-                                this.element.style.top = d.documentElement.offsetHeight-loader.element.offsetHeight-13+'px';
-                            };
-                            loader.show();
-                            probes[0].load({fileslist:probes[0].files[probes[0].view.files].path});
-                        }
-                        break;
-                    case 'filesbox':
-                        break;
-                    case 'log':
-                        object.show();
-                        if (probes[0].view.log) {
-                            listeditor.editor.setOption('lineNumbers', true);
-                            logbox.show();
-                        }
-                        break;
-                    case 'logbox':
-                        break;
-                    case 'mothership':
-                        object.show();
-                        if (probes[0].view.users) {
-                            usersbox.show();
-                            loader.resize = function () {
-                                this.element.style.left = '10px';
-                                this.element.style.top = d.documentElement.offsetHeight-loader.element.offsetHeight-13+'px';
-                            };
-                            loader.show();
-                            probes[0].load({userslist:'users'});
-                        }
-                        break;
-                    case 'usersbox':
-                        break;
-                    default:
-                        object.show();
+                    }
+                    if (probes[0].view.list === false && !probes[0].view.lists && probes[0].view.files === false && !probes[0].view.users)
+                        probes[0].loading = false;
+                } else {
+                    loader.hide();
+                    probe.element.className = 'btn';
+                    user.input.value = '';
+                    pass.input.value = '';
+                    user.input.focus();
+                    if (data.auth && !data.ghost) {
+                        noghost.resize = function () {
+                            this.element.style.left = form.element.offsetLeft+'px';
+                            this.element.style.top = form.element.offsetTop+form.element.offsetHeight+4+'px';
+                        };
+                        noghost.resize();
+                        noghost.show();
                     }
                 }
-                if (probes[0].view.list === false && !probes[0].view.lists && probes[0].view.files === false && !probes[0].view.users)
-                    probes[0].loading = false;
-            } else {
-                loader.hide();
-                probe.element.className = 'btn';
-                user.input.value = '';
-                pass.input.value = '';
-                user.input.focus();
-                if (data.auth && !data.ghost) {
-                    noghost.resize = function () {
-                        this.element.style.left = form.element.offsetLeft+'px';
-                        this.element.style.top = form.element.offsetTop+form.element.offsetHeight+4+'px';
-                    };
-                    noghost.resize();
-                    noghost.show();
-                }
-            }
-            break;
-        case 'data':
-            if (data.load) {
-                loader.hide();
-                for (var x in data.load) {
-                    window[x].load(data.load[x]);
-                    if (probes[0].view.files !== false) {
-                        if (error && error.constructor === Object) {
-                            if (x === 'fileslist') {
-                                var pos = fileslist.line(error.text),
-                                    editor = fileslist.editor;
-                                editor.operation(function () {
-                                    editor.addLineClass(pos, 'background', 'error');
-                                    editor.scrollIntoView({line:pos}, 200);
-                                    editor.setCursor(pos, 0);
-                                });
-                                fileslist.lineChange(pos);
-                            } else if (x === 'fileseditor') {
-                                var makeMarker = function () {
-                                    var marker = d.createElement('div');
-                                    marker.style.color = '#822';
-                                    marker.innerHTML = '●';
-                                    return marker;
-                                };
-                                var editor = fileseditor.editor;
-                                editor.operation(function () {
-                                    editor.clearGutter('breakpoints');
-                                    if (marker) marker.clear();
-                                    editor.setGutterMarker(error.line, 'breakpoints', makeMarker());
-                                    marker = editor.markText({line:error.line, ch:error.ch}, {line:error.line, ch:error.ch+1}, {className:'CodeMirror-headless-mark-error'});
-                                    editor.scrollIntoView({line:error.line}, 200);
-                                    editor.setCursor(error.line, error.ch);
-                                    editor.focus();
-                                });
-                                errmsg.element.innerHTML = error.message;
-                                errmsg.show();
-                                error = null;
-                            }
-                        } else if (probes[0].files[probes[0].view.files].memory) {
-                            if (x === 'fileslist') {
-                                var memory = probes[0].files[probes[0].view.files].memory.fileslist,
-                                    editor = fileslist.editor,
-                                    pos = memory.line;
-                                editor.operation(function () {
-                                    editor.scrollTo(memory.left, memory.top);
-                                    editor.setCursor(memory.line, memory.ch);
-                                });
-                                fileslist.lineChange(pos);
-                            } else if (x === 'fileseditor') {
-                                var memory = probes[0].files[probes[0].view.files].memory.fileseditor,
-                                    editor = fileseditor.editor,
-                                    pos = fileslist.editor.getCursor().line;
-                                // TODO: Investigate CodeMirror's buggy scroll position
-                                if (pos !== memory.pos) {
+                break;
+            case 'data':
+                if (data.load) {
+                    loader.hide();
+                    for (var x in data.load) {
+                        window[x].load(data.load[x]);
+                        if (probes[0].view.files !== false) {
+                            if (error && typeof error === "object") {
+                                if (x === 'fileslist') {
+                                    var pos = fileslist.line(error.text),
+                                        editor = fileslist.editor;
                                     editor.operation(function () {
-                                        editor.refresh();
-                                        editor.scrollTo(0, 0);
-                                        editor.setCursor(0, 0);
+                                        editor.addLineClass(pos, 'background', 'error');
+                                        editor.scrollIntoView({line:pos}, 200);
+                                        editor.setCursor(pos, 0);
                                     });
-                                    probes[0].files[probes[0].view.files].memory.fileseditor = {
-                                        pos: pos,
-                                        left: 0,
-                                        top: 0,
-                                        line: 0,
-                                        ch: 0
+                                    fileslist.lineChange(pos);
+                                } else if (x === 'fileseditor') {
+                                    var makeMarker = function () {
+                                        var marker = d.createElement('div');
+                                        marker.style.color = '#822';
+                                        marker.innerHTML = '●';
+                                        return marker;
                                     };
-                                } else {
+                                    var editor = fileseditor.editor;
                                     editor.operation(function () {
-                                        editor.scrollTo(memory.left, memory.top);
-                                        editor.setCursor(memory.line, memory.ch);
+                                        editor.clearGutter('breakpoints');
+                                        if (marker) marker.clear();
+                                        editor.setGutterMarker(error.line, 'breakpoints', makeMarker());
+                                        marker = editor.markText({line:error.line, ch:error.ch}, {line:error.line, ch:error.ch+1}, {className:'CodeMirror-headless-mark-error'});
+                                        editor.scrollIntoView({line:error.line}, 200);
+                                        editor.setCursor(error.line, error.ch);
+                                        editor.focus();
                                     });
+                                    errmsg.element.innerHTML = error.message;
+                                    errmsg.show();
+                                    error = null;
+                                }
+                            } else if (probes[0].files[probes[0].view.files].memory) {
+                                if (x === 'fileslist') {
+                                    var filesmemory = probes[0].files[probes[0].view.files].memory.fileslist,
+                                        editor = fileslist.editor,
+                                        pos = filesmemory.line;
+                                    editor.operation(function () {
+                                        editor.scrollTo(filesmemory.left, filesmemory.top);
+                                        editor.setCursor(filesmemory.line, filesmemory.ch);
+                                    });
+                                    fileslist.lineChange(pos);
+                                } else if (x === 'fileseditor') {
+                                    var filesmemory = probes[0].files[probes[0].view.files].memory.fileseditor,
+                                        editor = fileseditor.editor,
+                                        pos = fileslist.editor.getCursor().line;
+                                    // TODO: Investigate CodeMirror's buggy scroll position
+                                    if (pos !== filesmemory.pos) {
+                                        editor.operation(function () {
+                                            editor.refresh();
+                                            editor.scrollTo(0, 0);
+                                            editor.setCursor(0, 0);
+                                        });
+                                        probes[0].files[probes[0].view.files].memory.fileseditor = {
+                                            pos: pos,
+                                            left: 0,
+                                            top: 0,
+                                            line: 0,
+                                            ch: 0
+                                        };
+                                    } else {
+                                        editor.operation(function () {
+                                            editor.scrollTo(filesmemory.left, filesmemory.top);
+                                            editor.setCursor(filesmemory.line, filesmemory.ch);
+                                        });
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            } else if (data.command === 'box') {
-                console.log(data.args);
-                if (data.args.id) {
-                    var box = window[data.args.id].box;
-                    box.element.innerHTML = '';
-                    box = alien.box(data.args.boxes[0], 0, data.args.id);
-                    box.show();
-                    window[data.args.id].box = box;
-                } else {
-                    var boxes = [];
-                    for (var i = 0; i < data.args.boxes.length; i++) {
-                        var box = alien.box(data.args.boxes[i], i);
-                        box.element.style.top = (i ? boxes[i-1].element.offsetTop+boxes[i-1].element.offsetHeight+10 : 4)+'px';
-                        boxes.push(box);
-                    }
-                    var group = alien.group(boxes);
-                    group.element.setAttribute('data-visible', 'hidden');
-                    group.element.className = 'infobox';
-                    group.element.style.left = '10px';
-                    group.element.style.top = '50px';
-                    group.resize = function () {
-                        this.element.style.width = (
-                            probes[0].view.log && logbox.element.offsetLeft > 10 ? logbox.element.offsetLeft : d.documentElement.offsetWidth
-                        )-20+'px';
-                        this.element.style.height = logbox.element.offsetHeight+'px';
-                        for (var i = 0; i < this.objects.length; i++) this.objects[i].resize();
-                    };
-                    group.boxes = boxes;
-                    group.data = data.args;
-                    group.resize();
-                    infoboxes.push(group);
-                    if (infoboxes.length === 1) {
-                        infobox = infoboxes[0];
-                        infobox.element.setAttribute('data-visible', 'visible');
-                        infobox.show();
-                    }
-                }
-            } else {
-                var pre = d.createElement('pre');
-                pre.innerHTML = timestamp()+' - '+(data.args.text ? data.args.text+' → ' : '')+data.args.message;
-                logbox.element.appendChild(pre);
-                if (!logbox.element.scrollTop ||
-                    logbox.element.scrollHeight-(logbox.element.scrollTop+logbox.element.clientHeight) < 200
-                ) logbox.element.scrollTop = logbox.element.scrollHeight;
-                if (data.args.text) {
-                    listgutter.updateItem(data.args);
-                } else if (data.args.progress === 100) {
-                    for (var i = 0; i < listgutter.items.length; i++) {
-                        var status = listgutter.items[i];
-                        status.loader.element.setAttribute('data-visible', 'hidden');
-                        status.loader.hide();
-                    }
-                    run.element.className = 'btn small';
-                    if (probes[0].view.list !== false) {
-                        listeditor.editor.focus();
-                    }
-                } else if (data.args.loading === false) {
-                    loader.hide();
-                    if (probes[0].view.list !== false) {
-                        listeditor.editor.focus();
-                    } else if (probes[0].view.lists) {
-                        var text = listslist.editor.getLine(listslist.editor.getCursor().line);
-                        if (text !== '') {
-                            save.element.setAttribute('data-visible', 'visible');
-                            actionbox.resize();
-                            save.show();
+                } else if (data.command === 'box') {
+                    console.log(data.args);
+                    if (data.args.id) {
+                        var box = window[data.args.id].box;
+                        box.element.innerHTML = '';
+                        box = alien.box(data.args.boxes[0], 0, data.args.id);
+                        box.show();
+                        window[data.args.id].box = box;
+                    } else {
+                        var boxes = [];
+                        for (var i = 0; i < data.args.boxes.length; i++) {
+                            var box = alien.box(data.args.boxes[i], i);
+                            box.element.style.top = (i ? boxes[i-1].element.offsetTop+boxes[i-1].element.offsetHeight+10 : 4)+'px';
+                            boxes.push(box);
                         }
-                        listslist.editor.focus();
-                    } else if (probes[0].view.files !== false) {
-                        var text = fileslist.editor.getLine(fileslist.editor.getCursor().line),
-                            content = fileseditor.editor.getValue();
-                        if (text !== '' && content !== 'binary') {
-                            save.element.setAttribute('data-visible', 'visible');
-                            actionbox.resize();
-                            save.show();
+                        var group = alien.group(boxes);
+                        group.element.setAttribute('data-visible', 'hidden');
+                        group.element.className = 'infobox';
+                        group.element.style.left = '10px';
+                        group.element.style.top = '50px';
+                        group.resize = function () {
+                            this.element.style.width = (
+                                probes[0].view.log && logbox.element.offsetLeft > 10 ? logbox.element.offsetLeft : d.documentElement.offsetWidth
+                            )-20+'px';
+                            this.element.style.height = logbox.element.offsetHeight+'px';
+                            for (var i = 0; i < this.objects.length; i++) this.objects[i].resize();
+                        };
+                        group.boxes = boxes;
+                        group.data = data.args;
+                        group.resize();
+                        infoboxes.push(group);
+                        if (infoboxes.length === 1) {
+                            infobox = infoboxes[0];
+                            infobox.element.setAttribute('data-visible', 'visible');
+                            infobox.show();
                         }
-                        if (error && error.constructor === Object) {
-                            fileseditor.editor.focus();
+                    }
+                // TODO: Video playback
+                } else if (data.command === 'audio') {
+                    console.log(data.args);
+                    audio.pause();
+                    if (audioargs) {
+                        audioargs.progress = null;
+                        audioargs.status = null;
+                        listgutter.updateItem(audioargs);
+                    } else {
+                        audio.ontimeupdate = function () {
+                            audioargs.progress = isFinite(audio.duration) ? Math.round((audio.currentTime/audio.duration)*100) : null;
+                            audioargs.status = toTimer(audio.currentTime);
+                            listgutter.updateItem(audioargs);
+                        };
+                    }
+                    audioargs = data.args;
+                    audio.src = /http:/.test(audioargs.src) ? audioargs.src : '/stream?src='+encodeURIComponent(audioargs.src);
+                    audio.type = audioargs.type;
+                    audio.play();
+                    memory[audioargs.text].status.onclick = function () {
+                        if (!audio.paused) {
+                            audio.pause();
                         } else {
-                            fileslist.editor.focus();
+                            audio.play();
                         }
-                    } else if (probes[0].view.users) {
-                        var text = userslist.editor.getLine(userslist.editor.getCursor().line);
-                        if (text !== '') {
-                            save.element.setAttribute('data-visible', 'visible');
-                            actionbox.resize();
-                            save.show();
-                            for (var x in userseditor.box)
-                                if (userseditor.box[x] && userseditor.box[x].input) userseditor.box[x].input.value = '';
+                    };
+                    memory[audioargs.text].status.group.element.onclick = memory[audioargs.text].status.onclick;
+                } else {
+                    var pre = d.createElement('pre');
+                    pre.innerHTML = timestamp()+' - '+(data.args.text ? data.args.text+' → ' : '')+data.args.message;
+                    logbox.element.appendChild(pre);
+                    if (!logbox.element.scrollTop ||
+                        logbox.element.scrollHeight-(logbox.element.scrollTop+logbox.element.clientHeight) < 200
+                    ) logbox.element.scrollTop = logbox.element.scrollHeight;
+                    if (data.args.text) {
+                        listgutter.updateItem(data.args);
+                    } else if (data.args.progress === 100) {
+                        for (var i = 0; i < listgutter.items.length; i++) {
+                            var status = listgutter.items[i];
+                            status.loader.element.setAttribute('data-visible', 'hidden');
+                            status.loader.hide();
                         }
-                        userslist.editor.focus();
+                        run.element.className = 'btn small';
+                        if (probes[0].view.list !== false) {
+                            listeditor.editor.focus();
+                        }
+                    } else if (data.args.loading === false) {
+                        loader.hide();
+                        if (probes[0].view.list !== false) {
+                            listeditor.editor.focus();
+                        } else if (probes[0].view.lists) {
+                            var text = listslist.editor.getLine(listslist.editor.getCursor().line);
+                            if (text !== '') {
+                                save.element.setAttribute('data-visible', 'visible');
+                                actionbox.resize();
+                                save.show();
+                            }
+                            listslist.editor.focus();
+                        } else if (probes[0].view.files !== false) {
+                            var text = fileslist.editor.getLine(fileslist.editor.getCursor().line),
+                                content = fileseditor.editor.getValue();
+                            if (text !== '' && content !== 'binary') {
+                                save.element.setAttribute('data-visible', 'visible');
+                                actionbox.resize();
+                                save.show();
+                            }
+                            if (error && typeof error === "object") {
+                                fileseditor.editor.focus();
+                            } else {
+                                fileslist.editor.focus();
+                            }
+                        } else if (probes[0].view.users) {
+                            var text = userslist.editor.getLine(userslist.editor.getCursor().line);
+                            if (text !== '') {
+                                save.element.setAttribute('data-visible', 'visible');
+                                actionbox.resize();
+                                save.show();
+                                for (var x in userseditor.box)
+                                    if (userseditor.box[x] && userseditor.box[x].input) userseditor.box[x].input.value = '';
+                            }
+                            userslist.editor.focus();
+                        }
                     }
                 }
+                break;
+            case 'hash':
+                loader.hide();
+                var ghost = data.ghost;
+                ghost.lists = data.lists;
+                alien.hash(ghost);
+                resize();
+                break;
+            case 'error':
+                error = data;
+                probes[0].pullout();
+                break;
+            case 'heartbeat':
+                console.log("Heartbeat with "+(Date.now()-payload.time)+"ms latency");
+                break;
             }
-            break;
-        case 'hash':
-            loader.hide();
-            var ghost = data.ghost;
-            ghost.lists = data.lists;
-            alien.hash(ghost);
-            resize();
-            break;
-        case 'error':
-            error = data;
-            probes[0].pullout();
-            break;
-        case 'heartbeat':
-            console.log("Heartbeat with "+(Date.now()-payload.time)+"ms latency");
-            break;
         }
     };
     socket.onerror = socket.onclose = function () {
@@ -811,11 +854,7 @@ alien.listeditor = function () {
                 });
                 text = editor.getLine(pos);
                 run.element.className = 'btn pressed small';
-                memory[text] = {
-                    item: {
-                        text: text
-                    }
-                };
+                memory[text] = {item:{text:text}};
                 listgutter.addItem(text, memory[text].item);
                 listgutter.index();
                 object.lineChange(pos);
@@ -827,15 +866,10 @@ alien.listeditor = function () {
             if (pos !== object.pos) {
                 if (!editor.somethingSelected()) {
                     object.lineChange(pos);
-                } else {
+                } else if (editor.getSelection('|').split('|').length > 2) {
                     object.clear();
                     object.pos = pos;
                 }
-            }
-        } else if (name === 'Backspace' || name === 'Delete') {
-            if (editor.lineCount() !== object.lineCount) {
-                object.lineChange(editor.getCursor().line);
-                listgutter.index();
             }
         }
     });
@@ -844,7 +878,7 @@ alien.listeditor = function () {
         if (pos !== object.pos) {
             if (!editor.somethingSelected()) {
                 object.lineChange(pos);
-            } else {
+            } else if (editor.getSelection('|').split('|').length > 2) {
                 object.clear();
                 object.pos = pos;
             }
@@ -862,6 +896,7 @@ alien.listeditor = function () {
                 }
                 probes[0].merge();
             }
+            if (!(change.origin === 'paste' && change.text.length === 1)) object.lineChange(editor.getCursor().line);
             listgutter.index();
         }
     });
@@ -878,7 +913,7 @@ alien.listeditor = function () {
     object.lineChange = function (pos) {
         this.clear();
         var text = editor.getLine(pos);
-        if (text !== '') {
+        if (text !== '' || editor.lineCount() > 2) {
             run.element.setAttribute('data-visible', 'visible');
             actionbox.resize();
             run.show();
@@ -899,7 +934,7 @@ alien.listeditor = function () {
             editor.setValue([''].concat(content).join('\n')+'\n');
             if (probes[0].view.list !== false) {
                 var text = editor.getLine(editor.getCursor().line);
-                if (text !== '') {
+                if (text !== '' || editor.lineCount() > 2) {
                     run.element.setAttribute('data-visible', 'visible');
                     actionbox.resize();
                     run.show();
@@ -940,6 +975,7 @@ alien.listgutter = function () {
             type: alien.type()
         };
         status.group = alien.group([status.loader, status.progress, status.type], this.inner);
+        if (status.onclick) status.group.element.onclick = status.onclick;
         this.items.push(status);
         if (!(memory[text] && memory[text].status)) {
             memory[text] = {
@@ -970,6 +1006,7 @@ alien.listgutter = function () {
                 status.type.element.style.left = '132px';
                 status.progress.setPercent(data.progress);
                 status.progress.element.setAttribute('data-visible', 'data');
+                if (data.progress === 0) status.type.element.className = 'type';
                 if (probes[0].view.list !== false && !infobox) status.progress.show();
             } else {
                 status.progress.element.setAttribute('data-visible', 'hidden');
@@ -1007,7 +1044,7 @@ alien.listgutter = function () {
             this.inner.style.visibility = 'visible';
             for (var i = 0; i < this.items.length; i++) {
                 var item = this.items[i];
-                for (var x in item) item[x].show();
+                for (var x in item) if (item[x] && item[x].element) item[x].show();
             }
         }
     };
@@ -1016,7 +1053,7 @@ alien.listgutter = function () {
         this.inner.style.visibility = 'hidden';
         for (var i = 0; i < this.items.length; i++) {
             var item = this.items[i];
-            for (var x in item) item[x].hide();
+            for (var x in item) if (item[x] && item[x].element) item[x].hide();
         }
     };
     return object;
@@ -1122,15 +1159,10 @@ alien.listslist = function () {
             if (pos !== object.pos) {
                 if (!editor.somethingSelected()) {
                     object.lineChange(pos);
-                } else {
+                } else if (editor.getSelection('|').split('|').length > 2) {
                     object.clear();
                     object.pos = pos;
                 }
-            }
-        } else if (name === 'Backspace' || name === 'Delete') {
-            if (editor.lineCount() !== object.lineCount) {
-                object.lineChange(editor.getCursor().line);
-                object.index();
             }
         }
     });
@@ -1139,7 +1171,7 @@ alien.listslist = function () {
         if (pos !== object.pos) {
             if (!editor.somethingSelected()) {
                 object.lineChange(pos);
-            } else {
+            } else if (editor.getSelection('|').split('|').length > 2) {
                 object.clear();
                 object.pos = pos;
             }
@@ -1167,9 +1199,8 @@ alien.listslist = function () {
                     probes[0].move(obj);
                 }
             }
-            if (change.text.length > 1) {
-                for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
-            }
+            if (change.text.length > 1) for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
+            if (!(change.origin === 'paste' && change.text.length === 1)) object.lineChange(editor.getCursor().line);
             object.pos = editor.getCursor().line;
             object.lineCount = editor.lineCount();
         }
@@ -1364,15 +1395,10 @@ alien.fileslist = function () {
             if (pos !== object.pos) {
                 if (!editor.somethingSelected()) {
                     object.lineChange(pos);
-                } else {
+                } else if (editor.getSelection('|').split('|').length > 2) {
                     object.clear();
                     object.pos = pos;
                 }
-            }
-        } else if (name === 'Backspace' || name === 'Delete') {
-            if (editor.lineCount() !== object.lineCount) {
-                object.lineChange(editor.getCursor().line);
-                object.index();
             }
         }
     });
@@ -1381,7 +1407,7 @@ alien.fileslist = function () {
         if (pos !== object.pos) {
             if (!editor.somethingSelected()) {
                 object.lineChange(pos);
-            } else {
+            } else if (editor.getSelection('|').split('|').length > 2) {
                 object.clear();
                 object.pos = pos;
             }
@@ -1409,9 +1435,8 @@ alien.fileslist = function () {
                     probes[0].move(obj);
                 }
             }
-            if (change.text.length > 1) {
-                for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
-            }
+            if (change.text.length > 1) for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
+            if (!((change.origin === 'paste' || change.origin === '+delete') && change.text.length === 1)) object.lineChange(editor.getCursor().line);
             object.pos = editor.getCursor().line;
             object.lineCount = editor.lineCount();
         }
@@ -1611,15 +1636,10 @@ alien.userslist = function () {
             if (pos !== object.pos) {
                 if (!editor.somethingSelected()) {
                     object.lineChange(pos);
-                } else {
+                } else if (editor.getSelection('|').split('|').length > 2) {
                     object.clear();
                     object.pos = pos;
                 }
-            }
-        } else if (name === 'Backspace' || name === 'Delete') {
-            if (editor.lineCount() !== object.lineCount) {
-                object.lineChange(editor.getCursor().line);
-                object.index();
             }
         }
     });
@@ -1628,7 +1648,7 @@ alien.userslist = function () {
         if (pos !== object.pos) {
             if (!editor.somethingSelected()) {
                 object.lineChange(pos);
-            } else {
+            } else if (editor.getSelection('|').split('|').length > 2) {
                 object.clear();
                 object.pos = pos;
             }
@@ -1656,9 +1676,8 @@ alien.userslist = function () {
                     probes[0].move(obj);
                 }
             }
-            if (change.text.length > 1) {
-                for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
-            }
+            if (change.text.length > 1) for (var i = change.from.line; i < change.from.line+change.text.length-1; i++) object.items.splice(i, 0, '');
+            if (!(change.origin === 'paste' && change.text.length === 1)) object.lineChange(editor.getCursor().line);
             object.pos = editor.getCursor().line;
             object.lineCount = editor.lineCount();
         }
@@ -1893,7 +1912,6 @@ alien.box = function (box, index, id) {
             for (var i = 0; i < field.buttons.length; i++) {
                 var button = alien.button(field.buttons[i].label);
                 button.element.style.left = (buttons.length ? buttons[buttons.length-1].element.offsetLeft+buttons[buttons.length-1].element.offsetWidth+10 : 0)+'px';
-                button.element.className = 'btn'+(field.buttons[i].value === field.value ? ' pressed' : '')+' small';
                 button.element.setAttribute('data-value', JSON.stringify(field.buttons[i].value));
                 button.element.setAttribute('data-name', field.buttons[i].name);
                 button.element.setAttribute('data-key', key);
@@ -1906,7 +1924,7 @@ alien.box = function (box, index, id) {
                             id = this.getAttribute('data-id'),
                             box = window[id].box;
                         this.className = 'btn pressed small';
-                        if (value && value.constructor === String) box.data[key] = value;
+                        if (value && typeof value === "string") box.data[key] = value;
                         if (name === 'api') {
                             for (var x in box) if (box[x] && box[x].input) box.data[x] = box[x].input.value;
                             box.data.id = id;
@@ -1914,7 +1932,7 @@ alien.box = function (box, index, id) {
                         }
                         setTimeout(function () {
                             box.element.innerHTML = '';
-                            if (value && value.constructor === Object) {
+                            if (value && typeof value === "object") {
                                 box = alien.box(value, 0, id);
                                 box.show();
                                 window[id].box = box;
@@ -2135,7 +2153,7 @@ user.element.onsubmit = function () {
 };
 
 var match = /(.*)\.headless\.io/.exec(location.hostname);
-if (match) user.input.value = match[1];
+user.input.value = match && /\./.test(match[1]) ? match[1].split('.')[0] : match ? match[1] : '';
 
 var pass = alien.input("Password", true);
 if (!match) pass.element.style.top = user.element.offsetTop+user.element.offsetHeight+10+'px';
@@ -2501,6 +2519,7 @@ run.element.onclick = function () {
             setTimeout(function () {
                 run.element.className = 'btn small';
             }, 100);
+            if (!probes[0].view.log) log.element.onclick();
         } else {
             probes[0].run(text !== '' ? text : undefined);
         }
@@ -2551,8 +2570,46 @@ save.element.onclick = function () {
                 loader.show();
                 var obj = {},
                     ghostconfig = probes[0].join('users', user.input.value, 'config.json'),
-                    ghosthash = probes[0].join(probes[0].files[probes[0].view.files].path, text).replace('.'+this.separator, '') === ghostconfig;
-                if (ghosthash) {
+                    ghosthash = probes[0].join(probes[0].files[probes[0].view.files].path, text).replace('.'+this.separator, '') === ghostconfig,
+                    jshint = function (value) {
+                        JSHINT(fileseditor.editor.getValue());
+                        if (JSHINT.errors.length) {
+                            var err = JSHINT.errors[0];
+                            if (err) {
+                                error = {
+                                    path: text,
+                                    line: err.line-1,
+                                    ch: err.character-1,
+                                    message: err.reason,
+                                    stack: null
+                                };
+                                fileslist.editor.addLineClass(fileslist.editor.getCursor().line, 'background', 'error');
+                                var makeMarker = function () {
+                                    var marker = d.createElement('div');
+                                    marker.style.color = '#822';
+                                    marker.innerHTML = '●';
+                                    return marker;
+                                };
+                                var editor = fileseditor.editor;
+                                editor.operation(function () {
+                                    editor.clearGutter('breakpoints');
+                                    if (marker) marker.clear();
+                                    editor.setGutterMarker(error.line, 'breakpoints', makeMarker());
+                                    marker = editor.markText({line:error.line, ch:error.ch}, {line:error.line, ch:error.ch+1}, {className:'CodeMirror-headless-mark-error'});
+                                    editor.scrollIntoView({line:error.line}, 200);
+                                    editor.setCursor(error.line, error.ch);
+                                });
+                                errmsg.element.innerHTML = error.message;
+                                errmsg.show();
+                                error = null;
+                            }
+                            return false;
+                        } else {
+                            fileslist.clearError();
+                            return true;
+                        }
+                    };
+                if (ghosthash && jshint(fileseditor.editor.getValue())) {
                     probes[0].ghost = JSON.parse(fileseditor.editor.getValue());
                 } else {
                     obj[probes[0].join(probes[0].files[probes[0].view.files].path, text)] = fileseditor.editor.getValue();
@@ -2593,42 +2650,7 @@ save.element.onclick = function () {
                         actionbox.resize();
                         restart.show();
                     }
-                    if (/\.js/.test(text)) {
-                        JSHINT(fileseditor.editor.getValue());
-                        if (JSHINT.errors.length) {
-                            var err = JSHINT.errors[0];
-                            if (err) {
-                                error = {
-                                    path: text,
-                                    line: err.line-1,
-                                    ch: err.character-1,
-                                    message: err.reason,
-                                    stack: null
-                                };
-                                fileslist.editor.addLineClass(fileslist.editor.getCursor().line, 'background', 'error');
-                                var makeMarker = function () {
-                                    var marker = d.createElement('div');
-                                    marker.style.color = '#822';
-                                    marker.innerHTML = '●';
-                                    return marker;
-                                };
-                                var editor = fileseditor.editor;
-                                editor.operation(function () {
-                                    editor.clearGutter('breakpoints');
-                                    if (marker) marker.clear();
-                                    editor.setGutterMarker(error.line, 'breakpoints', makeMarker());
-                                    marker = editor.markText({line:error.line, ch:error.ch}, {line:error.line, ch:error.ch+1}, {className:'CodeMirror-headless-mark-error'});
-                                    editor.scrollIntoView({line:error.line}, 200);
-                                    editor.setCursor(error.line, error.ch);
-                                });
-                                errmsg.element.innerHTML = error.message;
-                                errmsg.show();
-                                error = null;
-                            }
-                        } else {
-                            fileslist.clearError();
-                        }
-                    }
+                    if (/\.js/.test(text)) jshint(fileseditor.editor.getValue());
                 }, 100);
             }
         } else if (probes[0].view.users) {

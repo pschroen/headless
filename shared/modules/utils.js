@@ -213,6 +213,72 @@ var Script = function () {
 Utils.prototype.Script = Script;
 
 /**
+ * Terms to pattern.
+ *
+ * Lookahead and negated lookahead.
+ * Alternatives can be specified in the terms.
+ *
+ * @param    {string} str Space delimited list of terms
+ * @returns  {string}
+ */
+function termsToPattern(str) {
+    "use strict";
+    var out = '^',
+        terms = str.split(' ');
+    for (var i = 0; i < terms.length; i++) {
+        var term = terms[i];
+        if (/^-/.exec(term)) {
+            out += '(?!.*('+term.substring(1)+'))';
+        } else {
+            out += '(?=.*('+term+'))';
+        }
+    }
+    return out;
+}
+Utils.prototype.termsToPattern = termsToPattern;
+
+/**
+ * Text to pattern.
+ *
+ * Currently only greater than or equal to ranges are supported.
+ * Greater than or equal to date, YYYY-MM-DD format.
+ * Greater than or equal to integer.
+ *
+ * @param    {string} str
+ * @returns  {string}
+ */
+function textToPattern(str) {
+    "use strict";
+    var texts = str.split('.');
+    for (var i = 0; i < texts.length; i++) {
+        var text = texts[i];
+        if (/\d{4}-\d{2}-\d{2}\+$/.test(text)) {
+            var m = /(\d{4})-(\d{2})-(\d{2})/.exec(text),
+                nextyear = (parseInt(m[1], 10)+1).toString(),
+                nextmonth = (parseInt(m[2], 10)+1).toString();
+            if (nextmonth.length < 2) {
+                nextmonth = '0'+nextmonth;
+            } else if (nextmonth === '13') {
+                nextmonth = '01';
+            }
+            texts[i] = '(\
+                ['+m[1][0]+'-9]['+m[1][1]+'-9]['+m[1][2]+'-9]['+m[1][3]+'-9].\
+                ('+m[2][0]+m[2][1]+'.['+m[3][0]+'-3]['+m[3][1]+'-9]|['+nextmonth[0]+'-1]['+nextmonth[1]+'-9] [0-3][1-9])|\
+                ['+nextyear[0]+'-9]['+nextyear[1]+'-9]['+nextyear[2]+'-9]['+nextyear[3]+'-9].\
+                [0-1][1-9].[0-3][1-9]\
+            )';
+        } else if (/\d\+$/.test(text)) {
+            var m = /(\d+)/.exec(text),
+                number = m[1].replace(/(\d)/g, '[$1-9]'),
+                next = ((parseInt(m[1][0], 10)+1).toString()+m[1].substring(1).replace(/(\d)/g, '0')).replace(/(\d)/g, '[$1-9]');
+            texts[i] = text.replace(/(\d+\+)/g, '('+number+'|'+next+')');
+        }
+    }
+    return texts.join('.');
+}
+Utils.prototype.textToPattern = textToPattern;
+
+/**
  * File size parser.
  *
  * Convert human readable file sizes to their byte equivalent.
@@ -222,7 +288,7 @@ Utils.prototype.Script = Script;
  * @param    {*} input
  * @returns  {number}
  */
-function filesize (input) {
+function filesize(input) {
     "use strict";
     var validAmount = function (n) {
         return !isNaN(parseFloat(n)) && isFinite(n);

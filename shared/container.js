@@ -145,7 +145,7 @@ var Shell = function (container, user, list, index, load) {
                                 version: '"+process.version.substring(1)+"',\n\
                                 arch: '"+os.platform()+"-"+utsname.machine+"',\n\
                                 hostname: '"+os.hostname()+"',\n\
-                                payload: JSON.parse("+JSON.stringify(load)+")\n\
+                                payload: JSON.parse('"+utils.addslashes(JSON.stringify(load))+"')\n\
                             }\n\
                         }));\n\
                     };\n\
@@ -154,7 +154,7 @@ var Shell = function (container, user, list, index, load) {
                     };\n\
                 </script></head><body></body></html>");
             }).listen(function () {
-                var phantom = cp.spawn(config.phantomPath ? config.phantomPath : require('phantomjs').path, ['--ignore-ssl-errors=true', 'shell.js', server.address().port, list, index]);
+                var phantom = cp.spawn(config.phantomjs ? config.phantomjs : require('phantomjs').path, ['--ignore-ssl-errors=true', 'shell.js', server.address().port, list, index]);
                 phantom.stdout.on('data', function (data) {
                     util.log("Phantom stdout: "+data);
                 });
@@ -414,12 +414,66 @@ Shell.prototype.exec = exec;
 function out(user, data, callback) {
     "use strict";
     /*jshint validthis:true */
-    var args = data.args;
-    if (this.callback) {
-        this.callback(args);
-        this.callback = null;
+    var self = this,
+        args = data.args;
+    if (self.callback) {
+        if (user && args.stream) {
+            fs.stat(args.data, function (err, stats) {
+                if (!err) {
+                    send(user.socket, {
+                        name: user.name,
+                        message: 'data',
+                        data: {
+                            args: {
+                                error: null,
+                                message: "Streaming "+stats.size+" bytes of data at "+config.streamrate+" bytes per second",
+                                progress: null
+                            }
+                        }
+                    });
+                    self.callback({stream:'start', type:args.type, size:stats.size});
+                    var stream = fs.createReadStream(args.data).pipe(new (require('stream-throttle').Throttle)({rate:config.streamrate}));
+                    stream.on('data', function (data) {
+                        self.callback({stream:'data', data:data.toString('base64')});
+                    });
+                    stream.on('end', function () {
+                        self.callback({stream:'end'});
+                        self.callback = null;
+                        send(user.socket, {
+                            name: user.name,
+                            message: 'data',
+                            data: {
+                                args: {
+                                    error: null,
+                                    message: "Stream end",
+                                    progress: null
+                                }
+                            }
+                        });
+                        callback(args);
+                    });
+                } else {
+                    self.callback = null;
+                    send(user.socket, {
+                        name: user.name,
+                        message: 'data',
+                        data: {
+                            args: {
+                                error: null,
+                                message: "Could not retrieve file "+args.data,
+                                progress: null
+                            }
+                        }
+                    });
+                    callback(args);
+                }
+            });
+        } else {
+            self.callback(args);
+            self.callback = null;
+            callback(args);
+        }
     }
-    callback(args);
 }
 Shell.prototype.out = out;
 

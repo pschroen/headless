@@ -1,4 +1,4 @@
-/*!
+/**
  * Headless config.
  *
  * @author   Patrick Schroen <ps@ufotechnologies.com>
@@ -10,7 +10,11 @@ exports.https = 36669;
 exports.proxied = false;
 // Keep-alive every 4 minutes, must be under websocket 5 minute timeout
 exports.heartbeat = 240000;
+// Stream throttling rate, in bytes per second
+exports.streamrate = 51200;
 // Optional restart command
 exports.restart = '/etc/init.d/headless.sh restart';
-// Optional phantom path
-exports.phantomPath = 'bin/phantomjs';
+// Optional phantomjs path
+exports.phantomjs = 'bin/phantomjs';
+// Optional git path
+exports.git = '/opt/bin/git';

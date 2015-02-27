@@ -16,17 +16,14 @@ if (typeof process === 'undefined') {
 
 var path = require('path');
 
-// https://github.com/joyent/node/wiki/api-changes-between-v0.6-and-v0.8
-if (typeof fs.existsSync === 'undefined') fs.existsSync = path.existsSync;
-if (typeof path.sep === 'undefined') path.sep = process.platform === 'win32' ? '\\' : '/';
-
 var Shell = function () {};
 if (utils.basename(module.parent.id) === 'shell') utils.inherits(Shell, require('../shell').constructor);
 
 Shell.prototype.path = process.cwd();
 Shell.prototype.separator = path.sep;
-Shell.prototype.basename = path.basename;
 Shell.prototype.dirname = path.dirname;
+Shell.prototype.basename = path.basename;
+Shell.prototype.extname = path.extname;
 Shell.prototype.join = path.join;
 
 /**
@@ -175,7 +172,7 @@ function mkdir(p) {
 Shell.prototype.mkdir = mkdir;
 
 /**
- * Copy directory recursively equivalent of `cp -R`.
+ * Copy directory recursively equivalent of `cp -r`.
  *
  * @param    {string} src Path
  * @param    {string} dest Path
@@ -194,7 +191,7 @@ function cpdir(src, dest) {
 Shell.prototype.cpdir = cpdir;
 
 /**
- * Remove directory recursively equivalent of `rm -Rf`.
+ * Remove directory recursively equivalent of `rm -rf`.
  *
  * @param    {string} dir Path
  * @param    {undefined|boolean} [empty] Remove empty directory tree
