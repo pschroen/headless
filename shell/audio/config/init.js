@@ -14,6 +14,7 @@ var utils = require('./utils'),
     Script = utils.Script(module.id, "Audio Init");
 
 var types = {
+    'flac': 'audio/flac',
     'mp3': 'audio/mpeg',
     'ogg': 'audio/ogg',
     'wav': 'audio/wav',
@@ -41,8 +42,10 @@ function init(probe, callback) {
         probe.audio({src:src, type:type});
         probe.exit();
     } else {
-        var find = require(shell.path+'/shell/find/config/init.js');
-        src = find.files(probe, shell.audio.path, new RegExp(utils.termsToPattern(probe.item.text), 'i'));
+        var find = require(shell.path+'/shell/find/config/init.js'),
+            termstypes = [];
+        for (var key in types) termstypes.push('\\.'+key);
+        src = find.files(probe, shell.audio.path, new RegExp(utils.termsToPattern(probe.item.text+' '+termstypes.join('|')), 'i'));
         type = src ? types[shell.extname(src).substring(1)] : null;
         if (type) {
             probe.log("["+exports.id+"] Playing "+src);

@@ -55,8 +55,8 @@ var d = document,
     probes = [],
     memory = {},
     socket = null,
-    audio = d.createElement('audio'),
-    audioargs = null;
+    player = null,
+    playerargs = null;
 
 alien.probe = function (ghost, platform) {
     "use strict";
@@ -557,30 +557,43 @@ alien.mothership = function () {
                 // TODO: Video playback
                 } else if (data.command === 'audio') {
                     console.log(data.args);
-                    audio.pause();
-                    if (audioargs) {
-                        audioargs.progress = null;
-                        audioargs.status = null;
-                        listgutter.updateItem(audioargs);
+                    if (playerargs) {
+                        playerargs.progress = null;
+                        playerargs.status = null;
+                        listgutter.updateItem(playerargs);
+                    }
+                    playerargs = data.args;
+                    if (player) player.pause();
+                    if (playerargs.type === 'audio/flac') {
+                        player = AV.Player.fromURL(/http:/.test(playerargs.src) ? playerargs.src : '/stream?src='+encodeURIComponent(playerargs.src));
+                        player.on('progress', function () {
+                            playerargs.progress = isFinite(player.duration) ? Math.round((player.currentTime/player.duration)*100) : null;
+                            playerargs.status = toTimer(player.currentTime);
+                            listgutter.updateItem(playerargs);
+                        });
+                        player.play();
+                        memory[playerargs.text].status.onclick = function () {
+                            player.togglePlayback();
+                        };
                     } else {
-                        audio.ontimeupdate = function () {
-                            audioargs.progress = isFinite(audio.duration) ? Math.round((audio.currentTime/audio.duration)*100) : null;
-                            audioargs.status = toTimer(audio.currentTime);
-                            listgutter.updateItem(audioargs);
+                        player = d.createElement('audio');
+                        player.ontimeupdate = function () {
+                            playerargs.progress = isFinite(player.duration) ? Math.round((player.currentTime/player.duration)*100) : null;
+                            playerargs.status = toTimer(player.currentTime);
+                            listgutter.updateItem(playerargs);
+                        };
+                        player.src = /http:/.test(playerargs.src) ? playerargs.src : '/stream?src='+encodeURIComponent(playerargs.src);
+                        player.type = playerargs.type;
+                        player.play();
+                        memory[playerargs.text].status.onclick = function () {
+                            if (!player.paused) {
+                                player.pause();
+                            } else {
+                                player.play();
+                            }
                         };
                     }
-                    audioargs = data.args;
-                    audio.src = /http:/.test(audioargs.src) ? audioargs.src : '/stream?src='+encodeURIComponent(audioargs.src);
-                    audio.type = audioargs.type;
-                    audio.play();
-                    memory[audioargs.text].status.onclick = function () {
-                        if (!audio.paused) {
-                            audio.pause();
-                        } else {
-                            audio.play();
-                        }
-                    };
-                    memory[audioargs.text].status.group.element.onclick = memory[audioargs.text].status.onclick;
+                    memory[playerargs.text].status.group.element.onclick = memory[playerargs.text].status.onclick;
                 } else {
                     var pre = d.createElement('pre');
                     pre.innerHTML = timestamp()+' - '+(data.args.text ? data.args.text+' → ' : '')+data.args.message;
