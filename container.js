@@ -16,9 +16,6 @@ if (typeof process === 'undefined') {
     console.error("Headless shell needs to be executed from mothership");
 }
 
-var uname = require('uname'),
-    utsname = uname.uname();
-
 var Shell = function (container, user, list, index, load) {
     "use strict";
     this.container = container;
@@ -125,7 +122,7 @@ var Shell = function (container, user, list, index, load) {
                 data: {
                     headlessVersion: version,
                     version: process.version.substring(1),
-                    arch: os.platform()+"-"+utsname.machine,
+                    arch: os.platform()+"-"+process.arch,
                     hostname: os.hostname(),
                     payload: load
                 }
@@ -143,7 +140,7 @@ var Shell = function (container, user, list, index, load) {
                             data: {\n\
                                 headlessVersion: '"+version+"',\n\
                                 version: '"+process.version.substring(1)+"',\n\
-                                arch: '"+os.platform()+"-"+utsname.machine+"',\n\
+                                arch: '"+os.platform()+"-"+process.arch+"',\n\
                                 hostname: '"+os.hostname()+"',\n\
                                 payload: JSON.parse('"+utils.addslashes(JSON.stringify(load))+"')\n\
                             }\n\

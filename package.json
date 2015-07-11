@@ -39,7 +39,6 @@
     "node-uuid": "*",
     "phantomjs": ">=1.9.8 <2.0.0",
     "stream-throttle": "*",
-    "uname": "*",
     "ws": "*"
   }
 }
