@@ -28,14 +28,14 @@ cp = require('child_process'),
 path = require('path'),
 http = require('http'),
 https = require('https'),
-util = require("util"),
+util = require('util'),
 url = require('url'),
 querystring = require('querystring'),
 file = new (require('node-static')).Server('./mothership'),
 ws = require('ws'),
 bcrypt = require('bcrypt'),
 uuid = require('node-uuid'),
-isbinaryfile = require("isbinaryfile"),
+isbinaryfile = require('isbinaryfile');
 beautify = require('js-beautify').js_beautify;
 
 config = require('./config'),
@@ -475,7 +475,7 @@ function receive(socket, payload, upstream) {
                                         } else if (fs.lstatSync(val).isDirectory()) {
                                             load[key] = files.files(val);
                                         } else {
-                                            load[key] = !isbinaryfile(val) ? files.read(val).toString() : 'binary';
+                                            load[key] = !isbinaryfile.sync(val) ? files.read(val).toString() : 'binary';
                                             if (/\.json$/.exec(val)) load[key] = beautify(load[key]);
                                         }
                                     }
