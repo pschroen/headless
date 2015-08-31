@@ -81,7 +81,7 @@ var Shell = function (container, user, list, index, load) {
                                 data: data
                             });
                         }
-                        util.error(data.stack);
+                        console.error(data.stack);
                         break;
                 }
             });
@@ -156,7 +156,7 @@ var Shell = function (container, user, list, index, load) {
                     util.log("Phantom stdout: "+data);
                 });
                 phantom.stderr.on('data', function (data) {
-                    util.error("Phantom stderr: "+data);
+                    console.error("Phantom stderr: "+data);
                 });
                 phantom.on('exit', function (code, signal) {
                     if (user) {
@@ -240,19 +240,19 @@ var Shell = function (container, user, list, index, load) {
                                         data: data
                                     });
                                 }
-                                util.error(data.stack);
+                                console.error(data.stack);
                                 break;
                         }
                     });
                     self.socket = socket;
                 });
                 wss.on('close', function () {
-                    util.error("Phantom control page disconnected");
+                    console.error("Phantom control page disconnected");
                 });
             });
             break;
         default:
-            util.error("Container "+this.container+" not an option");
+            console.error("Container "+this.container+" not an option");
             return;
     }
 };

@@ -18,7 +18,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 // TODO: http://nodejs.org/api/domain.html
 process.on('uncaughtException', function (err) {
     "use strict";
-    util.error("UncaughtException: "+err.stack);
+    console.error("UncaughtException: "+err.stack);
 });
 
 // Globals
@@ -50,7 +50,7 @@ send = function (socket, data) {
     "use strict";
     if (socket) {
         socket.send(JSON.stringify(data), function (err) {
-            if (err && err.message !== 'not opened' && process.env.NODE_ENV !== 'production') util.error(err.stack);
+            if (err && err.message !== 'not opened' && process.env.NODE_ENV !== 'production') console.error(err.stack);
         });
     }
 };
