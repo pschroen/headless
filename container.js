@@ -260,35 +260,22 @@ var Shell = function (container, user, list, index, load) {
 function get(user, data, callback) {
     "use strict";
     var args = data.args,
-        uri = url.parse(args.url),
         options = {
-            host: uri.hostname,
-            port: uri.port,
-            path: uri.path
+            url: args.url
         };
     if (args.headers) options.headers = args.headers;
-    http.get(options, function (res) {
-        if (res.statusCode === 200) {
-            var body = '';
-            res.on('data', function (chunk) {
-                body += chunk;
-            }).on('end', function (error) {
-                args.error = error;
-                args.body = body;
-                args.headers = res.headers;
-                callback(args);
-            });
+    request(options, function (error, response, body) {
+        if (!error && response.statusCode === 200) {
+            args.error = error;
+            args.body = body;
+            args.headers = response.headers;
+            callback(args);
         } else {
-            args.error = res.statusCode;
+            args.error = response.statusCode;
             args.body = null;
-            args.headers = res.headers;
+            args.headers = response.headers;
             callback(args);
         }
-    }).on('error', function (error) {
-        args.error = error.message;
-        args.body = null;
-        args.headers = null;
-        callback(args);
     });
 }
 Shell.prototype.get = get;
@@ -298,61 +285,22 @@ function download(user, data, callback) {
     var args = data.args,
         uri = url.parse(args.url),
         options = {
-            host: uri.hostname,
-            port: uri.port,
-            path: uri.path
+            url: args.url
         };
     if (args.headers) options.headers = args.headers;
-    http.get(options, function (res) {
-        if (res.statusCode === 200) {
-            res.setEncoding('binary');
-            var body = '';
-            res.on('data', function (chunk) {
-                body += chunk;
-            }).on('end', function (error) {
-                var dest = args.dest+'/'+(res.headers['content-disposition'] ? res.headers['content-disposition'].split('"')[1] : uri.path.replace(/.*\//, ''));
-                if (!files.exists(dest)) {
-                    fs.open(dest, "a", 755, function (error, fd) {
-                        if (!error) {
-                            fs.write(fd, body, null, 'binary', function (err, written) {
-                                args.error = err;
-                                args.dest = dest;
-                                callback(args);
-                            });
-                        } else {
-                            args.error = error;
-                            args.dest = dest;
-                            callback(args);
-                        }
-                    });
-                } else {
-                    if (user) {
-                        send(user.socket, {
-                            name: user.name,
-                            message: 'data',
-                            data: {
-                                args: {
-                                    error: null,
-                                    message: "File exists",
-                                    progress: null
-                                }
-                            }
-                        });
-                    }
-                    args.error = null;
-                    args.dest = dest;
-                    callback(args);
-                }
+    request(options, function (error, response, body) {
+        if (!error && response.statusCode === 200) {
+            var dest = args.dest+'/'+(response.headers['content-disposition'] ? response.headers['content-disposition'].split('"')[1] : uri.path.replace(/.*\//, ''));
+            response.pipe(fs.createWriteStream(dest)).on('finish', function () {
+                args.error = error;
+                args.dest = dest;
+                callback(args);
             });
         } else {
-            args.error = res.statusCode;
+            args.error = response.statusCode;
             args.dest = null;
             callback(args);
         }
-    }).on('error', function (error) {
-        args.error = error.message;
-        args.dest = null;
-        callback(args);
     });
 }
 Shell.prototype.download = download;
@@ -360,39 +308,24 @@ Shell.prototype.download = download;
 function post(user, data, callback) {
     "use strict";
     var args = data.args,
-        uri = url.parse(args.url),
         options = {
-            host: uri.hostname,
-            port: uri.port,
-            path: uri.path,
-            method: 'POST',
-            headers: args.headers
+            url: args.url,
+            form: args.form
         };
-    var req = http.request(options, function (res) {
-        if (res.statusCode === 200) {
-            var body = '';
-            res.on('data', function (chunk) {
-                body += chunk;
-            }).on('end', function (error) {
-                args.error = error;
-                args.body = body;
-                args.headers = res.headers;
-                callback(args);
-            });
+    if (args.headers) options.headers = args.headers;
+    request.post(options, function (error, response, body) {
+        if (!error && response.statusCode === 200) {
+            args.error = error;
+            args.body = body;
+            args.headers = response.headers;
+            callback(args);
         } else {
-            args.error = res.statusCode;
+            args.error = response.statusCode;
             args.body = null;
-            args.headers = res.headers;
+            args.headers = response.headers;
             callback(args);
         }
-    }).on('error', function (error) {
-        args.error = error.message;
-        args.body = null;
-        args.headers = null;
-        callback(args);
     });
-    req.write(args.data);
-    req.end();
 }
 Shell.prototype.post = post;
 

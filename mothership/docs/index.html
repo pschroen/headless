@@ -367,9 +367,9 @@ HTTP POST request.
 
 <pre data-lang="javascript">
 var url = 'https://www.google.ca/upload',
-    data = 'data\n';
-probe.log("HTTP POST request for "+url+" with data: "+data);
-probe.post({url:url, data:data}, function (error, args) {
+    form = {key:'value'};
+probe.log("HTTP POST request for "+url+" with key value pairs: "+JSON.stringify(form));
+probe.post({url:url, form:form}, function (error, args) {
     if (!error) {
         probe.log("HTTP POST response, sending to console");
         console.log("HTTP POST response: "+JSON.stringify(args));
