@@ -47,9 +47,9 @@ function files(probe, dir, pattern, path) {
             fullpath = shell.join(dir, file);
         if (fs.lstatSync(fullpath).isDirectory()) {
             path = files(probe, fullpath, pattern, path);
-        } else if (pattern.test(fullpath)) {
+        } else if (pattern.test(file)) {
             path = fullpath;
-            probe.log("["+exports.id+"] Found path "+path);
+            probe.log("["+exports.id+"] Found file "+path);
             break;
         }
     }
