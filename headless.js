@@ -325,7 +325,7 @@ var init = function () {
                     if (socket.users) {
                         socket.users.forEach(function (user) {
                             var name = user.name;
-                            if (users[name] && users[name].socket) users[name].socket.terminate();
+                            if (users[name] && users[name].socket) users[name].socket.close();
                         });
                     }
                 });
@@ -653,7 +653,7 @@ function receive(socket, payload, upstream) {
                             case 'restart':
                                 if (upstream) {
                                     socket.removeAllListeners('close');
-                                    socket.terminate();
+                                    socket.close();
                                 }
                                 for (var user in users) {
                                     if (user.containers) {
@@ -743,7 +743,7 @@ function receive(socket, payload, upstream) {
                                             });
                                             if (!out.stream || out.stream === 'end') {
                                                 if (process.env.NODE_ENV !== 'production') util.log("Send complete, closing connection");
-                                                callback.terminate();
+                                                callback.close();
                                             }
                                         };
                                     });
@@ -929,7 +929,7 @@ function endpoint(data, callback) {
         payload = JSON.parse(payload);
         if (process.env.NODE_ENV !== 'production') util.log("Received data from endpoint "+url+" in "+(Date.now()-payload.time)+"ms, closing connection");
         callback(payload.data);
-        api.terminate();
+        api.close();
     });
     api.on('error', function (err) {
         if (process.env.NODE_ENV !== 'production') util.log("Endpoint "+url+" failed with "+err);
