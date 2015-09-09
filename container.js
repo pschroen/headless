@@ -271,9 +271,9 @@ function get(user, data, callback) {
             args.headers = response.headers;
             callback(args);
         } else {
-            args.error = response.statusCode;
+            args.error = error;
             args.body = null;
-            args.headers = response.headers;
+            args.headers = null;
             callback(args);
         }
     });
@@ -297,7 +297,7 @@ function download(user, data, callback) {
                 callback(args);
             });
         } else {
-            args.error = response.statusCode;
+            args.error = error;
             args.dest = null;
             callback(args);
         }
@@ -320,9 +320,9 @@ function post(user, data, callback) {
             args.headers = response.headers;
             callback(args);
         } else {
-            args.error = response.statusCode;
+            args.error = error;
             args.body = null;
-            args.headers = response.headers;
+            args.headers = null;
             callback(args);
         }
     });
