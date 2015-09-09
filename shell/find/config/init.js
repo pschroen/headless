@@ -32,11 +32,13 @@ Script.prototype.init = init;
  * @param    {Probe} probe Instance
  * @param    {string} dir Path
  * @param    {RegExp} pattern Regular expression
+ * @param    {boolean} [dotfiles=true] Find hidden files
  * @param    {undefined|string} path Path match
  * @returns  {string}
  */
-function files(probe, dir, pattern, path) {
+function files(probe, dir, pattern, dotfiles, path) {
     "use strict";
+    if (typeof dotfiles === 'undefined') dotfiles = true;
     var filenames = shell.readdir(dir);
     filenames.sort(function (a, b) {
         return a < b ? -1 : 1;
@@ -45,12 +47,14 @@ function files(probe, dir, pattern, path) {
         if (typeof path !== 'undefined') break;
         var file = filenames[i],
             fullpath = shell.join(dir, file);
-        if (fs.lstatSync(fullpath).isDirectory()) {
-            path = files(probe, fullpath, pattern, path);
-        } else if (pattern.test(file)) {
-            path = fullpath;
-            probe.log("["+exports.id+"] Found file "+path);
-            break;
+        if (!(!dotfiles && /^\./.test(file))) {
+            if (fs.lstatSync(fullpath).isDirectory()) {
+                path = files(probe, fullpath, pattern, dotfiles, path);
+            } else if (pattern.test(file)) {
+                path = fullpath;
+                probe.log("["+exports.id+"] Found file "+path);
+                break;
+            }
         }
     }
     return path;

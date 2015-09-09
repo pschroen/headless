@@ -44,7 +44,7 @@ function init(probe, callback) {
         var find = require(shell.path+'/shell/find/config/init.js'),
             termstypes = [];
         for (var key in types) termstypes.push('\\.'+key);
-        src = find.files(probe, shell.audio.path, new RegExp(utils.termsToPattern('-^\\. '+probe.item.text+' '+termstypes.join('|')), 'i'));
+        src = find.files(probe, shell.audio.path, new RegExp(utils.termsToPattern(probe.item.text+' '+termstypes.join('|')), 'i'), false);
         type = src ? types[shell.extname(src).substring(1)] : null;
         if (type) {
             probe.log("["+exports.id+"] Playing "+src);
