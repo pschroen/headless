@@ -3,7 +3,7 @@
  *
  * Parts abducted from node-phantom's node-phantom.js.
  *
- * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @author   Patrick Schroen / https://github.com/pschroen
  * @license  MIT Licensed
  */
 

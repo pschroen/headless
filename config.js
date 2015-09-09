@@ -1,7 +1,7 @@
 /**
  * Headless config.
  *
- * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @author   Patrick Schroen / https://github.com/pschroen
  * @license  MIT Licensed
  */
 exports.ip = '0.0.0.0';
