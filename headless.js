@@ -59,7 +59,7 @@ send = function (socket, data) {
 if (config.http) {
     http.createServer(function (req, res) {
         "use strict";
-        req.addListener('end', function () {
+        req.on('end', function (error) {
             res.writeHead(302, {
                 'Location': 'https://'+(config.https !== 443 && !config.proxied ? url.parse('http://'+req.headers.host).hostname+':'+config.https : req.headers.host)+req.url
             });
@@ -88,7 +88,10 @@ var init = function () {
         key: files.read('headless-key.pem'),
         cert: files.read('headless-cert.pem')
     }, function (req, res) {
-        req.addListener('end', function () {
+        var body = '';
+        req.on('data', function (chunk) {
+            body += chunk;
+        }).on('end', function (error) {
             var match = /(.*)\.headless\.io/.exec(req.headers.host),
                 filepath = './mothership'+req.url;
             if (!match && /headless\.io/.test(req.headers.host) && req.url === '/') {
@@ -99,7 +102,7 @@ var init = function () {
                 var name = match && /\./.test(match[1]) ? match[1].split('.')[0] : match ? match[1] : null;
                 if (match && users[name] && users[name].host) {
                     var uri = url.parse(req.url),
-                        load = req.post ? JSON.parse(req.post) : {};
+                        load = body.length ? querystring.parse(body) : {};
                     utils.extend(load, querystring.parse(uri.query));
                     if (!load.remoteAddress) load.remoteAddress = req.socket.remoteAddress;
                     callbacks[callbackid] = function (out) {
@@ -146,7 +149,7 @@ var init = function () {
                                         var item = list.list.items[i],
                                             uri = url.parse(req.url);
                                         if ('/'+item.text === uri.pathname) {
-                                            var load = req.post ? JSON.parse(req.post) : {};
+                                            var load = body.length ? querystring.parse(body) : {};
                                             utils.extend(load, querystring.parse(uri.query));
                                             if (!load.remoteAddress) load.remoteAddress = req.socket.remoteAddress;
                                             if (process.env.NODE_ENV !== 'production') util.log("Endpoint requested "+uri.pathname+" > "+load.remoteAddress);
