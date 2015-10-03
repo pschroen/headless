@@ -222,12 +222,20 @@ function load(id) {
  *
  * @callback initCallback
  * @param    {undefined|Object|string} [out]
- * @param    {undefined|string} [type=application/json] Content-Type
+ * @param    {undefined|Object|string} [headers={'Content-Type':'application/json'}]
  * @param    {undefined|boolean} [stream] Stream out
  */
-        probe.config.init(probe, function (out, type, stream) {
+        probe.config.init(probe, function (out, headers, stream) {
             if (typeof out !== 'undefined') {
-                shell.command(probe, 'out', {data:out, type:type, stream:stream});
+                var outheaders = {'Content-Type':'application/json'};
+                if (typeof headers !== 'undefined') {
+                    if (typeof headers !== 'object') {
+                        outheaders['Content-Type'] = headers;
+                    } else {
+                        utils.extend(outheaders, headers);
+                    }
+                }
+                shell.command(probe, 'out', {data:out, headers:outheaders, stream:stream});
                 shell.exit();
             }
         });

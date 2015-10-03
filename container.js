@@ -361,7 +361,7 @@ function out(user, data, callback) {
                             }
                         }
                     });
-                    self.callback({stream:'start', type:args.type, size:stats.size});
+                    self.callback({stream:'start', headers:args.headers, length:stats.size});
                     var stream = fs.createReadStream(args.data).pipe(new (require('stream-throttle').Throttle)({rate:config.streamrate}));
                     stream.on('data', function (data) {
                         self.callback({stream:'data', data:data.toString('base64')});

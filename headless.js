@@ -108,23 +108,19 @@ var init = function () {
                     callbacks[callbackid] = function (out) {
                         var data = null;
                         if (!out.stream) {
-                            if (out.type) {
+                            if (out.headers['Content-Type'] !== 'application/json') {
                                 data = out.data;
                             } else {
                                 data = beautify(JSON.stringify(out.data));
                             }
                         }
                         if (!out.stream || out.stream === 'start') {
-                            res.writeHead(200, {
-                                'Access-Control-Allow-Origin': out.origin ? out.origin : '*',
-                                'Content-Type': out.type ? out.type : 'application/json',
-                                'Content-Length': out.size ? out.size : data.length
-                            });
+                            res.writeHead(200, utils.extend(out.headers, {'Content-Length': out.length ? out.length : data.length}));
                         }
                         if (!out.stream) {
                             res.write(data);
                         } else if (out.stream === 'data') {
-                            res.write(new Buffer(out.data, 'base64'));
+                            res.write(new Buffer(data, 'base64'));
                         }
                         if (!out.stream || out.stream === 'end') res.end();
                     };
@@ -158,23 +154,19 @@ var init = function () {
                                             api.callback = function (out) {
                                                 var data = null;
                                                 if (!out.stream) {
-                                                    if (out.type) {
+                                                    if (out.headers['Content-Type'] !== 'application/json') {
                                                         data = out.data;
                                                     } else {
                                                         data = beautify(JSON.stringify(out.data));
                                                     }
                                                 }
                                                 if (!out.stream || out.stream === 'start') {
-                                                    res.writeHead(200, {
-                                                        'Access-Control-Allow-Origin': out.origin ? out.origin : '*',
-                                                        'Content-Type': out.type ? out.type : 'application/json',
-                                                        'Content-Length': out.size ? out.size : data.length
-                                                    });
+                                                    res.writeHead(200, utils.extend(out.headers, {'Content-Length': out.length ? out.length : data.length}));
                                                 }
                                                 if (!out.stream) {
                                                     res.write(data);
                                                 } else if (out.stream === 'data') {
-                                                    res.write(new Buffer(out.data, 'base64'));
+                                                    res.write(new Buffer(data, 'base64'));
                                                 }
                                                 if (!out.stream || out.stream === 'end') res.end();
                                             };

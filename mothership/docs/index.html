@@ -333,7 +333,7 @@ probe.item.infobox = {boxes:[box]};
 probe.box("Infobox");
 </pre>
 
-More <code>Infobox</code> examples can be found on <a href="https://github.com/pschroen/headless/wiki">The Wiki</a>.
+<!--More <code>Infobox</code> examples can be found on <a href="https://github.com/pschroen/headless/wiki">The Wiki</a>.-->
 
 <h2>probe.remember(memory)</h2>
 
@@ -651,8 +651,8 @@ probe.log("Infobox");
 callback(shell.box(name, id, [box]));
 </pre>
 
-More <code>Infobox</code> examples can be found on <a href="https://github.com/pschroen/headless/wiki">The Wiki</a>.
-<br>&nbsp;
+<!--More <code>Infobox</code> examples can be found on <a href="https://github.com/pschroen/headless/wiki">The Wiki</a>.
+<br>-->&nbsp;
 
 <h1>Utils</h1>
 
@@ -708,6 +708,8 @@ index = shell.index;
 
 You may have noticed the default APIs list is empty, this is intentional as any script added to the list will make it available. APIs are the exact same scripts, use the <code>callback()</code> function to return your data.
 
+<h2>Hello World</h2>
+
 <h3>apis/hello.js</h3>
 
 <pre data-lang="javascript">
@@ -728,6 +730,28 @@ module.exports = exports = new Script();
 </pre>
 
 Add the basename of the script (without <code>.js</code>) to your APIs list to make it available for use.
+
+<h2>Headers</h2>
+
+<h3>apis/hello-headers.js</h3>
+
+<pre data-lang="javascript">
+var utils = require(shell.path+'/modules/utils'),
+    Script = utils.Script(module.id, "Hello World");
+
+function init(probe, callback) {
+    var headers = {'Access-Control-Allow-Origin':'*'};
+    probe.log(exports.name);
+    callback({
+        title: exports.name,
+        text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
+            The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+    }, headers);
+}
+Script.prototype.init = init;
+
+module.exports = exports = new Script();
+</pre>
 <br>&nbsp;
 
 <h1>Mixin other frameworks</h1>
