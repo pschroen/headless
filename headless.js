@@ -116,6 +116,7 @@ var init = function () {
                         }
                         if (!out.stream || out.stream === 'start') {
                             res.writeHead(200, {
+                                'Access-Control-Allow-Origin': out.origin ? out.origin : '*',
                                 'Content-Type': out.type ? out.type : 'application/json',
                                 'Content-Length': out.size ? out.size : data.length
                             });
@@ -165,6 +166,7 @@ var init = function () {
                                                 }
                                                 if (!out.stream || out.stream === 'start') {
                                                     res.writeHead(200, {
+                                                        'Access-Control-Allow-Origin': out.origin ? out.origin : '*',
                                                         'Content-Type': out.type ? out.type : 'application/json',
                                                         'Content-Length': out.size ? out.size : data.length
                                                     });
