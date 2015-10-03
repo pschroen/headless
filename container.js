@@ -16,7 +16,7 @@ if (typeof process === 'undefined') {
     console.error("Headless shell needs to be executed from mothership");
 }
 
-var Shell = function (container, user, list, index, load) {
+var Shell = function (container, user, list, index, load, session) {
     "use strict";
     this.container = container;
     try {
@@ -71,6 +71,27 @@ var Shell = function (container, user, list, index, load) {
                                 }
                             });
                         }
+                        if (args.error) error = args.error;
+                        break;
+                    case 'session':
+                        var args = data.args;
+                        if (session) {
+                            if (typeof args.value !== 'undefined') {
+                                session[args.name] = args.value;
+                            } else if (typeof args.name !== 'object') {
+                                args.value = session[args.name];
+                            } else {
+                                utils.extend(session, args.name);
+                            }
+                        }
+                        node.send({
+                            message: 'response',
+                            data: {
+                                id: data.id,
+                                command: data.command,
+                                args: args
+                            }
+                        });
                         if (args.error) error = args.error;
                         break;
                     case 'error':
@@ -230,6 +251,27 @@ var Shell = function (container, user, list, index, load) {
                                         }
                                     });
                                 }
+                                if (args.error) error = args.error;
+                                break;
+                            case 'session':
+                                var args = data.args;
+                                if (session) {
+                                    if (typeof args.value !== 'undefined') {
+                                        session[args.name] = args.value;
+                                    } else if (typeof args.name !== 'object') {
+                                        args.value = session[args.name];
+                                    } else {
+                                        utils.extend(session, args.name);
+                                    }
+                                }
+                                send(socket, {
+                                    message: 'response',
+                                    data: {
+                                        id: data.id,
+                                        command: data.command,
+                                        args: args
+                                    }
+                                });
                                 if (args.error) error = args.error;
                                 break;
                             case 'error':

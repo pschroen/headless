@@ -152,6 +152,21 @@ function command(probe, name, args, callback) {
             }
         });
         shell.callbackid++;
+    } else if (name === 'session') {
+        shell.queue++;
+        shell.callbacks[shell.callbackid] = function (e, a) {
+            if (callback) callback(e, a);
+            shell.exit(shell.queue);
+        };
+        shell.send({
+            message: 'session',
+            data: {
+                id: shell.callbackid,
+                command: name,
+                args: args
+            }
+        });
+        shell.callbackid++;
     } else {
         shell.queue++;
         shell.callbacks[shell.callbackid] = function (e, a) {

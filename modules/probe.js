@@ -84,5 +84,16 @@ function Probe(id, i, load) {
     this.audio = function (args) {
         shell.command(this, 'audio', args);
     };
+    this.session = function (name, value) {
+        var args = null,
+            callback = null;
+        if (typeof value !== 'function') {
+            args = {name:name, value:value};
+        } else {
+            args = {name:name};
+            callback = value;
+        }
+        shell.command(this, 'session', args, callback);
+    };
 }
 module.exports = exports = Probe;

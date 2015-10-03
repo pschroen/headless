@@ -28,6 +28,7 @@ cp = require('child_process'),
 path = require('path'),
 http = require('http'),
 https = require('https'),
+connect = require('connect'),
 request = require('request'),
 util = require('util'),
 url = require('url'),
@@ -84,10 +85,11 @@ var insert = [],
 
 var init = function () {
     "use strict";
-    server = https.createServer({
-        key: files.read('headless-key.pem'),
-        cert: files.read('headless-cert.pem')
-    }, function (req, res) {
+    var app = connect();
+    app.use(require('compression')());
+    app.use(require('cookie-session')({name:'session', secret:'TODO: Salt'}));
+
+    app.use(function (req, res) {
         var body = '';
         req.on('data', function (chunk) {
             body += chunk;
@@ -150,7 +152,7 @@ var init = function () {
                                             utils.extend(load, querystring.parse(uri.query));
                                             if (!load.remoteAddress) load.remoteAddress = req.socket.remoteAddress;
                                             if (process.env.NODE_ENV !== 'production') util.log("Endpoint requested "+uri.pathname+" > "+load.remoteAddress);
-                                            var api = new container(list.list.container, users[name], list.path, i, load);
+                                            var api = new container(list.list.container, users[name], list.path, i, load, req.session);
                                             api.callback = function (out) {
                                                 var data = null;
                                                 if (!out.stream) {
@@ -182,13 +184,18 @@ var init = function () {
                 file.serve(req, res);
             }
         }).resume();
-    }).listen(config.https, config.ip, function () {
+    });
+
+    server = https.createServer({
+        key: files.read('headless-key.pem'),
+        cert: files.read('headless-cert.pem')
+    }, app).listen(config.https, config.ip, function () {
         wss = new ws.Server({server:server});
         wss.on('connection', function (socket) {
             if (socket.upgradeReq.headers['user-agent']) {
                 if (process.env.NODE_ENV !== 'production') util.log("Hello "+socket._socket.remoteAddress);
                 socket.on('message', function (payload) {
-                    receive(socket, payload);
+                    receive(socket, payload, socket.upgradeReq);
                 });
                 socket.on('close', function () {
                     if (users[socket._socket.remoteAddress] && users[socket._socket.remoteAddress].socket) delete users[socket._socket.remoteAddress].socket;
@@ -275,7 +282,7 @@ var init = function () {
                                                         if ('/'+item.text === socket.upgradeReq.url) {
                                                             if (!data.remoteAddress) data.remoteAddress = socket._socket.remoteAddress;
                                                             if (process.env.NODE_ENV !== 'production') util.log("Endpoint served "+socket.upgradeReq.url+" > "+data.remoteAddress);
-                                                            var api = new container(list.list.container, users[name], list.path, i, data);
+                                                            var api = new container(list.list.container, users[name], list.path, i, data, socket.upgradeReq.session);
                                                             api.callback = function (out) {
                                                                 if (out.data.message === 'data' && out.data.data.command === 'box' &&
                                                                     out.data.data.args.boxes[0].data &&
@@ -345,13 +352,13 @@ var init = function () {
                             seconds = (list.list.run/1000)%60;
                         var loop = function () {
                             util.log("Running "+list.path+" with "+hours+" hour"+(minutes ? " "+minutes+" minute" : "")+(seconds ? " "+seconds+" second" : "")+" interval");
-                            var run = new container(list.list.container, users[name], list.path, -1, null);
+                            var run = new container(list.list.container, users[name], list.path, -1, null, null);
                         };
                         intervals.push(setInterval(loop, list.list.run));
                         loop();
                     } else {
                         util.log("Running "+list.path);
-                        var run = new container(list.list.container, users[name], list.path, -1, null);
+                        var run = new container(list.list.container, users[name], list.path, -1, null, null);
                     }
                 }
             });
@@ -377,7 +384,7 @@ var init = function () {
     keys = keys.join('|');
 };
 
-function receive(socket, payload, upstream) {
+function receive(socket, payload, req, upstream) {
     "use strict";
     payload = JSON.parse(payload);
     var message = payload.message,
@@ -641,7 +648,7 @@ function receive(socket, payload, upstream) {
                                 break;
                             case 'list':
                                 if (!users[name].containers) users[name].containers = [];
-                                users[name].containers.push(new container(data.container, users[name], data.list, data.index, null));
+                                users[name].containers.push(new container(data.container, users[name], data.list, data.index, null, req.session));
                                 break;
                             case 'kill':
                                 var contain = users[name].containers ? users[name].containers[users[name].containers.length-1] : null;
@@ -649,7 +656,7 @@ function receive(socket, payload, upstream) {
                                 break;
                             case 'restart':
                                 if (upstream) {
-                                    socket.removeAllListeners('close');
+                                    socket.off('close');
                                     socket.close();
                                 }
                                 for (var user in users) {
@@ -730,7 +737,7 @@ function receive(socket, payload, upstream) {
                                     if (process.env.NODE_ENV !== 'production') util.log("Endpoint received from "+url+"/"+data.submit+" > "+data.payload.remoteAddress);
                                     callback.on('open', function () {
                                         if (process.env.NODE_ENV !== 'production') util.log("Sending data to callback "+url);
-                                        var api = new container(list.list.container, users[name], list.path, i, data.payload);
+                                        var api = new container(list.list.container, users[name], list.path, i, data.payload, req.session);
                                         api.callback = function (out) {
                                             send(callback, {
                                                 id: payload.id,
@@ -857,7 +864,7 @@ function mothership(insert) {
             }, config.heartbeat);
         });
         socket.on('message', function (payload) {
-            receive(socket, payload, url);
+            receive(socket, payload, socket.upgradeReq, url);
         });
         socket.on('error', function (err) {
             util.log("Call home to "+url+" failed with "+err+", reconnecting in 20 seconds");

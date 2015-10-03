@@ -344,6 +344,22 @@ probe.log("Remembering {id:12345} for "+probe.item.text);
 probe.remember({id:12345});
 </pre>
 
+<h2>probe.session(name, value|callback)</h2>
+
+Store to the user's cookie session, must be called before the callback.
+
+<pre data-lang="javascript">
+probe.session('username', 'grumpycat');
+</pre>
+
+Retrieve a value from the user's cookie session, must have an asynchronous callback.
+
+<pre data-lang="javascript">
+probe.session('username', function (error, args) {
+    probe.log("Session response: "+JSON.stringify(args));
+});
+</pre>
+
 <h2>probe.get(args, callback)</h2>
 
 HTTP GET request.
@@ -747,6 +763,43 @@ function init(probe, callback) {
         text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
             The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
     }, headers);
+}
+Script.prototype.init = init;
+
+module.exports = exports = new Script();
+</pre>
+
+<h2>Session</h2>
+
+<h3>apis/hello-session.js</h3>
+
+<pre data-lang="javascript">
+var utils = require(shell.path+'/modules/utils'),
+    Script = utils.Script(module.id, "Hello World");
+
+function init(probe, callback) {
+    "use strict";
+    var headers = {'Access-Control-Allow-Origin':'*'};
+    probe.log(exports.name);
+
+    // Retrieve username
+    probe.session('username', function (error, args) {
+        probe.log("Session response: "+JSON.stringify(args));
+
+        // Store username, must be called before the callback
+        probe.session('username', 'helloworld');
+
+        // Retrieve username that we just stored
+        probe.session('username', function (error, args) {
+            probe.log("Session response: "+JSON.stringify(args));
+
+            callback({
+                title: exports.name,
+                text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
+                    The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+            }, headers);
+        });
+    });
 }
 Script.prototype.init = init;
 

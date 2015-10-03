@@ -33,6 +33,9 @@
     },
     "dependencies": {
         "bcrypt": "*",
+        "connect": "*",
+        "compression": "*",
+        "cookie-session": "*",
         "isbinaryfile": "*",
         "js-beautify": "*",
         "node-static": "*",
