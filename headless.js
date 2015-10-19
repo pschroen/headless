@@ -106,7 +106,8 @@ var init = function () {
                     var uri = url.parse(req.url),
                         load = body.length ? querystring.parse(body) : {};
                     utils.extend(load, querystring.parse(uri.query));
-                    if (!load.remoteAddress) load.remoteAddress = req.socket.remoteAddress;
+                    load.remoteAddress = req.socket.remoteAddress;
+                    load.origin = req.headers.origin;
                     callbacks[callbackid] = function (out) {
                         var data = null;
                         if (!out.stream) {
@@ -150,7 +151,8 @@ var init = function () {
                                         if ('/'+item.text === uri.pathname) {
                                             var load = body.length ? querystring.parse(body) : {};
                                             utils.extend(load, querystring.parse(uri.query));
-                                            if (!load.remoteAddress) load.remoteAddress = req.socket.remoteAddress;
+                                            load.remoteAddress = req.socket.remoteAddress;
+                                            load.origin = req.headers.origin;
                                             if (process.env.NODE_ENV !== 'production') util.log("Endpoint requested "+uri.pathname+" > "+load.remoteAddress);
                                             var api = new container(list.list.container, users[name], list.path, i, load, req.session);
                                             api.callback = function (out) {
