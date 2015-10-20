@@ -769,6 +769,31 @@ Script.prototype.init = init;
 module.exports = exports = new Script();
 </pre>
 
+<h3>apis/hello-origin.js</h3>
+
+<pre data-lang="javascript">
+var utils = require(shell.path+'/modules/utils'),
+    Script = utils.Script(module.id, "Hello World");
+
+function init(probe, callback) {
+    var payload = probe.payload,
+        origin = payload.origin,
+        headers = {
+            'Access-Control-Allow-Origin': origin,
+            'Access-Control-Allow-Credentials': 'true'
+        };
+    probe.log(exports.name);
+    callback({
+        title: exports.name,
+        text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
+            The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+    }, headers);
+}
+Script.prototype.init = init;
+
+module.exports = exports = new Script();
+</pre>
+
 <h2>Session</h2>
 
 <h3>apis/hello-session.js</h3>
@@ -778,8 +803,12 @@ var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Hello World");
 
 function init(probe, callback) {
-    "use strict";
-    var headers = {'Access-Control-Allow-Origin':'*'};
+    var payload = probe.payload,
+        origin = payload.origin,
+        headers = {
+            'Access-Control-Allow-Origin': origin,
+            'Access-Control-Allow-Credentials': 'true'
+        };
     probe.log(exports.name);
 
     // Retrieve username
