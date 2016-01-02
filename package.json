@@ -37,7 +37,6 @@
         "compression": "*",
         "cookie-session": "*",
         "isbinaryfile": "*",
-        "js-beautify": "*",
         "node-static": "*",
         "node-uuid": "*",
         "phantomjs": ">=1.9.8 <2.0.0",

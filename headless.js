@@ -38,7 +38,6 @@ ws = require('ws'),
 bcrypt = require('bcrypt'),
 uuid = require('node-uuid'),
 isbinaryfile = require('isbinaryfile');
-beautify = require('js-beautify').js_beautify;
 
 config = require('./config'),
 utils = require('./modules/utils'),
@@ -111,11 +110,8 @@ var init = function () {
                     callbacks[callbackid] = function (out) {
                         var data = null;
                         if (!out.stream) {
-                            if (out.headers['Content-Type'] !== 'application/json') {
-                                data = out.data;
-                            } else {
-                                data = beautify(JSON.stringify(out.data));
-                            }
+                            data = out.data;
+                            if (out.headers['Content-Type'] === 'application/json') data = JSON.stringify(JSON.parse(out.data), null, '\t');
                         }
                         if (!out.stream || out.stream === 'start') {
                             res.writeHead(200, utils.extend(out.headers, {'Content-Length': out.length ? out.length : data.length}));
@@ -158,11 +154,8 @@ var init = function () {
                                             api.callback = function (out) {
                                                 var data = null;
                                                 if (!out.stream) {
-                                                    if (out.headers['Content-Type'] !== 'application/json') {
-                                                        data = out.data;
-                                                    } else {
-                                                        data = beautify(JSON.stringify(out.data));
-                                                    }
+                                                    data = out.data;
+                                                    if (out.headers['Content-Type'] === 'application/json') data = JSON.stringify(JSON.parse(out.data), null, '\t');
                                                 }
                                                 if (!out.stream || out.stream === 'start') {
                                                     res.writeHead(200, utils.extend(out.headers, {'Content-Length': out.length ? out.length : data.length}));
@@ -483,7 +476,7 @@ function receive(socket, payload, req, upstream) {
                                             load[key] = files.files(val);
                                         } else {
                                             load[key] = !isbinaryfile.sync(val) ? files.read(val).toString() : 'binary';
-                                            if (/\.json$/.exec(val)) load[key] = beautify(load[key]);
+                                            if (/\.json$/.exec(val)) load[key] = JSON.stringify(JSON.parse(load[key]), null, '\t');
                                         }
                                     }
                                 }
