@@ -49,4 +49,4 @@ su - <user> -c "cd <install path> && forever start headless.js"
 
 ## Copyright & License
 
-Copyright (c) 2014-2015 Patrick Schroen - Released under the [MIT License](LICENSE).
+Copyright (c) 2014-2016 Patrick Schroen - Released under the [MIT License](LICENSE).
