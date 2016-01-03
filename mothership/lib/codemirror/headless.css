@@ -1,48 +1,51 @@
 /* Based on Sublime Text's Monokai theme */
 
-.cm-s-headless.CodeMirror {height: 100%; background: #111; color: #f8f8f2;}
-.cm-s-headless div.CodeMirror-selected {background: #49483E !important;}
-.cm-s-headless.CodeMirror ::selection { background: rgba(73, 72, 62, .99); }
-.cm-s-headless.CodeMirror ::-moz-selection { background: rgba(73, 72, 62, .99); }
-.cm-s-headless .CodeMirror-gutters {background: #111; border-right: 0px;}
+.cm-s-headless.CodeMirror { height: 100%; background: #111; color: #f8f8f2; }
+.cm-s-headless div.CodeMirror-selected { background: #49483E; }
+.cm-s-headless .CodeMirror-line::selection, .cm-s-headless .CodeMirror-line > span::selection, .cm-s-headless .CodeMirror-line > span > span::selection { background: rgba(73, 72, 62, .99); }
+.cm-s-headless .CodeMirror-line::-moz-selection, .cm-s-headless .CodeMirror-line > span::-moz-selection, .cm-s-headless .CodeMirror-line > span > span::-moz-selection { background: rgba(73, 72, 62, .99); }
+.cm-s-headless .CodeMirror-gutters { background: #111; border-right: 0px; }
 .cm-s-headless .CodeMirror-guttermarker { color: white; }
 .cm-s-headless .CodeMirror-guttermarker-subtle { color: #d0d0d0; }
-.cm-s-headless .CodeMirror-linenumber {color: #d0d0d0;}
-.cm-s-headless .CodeMirror-cursor {border-left: 1px solid #f8f8f0 !important;}
+.cm-s-headless .CodeMirror-linenumber { color: #d0d0d0; }
+.cm-s-headless .CodeMirror-cursor { border-left: 1px solid #f8f8f0; }
 
-.cm-s-headless span.cm-comment {color: #75715e;}
-.cm-s-headless span.cm-atom {color: #ae81ff;}
-.cm-s-headless span.cm-number {color: #ae81ff;}
+.cm-s-headless span.cm-comment { color: #75715e; }
+.cm-s-headless span.cm-atom { color: #ae81ff; }
+.cm-s-headless span.cm-number { color: #ae81ff; }
 
-.cm-s-headless span.cm-property, .cm-s-headless span.cm-attribute {color: #a6e22e;}
-.cm-s-headless span.cm-keyword {color: #f92672;}
-.cm-s-headless span.cm-string {color: #e6db74;}
+.cm-s-headless span.cm-property, .cm-s-headless span.cm-attribute { color: #a6e22e; }
+.cm-s-headless span.cm-keyword { color: #f92672; }
+.cm-s-headless span.cm-string { color: #e6db74; }
 
-.cm-s-headless span.cm-variable {color: #a6e22e;}
-.cm-s-headless span.cm-variable-2 {color: #9effff;}
-.cm-s-headless span.cm-def {color: #fd971f;}
-.cm-s-headless span.cm-bracket {color: #f8f8f2;}
-.cm-s-headless span.cm-tag {color: #f92672;}
-.cm-s-headless span.cm-link {color: #ae81ff;}
-.cm-s-headless span.cm-error {background: #f92672; color: #f8f8f0;}
+.cm-s-headless span.cm-variable { color: #f8f8f2; }
+.cm-s-headless span.cm-variable-2 { color: #9effff; }
+.cm-s-headless span.cm-variable-3 { color: #66d9ef; }
+.cm-s-headless span.cm-def { color: #fd971f; }
+.cm-s-headless span.cm-bracket { color: #f8f8f2; }
+.cm-s-headless span.cm-tag { color: #f92672; }
+.cm-s-headless span.cm-header { color: #ae81ff; }
+.cm-s-headless span.cm-link { color: #ae81ff; }
+.cm-s-headless span.cm-error { background: #f92672; color: #f8f8f0; }
 
-.cm-s-headless .CodeMirror-activeline-background {background: #222 !important;}
-.cm-s-headless .CodeMirror-activeline-background.error {background: #822 !important;}
+.cm-s-headless .CodeMirror-activeline-background { background: #222; }
+.cm-s-headless .CodeMirror-activeline-background.error { background: #822; }
 .cm-s-headless .CodeMirror-matchingbracket {
   text-decoration: underline;
   color: white !important;
 }
 
-.cm-s-headless .CodeMirror-scrollbar-filler {background: #111;}
-.cm-s-headless .CodeMirror-search-match {background: #f8f8f0; max-height: 2px;}
+.cm-s-headless .CodeMirror-scrollbar-filler { background: #111; }
+.cm-s-headless .CodeMirror-search-match { background: #f8f8f0; max-height: 2px; }
 .cm-s-headless .cm-searching {
   background: none;
   border: 1px solid #f8f8f0;
   border-radius: 3px;
+  -moz-box-sizing: border-box;
   box-sizing: border-box;
 }
 
-.cm-s-headless .breakpoints {width: .8em;}
+.cm-s-headless .breakpoints { width: .8em; }
 .cm-s-headless .CodeMirror-headless-mark-error {
   background-position: center bottom;
   background-repeat: no-repeat;
