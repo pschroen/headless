@@ -14,6 +14,8 @@ if (!(typeof process !== 'undefined' && typeof process.send !== 'undefined') && 
     console.error("Headless shell needs to be executed from mothership");
 }
 
+var debug = typeof phantom === 'undefined' ? require('debug')('headless:modules:shell') : function () {};
+
 /**
  * Shell constructor.
  *
@@ -241,6 +243,7 @@ function load(id) {
  * @param    {undefined|boolean} [stream] Stream out
  */
         probe.config.init(probe, function (out, headers, stream) {
+            debug('initCallback  : '+(typeof out === 'object' ? JSON.stringify(out) : out)+'  '+headers+'  '+stream);
             if (typeof out !== 'undefined') {
                 var outheaders = {'Content-Type':'application/json'};
                 if (typeof headers !== 'undefined') {

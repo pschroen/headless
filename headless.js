@@ -45,10 +45,14 @@ files = require('./modules/node/files'),
 container = require('./container'),
 shell = JSON.parse(files.read(path.join('shell', 'config.json'))),
 version = JSON.parse(files.read('package.json')).version,
+// TODO: Better error handling
 error = null;
+
+var debug = require('debug')('headless');
 
 send = function (socket, data) {
     "use strict";
+    debug('send  : '+JSON.stringify(data));
     if (socket) {
         socket.send(JSON.stringify(data), function (err) {
             if (err && err.message !== 'not opened' && process.env.NODE_ENV !== 'production') console.error(err.stack);
@@ -84,6 +88,7 @@ var insert = [],
 
 var init = function () {
     "use strict";
+    debug('init');
     var app = connect();
     app.use(require('compression')());
     app.use(require('cookie-session')({name:'session', secret:'TODO: Salt'}));
@@ -108,10 +113,11 @@ var init = function () {
                     load.remoteAddress = req.socket.remoteAddress;
                     load.origin = req.headers.origin;
                     callbacks[callbackid] = function (out) {
+                        debug('remote apiCallback  : '+JSON.stringify(out));
                         var data = null;
                         if (!out.stream) {
                             data = out.data;
-                            if (out.headers['Content-Type'] === 'application/json') data = JSON.stringify(JSON.parse(out.data), null, '\t');
+                            if (out.headers['Content-Type'] === 'application/json') data = JSON.stringify(out.data, null, '\t');
                         }
                         if (!out.stream || out.stream === 'start') {
                             res.writeHead(200, utils.extend(out.headers, {'Content-Length': out.length ? out.length : data.length}));
@@ -152,10 +158,11 @@ var init = function () {
                                             if (process.env.NODE_ENV !== 'production') util.log("Endpoint requested "+uri.pathname+" > "+load.remoteAddress);
                                             var api = new container(list.list.container, users[name], list.path, i, load, req.session);
                                             api.callback = function (out) {
+                                                debug('local apiCallback  : '+JSON.stringify(out));
                                                 var data = null;
                                                 if (!out.stream) {
                                                     data = out.data;
-                                                    if (out.headers['Content-Type'] === 'application/json') data = JSON.stringify(JSON.parse(out.data), null, '\t');
+                                                    if (out.headers['Content-Type'] === 'application/json') data = JSON.stringify(out.data, null, '\t');
                                                 }
                                                 if (!out.stream || out.stream === 'start') {
                                                     res.writeHead(200, utils.extend(out.headers, {'Content-Length': out.length ? out.length : data.length}));
@@ -187,6 +194,7 @@ var init = function () {
     }, app).listen(config.https, config.ip, function () {
         wss = new ws.Server({server:server});
         wss.on('connection', function (socket) {
+            debug('connection  : '+socket.upgradeReq.headers['user-agent']);
             if (socket.upgradeReq.headers['user-agent']) {
                 if (process.env.NODE_ENV !== 'production') util.log("Hello "+socket._socket.remoteAddress);
                 socket.on('message', function (payload) {
@@ -377,10 +385,13 @@ var init = function () {
 
     mothership(insert);
     keys = keys.join('|');
+
+    debug('init');
 };
 
 function receive(socket, payload, req, upstream) {
     "use strict";
+    debug('receive  : '+payload+'  '+upstream);
     payload = JSON.parse(payload);
     var message = payload.message,
         data = payload.data;
@@ -813,6 +824,7 @@ function receive(socket, payload, req, upstream) {
 
 function mothership(insert) {
     "use strict";
+    debug('mothership  : '+JSON.stringify(insert));
     shell.mothership.forEach(function (host) {
         var url = 'wss://'+host,
             socket = new ws(url);
@@ -880,6 +892,7 @@ function mothership(insert) {
 
 function reinsert() {
     "use strict";
+    debug('reinsert');
     insert = [],
     keys = [];
     var userslist = files.readdir('users');
@@ -904,16 +917,18 @@ function reinsert() {
             }
         }
     });
-
     shell.mothership.forEach(function (host) {
         util.log("Relinking with mothership wss://"+host);
         device(insert);
     });
     keys = keys.join('|');
+
+    debug('reinsert');
 }
 
 function endpoint(data, callback) {
     "use strict";
+    debug('endpoint  : '+JSON.stringify(data));
     var url = 'wss://'+data.submit,
         api = new ws(url);
     api.on('open', function () {

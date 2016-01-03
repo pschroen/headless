@@ -36,6 +36,7 @@
         "connect": "*",
         "compression": "*",
         "cookie-session": "*",
+        "debug": "*",
         "isbinaryfile": "*",
         "node-static": "*",
         "node-uuid": "*",
