@@ -5,13 +5,12 @@
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, node:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, indent:4 */
+/* globals fs, utils, shell, error:true */
+"use strict";
 
 if (typeof process === 'undefined') {
-    console.error("Headless shell needs to be executed from mothership");
+    console.error("Headless shell needs to be executed from a mothership");
 }
 
 var path = require('path');
@@ -33,7 +32,6 @@ Shell.prototype.join = path.join;
  * @returns  {boolean}
  */
 function exists(filepath) {
-    "use strict";
     return fs.existsSync(filepath);
 }
 Shell.prototype.exists = exists;
@@ -45,7 +43,6 @@ Shell.prototype.exists = exists;
  * @returns  {Object}
  */
 function read(filename) {
-    "use strict";
     return fs.readFileSync(filename);
 }
 Shell.prototype.read = read;
@@ -57,7 +54,6 @@ Shell.prototype.read = read;
  * @returns  {string[]}
  */
 function readdir(dir) {
-    "use strict";
     return fs.readdirSync(dir);
 }
 Shell.prototype.readdir = readdir;
@@ -70,7 +66,6 @@ Shell.prototype.readdir = readdir;
  * @returns  {string[]}
  */
 function files(dir, paths) {
-    "use strict";
     if (typeof paths === 'undefined') paths = [];
     var filenames = readdir(dir);
     filenames.sort(function (a, b) {
@@ -95,7 +90,6 @@ Shell.prototype.files = files;
  * @returns  {string[]}
  */
 function lists(dir) {
-    "use strict";
     var paths = [],
         filenames = readdir(dir);
     filenames.sort(function (a, b) {
@@ -132,7 +126,6 @@ Shell.prototype.lists = lists;
  * @returns  {Object}
  */
 function move(src, dest) {
-    "use strict";
     return fs.renameSync(src, dest);
 }
 Shell.prototype.move = move;
@@ -145,7 +138,6 @@ Shell.prototype.move = move;
  * @returns  {Object}
  */
 function write(filename, data) {
-    "use strict";
     return fs.writeFileSync(filename, data);
 }
 Shell.prototype.write = write;
@@ -156,7 +148,6 @@ Shell.prototype.write = write;
  * @param    {string} p Path
  */
 function mkdir(p) {
-    "use strict";
     p = path.resolve(p);
     try {
         fs.mkdirSync(p);
@@ -178,7 +169,6 @@ Shell.prototype.mkdir = mkdir;
  * @param    {string} dest Path
  */
 function cpdir(src, dest) {
-    "use strict";
     if (fs.lstatSync(src).isDirectory()) {
         mkdir(dest);
         readdir(src).forEach(function (file) {
@@ -197,7 +187,6 @@ Shell.prototype.cpdir = cpdir;
  * @param    {undefined|boolean} [empty] Remove empty directory tree
  */
 function rmdir(dir, empty) {
-    "use strict";
     if (fs.lstatSync(dir).isDirectory()) {
         readdir(dir).forEach(function (file) {
             var fullpath = path.join(dir, file);
@@ -219,7 +208,6 @@ Shell.prototype.rmdir = rmdir;
  * @param    {string} dir Path
  */
 function rmdirEmpty(dir) {
-    "use strict";
     var parts = dir.split(path.sep);
     for (var i = parts.length; i > 0; i--) {
         var fullpath = parts.slice(0, i).join(path.sep);

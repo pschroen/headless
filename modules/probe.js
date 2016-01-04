@@ -5,10 +5,9 @@
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, node:true, phantom:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, phantom:true, indent:4 */
+/* globals shell, ghost, list */
+"use strict";
 
 /**
  * Probe instance.
@@ -19,7 +18,6 @@
  * @param    {undefined|Object} [load] Payload
  */
 function Probe(id, i, load) {
-    "use strict";
     this.id = id;
     this.shell = list.list.shell;
     this.item = list.list.items[i];

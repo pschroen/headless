@@ -5,10 +5,10 @@
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, node:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, indent:4 */
+/* globals os, fs, cp, path, http, https, connect, request, util, url, querystring, file, ws, bcrypt, uuid, isbinaryfile,
+    config, utils, files, container, shell, version, error:true, send */
+"use strict";
 
 if (typeof process === 'undefined') {
     console.error("Headless daemon needs to be executed with node");
@@ -17,41 +17,39 @@ if (typeof process === 'undefined') {
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 // TODO: http://nodejs.org/api/domain.html
 process.on('uncaughtException', function (err) {
-    "use strict";
     console.error("UncaughtException: "+err.stack);
 });
 
 // Globals
-os = require('os'),
-fs = require('fs'),
-cp = require('child_process'),
-path = require('path'),
-http = require('http'),
-https = require('https'),
-connect = require('connect'),
-request = require('request'),
-util = require('util'),
-url = require('url'),
-querystring = require('querystring'),
-file = new (require('node-static')).Server('./mothership'),
-ws = require('ws'),
-bcrypt = require('bcrypt'),
-uuid = require('node-uuid'),
-isbinaryfile = require('isbinaryfile');
+global.os = require('os'),
+global.fs = require('fs'),
+global.cp = require('child_process'),
+global.path = require('path'),
+global.http = require('http'),
+global.https = require('https'),
+global.connect = require('connect'),
+global.request = require('request'),
+global.util = require('util'),
+global.url = require('url'),
+global.querystring = require('querystring'),
+global.file = new (require('node-static')).Server('./mothership'),
+global.ws = require('ws'),
+global.bcrypt = require('bcrypt'),
+global.uuid = require('node-uuid'),
+global.isbinaryfile = require('isbinaryfile');
 
-config = require('./config'),
-utils = require('./modules/utils'),
-files = require('./modules/node/files'),
-container = require('./container'),
-shell = JSON.parse(files.read(path.join('shell', 'config.json'))),
-version = JSON.parse(files.read('package.json')).version,
+global.config = require('./config'),
+global.utils = require('./modules/utils'),
+global.files = require('./modules/node/files'),
+global.container = require('./container'),
+global.shell = JSON.parse(files.read(path.join('shell', 'config.json'))),
+global.version = JSON.parse(files.read('package.json')).version,
 // TODO: Better error handling
-error = null;
+global.error = null;
 
 var debug = require('debug')('headless');
 
-send = function (socket, data) {
-    "use strict";
+global.send = function (socket, data) {
     debug('send  : '+JSON.stringify(data));
     if (socket) {
         socket.send(JSON.stringify(data), function (err) {
@@ -62,7 +60,6 @@ send = function (socket, data) {
 
 if (config.http) {
     http.createServer(function (req, res) {
-        "use strict";
         req.on('end', function (error) {
             res.writeHead(302, {
                 'Location': 'https://'+(config.https !== 443 && !config.proxied ? url.parse('http://'+req.headers.host).hostname+':'+config.https : req.headers.host)+req.url
@@ -87,7 +84,6 @@ var insert = [],
     wss = null;
 
 var init = function () {
-    "use strict";
     debug('init');
     var app = connect();
     app.use(require('compression')());
@@ -390,7 +386,6 @@ var init = function () {
 };
 
 function receive(socket, payload, req, upstream) {
-    "use strict";
     debug('receive  : '+payload+'  '+upstream);
     payload = JSON.parse(payload);
     var message = payload.message,
@@ -823,7 +818,6 @@ function receive(socket, payload, req, upstream) {
 }
 
 function mothership(insert) {
-    "use strict";
     debug('mothership  : '+JSON.stringify(insert));
     shell.mothership.forEach(function (host) {
         var url = 'wss://'+host,
@@ -891,7 +885,6 @@ function mothership(insert) {
 }
 
 function reinsert() {
-    "use strict";
     debug('reinsert');
     insert = [],
     keys = [];
@@ -927,7 +920,6 @@ function reinsert() {
 }
 
 function endpoint(data, callback) {
-    "use strict";
     debug('endpoint  : '+JSON.stringify(data));
     var url = 'wss://'+data.submit,
         api = new ws(url);

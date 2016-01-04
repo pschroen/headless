@@ -7,17 +7,15 @@
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, node:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, indent:4 */
+/* globals os, fs, cp, http, request, util, url, ws, config, utils, shell, version, error:true, send */
+"use strict";
 
 if (typeof process === 'undefined') {
-    console.error("Headless shell needs to be executed from mothership");
+    console.error("Headless shell needs to be executed from a mothership");
 }
 
 var Shell = function (container, user, list, index, load, session) {
-    "use strict";
     this.container = container;
     try {
         this.list = JSON.parse(fs.readFileSync(list).toString());
@@ -300,7 +298,6 @@ var Shell = function (container, user, list, index, load, session) {
 };
 
 function get(user, data, callback) {
-    "use strict";
     var args = data.args,
         options = {
             url: args.url
@@ -323,7 +320,6 @@ function get(user, data, callback) {
 Shell.prototype.get = get;
 
 function download(user, data, callback) {
-    "use strict";
     var args = data.args,
         uri = url.parse(args.url),
         options = {
@@ -348,7 +344,6 @@ function download(user, data, callback) {
 Shell.prototype.download = download;
 
 function post(user, data, callback) {
-    "use strict";
     var args = data.args,
         options = {
             url: args.url,
@@ -372,7 +367,6 @@ function post(user, data, callback) {
 Shell.prototype.post = post;
 
 function exec(user, data, callback) {
-    "use strict";
     var args = data.args;
     cp.exec(args.command, args.options, function (error, stdout, stderr) {
         args.error = error;
@@ -384,8 +378,7 @@ function exec(user, data, callback) {
 Shell.prototype.exec = exec;
 
 function out(user, data, callback) {
-    "use strict";
-    /*jshint validthis:true */
+    /* jshint validthis:true */
     var self = this,
         args = data.args;
     if (self.callback) {
@@ -450,8 +443,7 @@ function out(user, data, callback) {
 Shell.prototype.out = out;
 
 function kill() {
-    "use strict";
-    /*jshint validthis:true */
+    /* jshint validthis:true */
     switch (this.container) {
         case 'node':
             this.node.send({message:'kill'});

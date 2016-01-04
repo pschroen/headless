@@ -5,13 +5,12 @@
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, node:true, phantom:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, phantom:true, indent:4 */
+/* globals probe, utils, shell, user, ghost, list, index */
+"use strict";
 
 if (!(typeof process !== 'undefined' && typeof process.send !== 'undefined') && typeof phantom === 'undefined') {
-    console.error("Headless shell needs to be executed from mothership");
+    console.error("Headless shell needs to be executed from a mothership");
 }
 
 var debug = typeof phantom === 'undefined' ? require('debug')('headless:modules:shell') : function () {};
@@ -29,7 +28,6 @@ Shell.prototype.threads = [];
 Shell.prototype.threadid = -1;
 
 function receive(payload) {
-    "use strict";
     if (payload.constructor === String) payload = JSON.parse(payload);
     var message = payload.message,
         data = payload.data;
@@ -87,7 +85,6 @@ function receive(payload) {
 Shell.prototype.receive = receive;
 
 function command(probe, name, args, callback) {
-    "use strict";
     if (name === 'log' || name === 'error') {
         if (name === 'error') {
             probe.searchid++;
@@ -196,7 +193,6 @@ Shell.prototype.command = command;
  * @param    {Object} box In a box
  */
 function box(name, id, box) {
-    "use strict";
     return {
         name: name,
         message: 'data',
@@ -212,7 +208,6 @@ function box(name, id, box) {
 Shell.prototype.box = box;
 
 function next() {
-    "use strict";
     shell.threadid++;
     if (shell.threadid < shell.threads.length) {
         shell.load(shell.threadid);
@@ -230,7 +225,6 @@ function next() {
 Shell.prototype.next = next;
 
 function load(id) {
-    "use strict";
     var probe = shell.threads[id];
     try {
         probe.config = require(shell.path+'/shell/'+probe.shell+'/config/init.js');
@@ -265,7 +259,6 @@ function load(id) {
 Shell.prototype.load = load;
 
 function error(err) {
-    "use strict";
     var match = (new RegExp('\\('+shell.path+'\/(.*):(.*):(.*)\\)', 'i')).exec(err.stack);
     if (!match) match = (new RegExp('\\('+shell.path+'\/(.*):(.*)\\)', 'i')).exec(err.stack);
     if (match) {
@@ -284,7 +277,6 @@ function error(err) {
 Shell.prototype.error = error;
 
 function remember(probe, memory) {
-    "use strict";
     utils.extend(probe.memory.list[probe.item.text], memory);
     merge();
     return probe.memory.list[probe.item.text];
@@ -292,7 +284,6 @@ function remember(probe, memory) {
 Shell.prototype.remember = remember;
 
 function merge() {
-    "use strict";
     shell.write(shell.join(shell.path, 'users', user, 'config.json'), JSON.stringify(ghost));
     shell.write(list.path, JSON.stringify(list.list));
 }

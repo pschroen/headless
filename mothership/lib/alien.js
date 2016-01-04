@@ -5,10 +5,7 @@
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false,
- loopfunc:true, shadow:true, browser:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, browser:true, indent:4 */
 
 function pad(n) {
     "use strict";

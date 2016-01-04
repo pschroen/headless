@@ -5,10 +5,9 @@
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, node:true, phantom:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, phantom:true, indent:4 */
+/* globals fs, shell */
+"use strict";
 
 var utils = require('./utils'),
     Script = utils.Script(module.id, "Find Init");
@@ -20,7 +19,6 @@ var utils = require('./utils'),
  * @param    {undefined|initCallback} [callback]
  */
 function init(probe, callback) {
-    "use strict";
     probe.log("["+exports.id+"] Loading "+exports.name+" and searching for "+probe.item.text);
     if (callback) callback(files(probe, shell.path, new RegExp(utils.termsToPattern(probe.item.text), 'i')));
 }
@@ -37,7 +35,6 @@ Script.prototype.init = init;
  * @returns  {string}
  */
 function files(probe, dir, pattern, dotfiles, path) {
-    "use strict";
     if (typeof dotfiles === 'undefined') dotfiles = true;
     var filenames = shell.readdir(dir);
     filenames.sort(function (a, b) {

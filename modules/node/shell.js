@@ -5,13 +5,12 @@
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, node:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, indent:4 */
+/* globals fs, utils, shell */
+"use strict";
 
 if (!(typeof process !== 'undefined' && typeof process.send !== 'undefined')) {
-    console.error("Headless shell needs to be executed from mothership");
+    console.error("Headless shell needs to be executed from a mothership");
 }
 
 var path = require('path');
@@ -27,26 +26,22 @@ Shell.prototype.list = {path:process.argv[2], list:JSON.parse(fs.readFileSync(pr
 Shell.prototype.index = parseInt(process.argv[3], 10);
 
 function timeout(f, millisec) {
-    "use strict";
     return setTimeout(function () {f();}, millisec);
 }
 Shell.prototype.setTimeout = timeout;
 
 function interval(f, millisec) {
-    "use strict";
     return setInterval(function () {f();}, millisec);
 }
 Shell.prototype.setInterval = interval;
 
 // NodeJS to NodeJS bridge
 function send(data) {
-    "use strict";
     process.send(data);
 }
 Shell.prototype.send = send;
 
 function exit(exit) {
-    "use strict";
     if (exit) {
         shell.queue--;
     } else if (!shell.queue) {
@@ -60,13 +55,11 @@ function exit(exit) {
 Shell.prototype.exit = exit;
 
 function kill() {
-    "use strict";
     process.exit();
 }
 Shell.prototype.kill = kill;
 
 process.on('message', function (payload) {
-    "use strict";
     shell.receive(payload);
 });
 
