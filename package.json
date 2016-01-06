@@ -1,48 +1,44 @@
 {
-    "name": "headless",
-    "version": "0.1.2",
-    "description": "NodeJS and PhantomJS shell",
-    "homepage": "https://headless.io/",
-    "keywords": [
-        "websocket",
-        "relay",
-        "ghost",
-        "shell",
-        "phantomjs"
-    ],
-    "author": {
-        "name": "Patrick Schroen",
-        "email": "ps@ufotechnologies.com",
-        "url": "http://blog.ufotechnologies.com/"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/pschroen/headless"
-    },
-    "bugs": {
-        "url": "https://github.com/pschroen/headless/issues"
-    },
-    "license": "MIT",
-    "private": true,
-    "main": "headless.js",
-    "scripts": {
-        "start": "node headless"
-    },
-    "engines": {
-        "node": ">=0.10.0"
-    },
-    "dependencies": {
-        "bcrypt": "*",
-        "connect": "*",
-        "compression": "*",
-        "cookie-session": "*",
-        "debug": "*",
-        "isbinaryfile": "*",
-        "node-static": "*",
-        "node-uuid": "*",
-        "phantomjs": ">=1.9.8 <2.0.0",
-        "request": "*",
-        "stream-throttle": "*",
-        "ws": "*"
-    }
+  "name": "headless",
+  "version": "0.1.2",
+  "description": "NodeJS and PhantomJS shell",
+  "homepage": "https://headless.io/",
+  "keywords": [
+    "websocket",
+    "relay",
+    "ghost",
+    "shell",
+    "phantomjs"
+  ],
+  "author": "Patrick Schroen <ps@ufotechnologies.com> (http://blog.ufotechnologies.com/)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pschroen/headless"
+  },
+  "bugs": {
+    "url": "https://github.com/pschroen/headless/issues"
+  },
+  "license": "MIT",
+  "private": true,
+  "main": "headless.js",
+  "scripts": {
+    "start": "node headless"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "dependencies": {
+    "bcrypt": "*",
+    "compression": "*",
+    "connect": "*",
+    "cookie-session": "*",
+    "debug": "*",
+    "isbinaryfile": "*",
+    "node-static": "*",
+    "node-uuid": "*",
+    "phantomjs": ">=1.9.8 <2.0.0",
+    "request": "*",
+    "stream-throttle": "*",
+    "ws": "*"
+  }
 }
