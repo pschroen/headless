@@ -28,7 +28,8 @@ Shell.prototype.threads = [];
 Shell.prototype.threadid = -1;
 
 function receive(payload) {
-    if (payload.constructor === String) payload = JSON.parse(payload);
+    debug('receive  : '+(typeof payload === 'object' ? JSON.stringify(payload) : payload));
+    if (typeof payload === 'string') payload = JSON.parse(payload);
     var message = payload.message,
         data = payload.data;
     switch (message) {
@@ -85,6 +86,7 @@ function receive(payload) {
 Shell.prototype.receive = receive;
 
 function command(probe, name, args, callback) {
+    debug('command  : '+name+'  '+JSON.stringify(args)+'  '+(typeof callback));
     if (name === 'log' || name === 'error') {
         if (name === 'error') {
             probe.searchid++;
@@ -103,6 +105,7 @@ function command(probe, name, args, callback) {
         }) !== JSON.stringify(probe.shadow)) {
             shell.queue++;
             shell.callbacks[shell.callbackid] = function () {
+                debug('log shellCallback');
                 shell.exit(shell.queue);
             };
             shell.send({
@@ -140,6 +143,7 @@ function command(probe, name, args, callback) {
         args.text = probe.item.text;
         shell.queue++;
         shell.callbacks[shell.callbackid] = function () {
+            debug('box shellCallback');
             shell.exit(shell.queue);
         };
         shell.send({
@@ -154,6 +158,7 @@ function command(probe, name, args, callback) {
     } else if (name === 'session') {
         shell.queue++;
         shell.callbacks[shell.callbackid] = function (e, a) {
+            debug('session shellCallback  : '+(typeof callback)+'  '+(typeof e === 'object' ? JSON.stringify(e) : e)+'  '+(typeof a === 'object' ? JSON.stringify(a) : a));
             if (callback) callback(e, a);
             shell.exit(shell.queue);
         };
@@ -169,6 +174,7 @@ function command(probe, name, args, callback) {
     } else {
         shell.queue++;
         shell.callbacks[shell.callbackid] = function (e, a) {
+            debug('request shellCallback  : '+(typeof callback)+'  '+(typeof e === 'object' ? JSON.stringify(e) : e)+'  '+(typeof a === 'object' ? JSON.stringify(a) : a));
             if (callback) callback(e, a);
             shell.exit(shell.queue);
         };
@@ -193,6 +199,7 @@ Shell.prototype.command = command;
  * @param    {Object} box In a box
  */
 function box(name, id, box) {
+    debug('box  : '+name+'  '+id+'  '+JSON.stringify(box));
     return {
         name: name,
         message: 'data',
@@ -208,6 +215,7 @@ function box(name, id, box) {
 Shell.prototype.box = box;
 
 function next() {
+    debug('next  : '+shell.threadid);
     shell.threadid++;
     if (shell.threadid < shell.threads.length) {
         shell.load(shell.threadid);
@@ -225,6 +233,7 @@ function next() {
 Shell.prototype.next = next;
 
 function load(id) {
+    debug('load  : '+id+'  '+JSON.stringify(shell.threads[id]));
     var probe = shell.threads[id];
     try {
         probe.config = require(shell.path+'/shell/'+probe.shell+'/config/init.js');
@@ -259,6 +268,7 @@ function load(id) {
 Shell.prototype.load = load;
 
 function error(err) {
+    debug('error  : '+(typeof err === 'object' ? JSON.stringify(err) : err));
     var match = (new RegExp('\\('+shell.path+'\/(.*):(.*):(.*)\\)', 'i')).exec(err.stack);
     if (!match) match = (new RegExp('\\('+shell.path+'\/(.*):(.*)\\)', 'i')).exec(err.stack);
     if (match) {
@@ -277,6 +287,7 @@ function error(err) {
 Shell.prototype.error = error;
 
 function remember(probe, memory) {
+    debug('remember  : '+JSON.stringify(memory));
     utils.extend(probe.memory.list[probe.item.text], memory);
     merge();
     return probe.memory.list[probe.item.text];
@@ -284,6 +295,7 @@ function remember(probe, memory) {
 Shell.prototype.remember = remember;
 
 function merge() {
+    debug('merge  : '+JSON.stringify(ghost)+'  '+JSON.stringify(list.list));
     shell.write(shell.join(shell.path, 'users', user, 'config.json'), JSON.stringify(ghost));
     shell.write(list.path, JSON.stringify(list.list));
 }

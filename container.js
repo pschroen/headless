@@ -15,6 +15,8 @@ if (typeof process === 'undefined') {
     console.error("Headless shell needs to be executed from a mothership");
 }
 
+var debug = require('debug')('headless:container');
+
 var Shell = function (container, user, list, index, load, session) {
     this.container = container;
     try {
@@ -35,6 +37,7 @@ var Shell = function (container, user, list, index, load, session) {
         case 'node':
             var node = cp.fork('shell.js', [list, index]);
             node.on('message', function (payload) {
+                debug('node message  : '+JSON.stringify(payload));
                 var message = payload.message,
                     data = payload.data;
                 switch (message) {
@@ -105,6 +108,7 @@ var Shell = function (container, user, list, index, load, session) {
                 }
             });
             node.on('exit', function (code, signal) {
+                debug('node exit  : '+code+'  '+signal);
                 if (user) {
                     send(user.socket, {
                         name: user.name,
@@ -178,6 +182,7 @@ var Shell = function (container, user, list, index, load, session) {
                     console.error("Phantom stderr: "+data);
                 });
                 phantom.on('exit', function (code, signal) {
+                    debug('phantom exit  : '+code+'  '+signal);
                     if (user) {
                         send(user.socket, {
                             name: user.name,
@@ -214,6 +219,7 @@ var Shell = function (container, user, list, index, load, session) {
                 var wss = new ws.Server({server:server});
                 wss.on('connection', function (socket) {
                     socket.on('message', function (payload) {
+                        debug('phantom message  : '+payload);
                         payload = JSON.parse(payload);
                         var message = payload.message,
                             data = payload.data;
@@ -298,6 +304,7 @@ var Shell = function (container, user, list, index, load, session) {
 };
 
 function get(user, data, callback) {
+    debug('get  : '+user.name+'  '+JSON.stringify(data)+'  '+(typeof callback));
     var args = data.args,
         options = {
             url: args.url
@@ -320,6 +327,7 @@ function get(user, data, callback) {
 Shell.prototype.get = get;
 
 function download(user, data, callback) {
+    debug('download  : '+user.name+'  '+JSON.stringify(data)+'  '+(typeof callback));
     var args = data.args,
         uri = url.parse(args.url),
         options = {
@@ -344,6 +352,7 @@ function download(user, data, callback) {
 Shell.prototype.download = download;
 
 function post(user, data, callback) {
+    debug('post  : '+user.name+'  '+JSON.stringify(data)+'  '+(typeof callback));
     var args = data.args,
         options = {
             url: args.url,
@@ -367,6 +376,7 @@ function post(user, data, callback) {
 Shell.prototype.post = post;
 
 function exec(user, data, callback) {
+    debug('exec  : '+user.name+'  '+JSON.stringify(data)+'  '+(typeof callback));
     var args = data.args;
     cp.exec(args.command, args.options, function (error, stdout, stderr) {
         args.error = error;
@@ -381,6 +391,7 @@ function out(user, data, callback) {
     /* jshint validthis:true */
     var self = this,
         args = data.args;
+    debug('out  : '+user.name+'  '+JSON.stringify(data)+'  '+(typeof callback)+'  '+(typeof self.callback));
     if (self.callback) {
         if (user && args.stream) {
             fs.stat(args.data, function (err, stats) {
@@ -418,6 +429,7 @@ function out(user, data, callback) {
                         callback(args);
                     });
                 } else {
+                    self.callback(args);
                     self.callback = null;
                     send(user.socket, {
                         name: user.name,
@@ -438,12 +450,15 @@ function out(user, data, callback) {
             self.callback = null;
             callback(args);
         }
+    } else {
+        callback(args);
     }
 }
 Shell.prototype.out = out;
 
 function kill() {
     /* jshint validthis:true */
+    debug('kill  : '+this.container);
     switch (this.container) {
         case 'node':
             this.node.send({message:'kill'});

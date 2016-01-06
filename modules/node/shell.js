@@ -15,6 +15,8 @@ if (!(typeof process !== 'undefined' && typeof process.send !== 'undefined')) {
 
 var path = require('path');
 
+var debug = require('debug')('headless:modules:node:shell');
+
 var Shell = function () {};
 utils.inherits(Shell, require('./files').constructor);
 
@@ -37,11 +39,13 @@ Shell.prototype.setInterval = interval;
 
 // NodeJS to NodeJS bridge
 function send(data) {
+    debug('send  : '+JSON.stringify(data));
     process.send(data);
 }
 Shell.prototype.send = send;
 
 function exit(exit) {
+    debug('exit  : '+shell.queue);
     if (exit) {
         shell.queue--;
     } else if (!shell.queue) {
@@ -55,6 +59,7 @@ function exit(exit) {
 Shell.prototype.exit = exit;
 
 function kill() {
+    debug('kill');
     process.exit();
 }
 Shell.prototype.kill = kill;
