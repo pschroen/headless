@@ -52,7 +52,7 @@ var d = document,
     probes = [],
     memory = {},
     socket = null,
-    audio = d.createElement('audio'),
+    audio = null,
     audioargs = null;
 
 alien.probe = function (ghost, platform) {
@@ -554,6 +554,7 @@ alien.mothership = function () {
                 // TODO: Video playback
                 } else if (data.command === 'audio') {
                     console.log(data.args);
+                    if (!audio) audio = new Audio();
                     audio.pause();
                     if (audioargs) {
                         audioargs.progress = null;
