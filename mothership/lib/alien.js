@@ -473,6 +473,7 @@ alien.mothership = function () {
                                         editor.focus();
                                     });
                                     errmsg.element.innerHTML = error.message;
+                                    actionbox.resize();
                                     errmsg.show();
                                     error = null;
                                 }
@@ -2598,6 +2599,7 @@ save.element.onclick = function () {
                                     editor.setCursor(error.line, error.ch);
                                 });
                                 errmsg.element.innerHTML = error.message;
+                                actionbox.resize();
                                 errmsg.show();
                                 error = null;
                             }
