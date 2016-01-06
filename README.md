@@ -21,7 +21,7 @@ Return to the setup page, create your first user and happy scripting! :)
 ## Running Forever
 
 ```sh
-[sudo] npm install forever -g
+sudo npm -g install forever
 forever start headless.js
 forever list
 ```
