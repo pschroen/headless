@@ -311,17 +311,11 @@ function get(user, data, callback) {
         };
     if (args.headers) options.headers = args.headers;
     request(options, function (error, response, body) {
-        if (!error && response.statusCode === 200) {
-            args.error = error;
-            args.body = body;
-            args.headers = response.headers;
-            callback(args);
-        } else {
-            args.error = error;
-            args.body = null;
-            args.headers = null;
-            callback(args);
-        }
+        debug('get response  : '+error+'  '+response.statusCode+'  '+body);
+        args.error = response.statusCode === 200 ? error : error || response.statusCode;
+        args.body = body;
+        args.headers = response.headers;
+        callback(args);
     });
 }
 Shell.prototype.get = get;
@@ -335,16 +329,19 @@ function download(user, data, callback) {
         };
     if (args.headers) options.headers = args.headers;
     request(options, function (error, response, body) {
+        debug('download response  : '+error+'  '+response.statusCode);
         if (!error && response.statusCode === 200) {
             var dest = args.dest+'/'+(response.headers['content-disposition'] ? response.headers['content-disposition'].split('"')[1] : uri.path.replace(/.*\//, ''));
             response.pipe(fs.createWriteStream(dest)).on('finish', function () {
                 args.error = error;
                 args.dest = dest;
+                args.headers = response.headers;
                 callback(args);
             });
         } else {
-            args.error = error;
+            args.error = error || response.statusCode;
             args.dest = null;
+            args.headers = response.headers;
             callback(args);
         }
     });
@@ -360,17 +357,11 @@ function post(user, data, callback) {
         };
     if (args.headers) options.headers = args.headers;
     request.post(options, function (error, response, body) {
-        if (!error && response.statusCode === 200) {
-            args.error = error;
-            args.body = body;
-            args.headers = response.headers;
-            callback(args);
-        } else {
-            args.error = error;
-            args.body = null;
-            args.headers = null;
-            callback(args);
-        }
+        debug('post response  : '+error+'  '+response.statusCode+'  '+body);
+        args.error = response.statusCode === 200 ? error : error || response.statusCode;
+        args.body = body;
+        args.headers = response.headers;
+        callback(args);
     });
 }
 Shell.prototype.post = post;
@@ -379,6 +370,7 @@ function exec(user, data, callback) {
     debug('exec  : '+user.name+'  '+JSON.stringify(data)+'  '+(typeof callback));
     var args = data.args;
     cp.exec(args.command, args.options, function (error, stdout, stderr) {
+        debug('exec response  : '+error+'  '+stdout+'  '+stderr);
         args.error = error;
         args.stdout = stdout;
         args.stderr = stderr;

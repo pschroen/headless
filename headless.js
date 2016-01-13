@@ -386,7 +386,7 @@ var init = function () {
 };
 
 function receive(socket, payload, req, upstream) {
-    debug('receive  : '+payload+'  '+upstream);
+    debug('receive  : '+payload+'  '+(typeof req)+'  '+upstream);
     payload = JSON.parse(payload);
     var message = payload.message,
         data = payload.data;
@@ -524,6 +524,7 @@ function receive(socket, payload, req, upstream) {
                                                     echo /'+list.shell+'/ >> .git/info/sparse-checkout && \
                                                     '+git+' read-tree -mu HEAD && \
                                                     '+git+' pull origin stable';
+                                                debug('shell save  : '+command);
                                                 var log = "Installing shell "+list.shell;
                                                 util.log(log);
                                                 send(socket, {
@@ -649,7 +650,7 @@ function receive(socket, payload, req, upstream) {
                                 break;
                             case 'list':
                                 if (!users[name].containers) users[name].containers = [];
-                                users[name].containers.push(new container(data.container, users[name], data.list, data.index, null, req.session));
+                                users[name].containers.push(new container(data.container, users[name], data.list, data.index, null, req ? req.session : null));
                                 break;
                             case 'kill':
                                 var contain = users[name].containers ? users[name].containers[users[name].containers.length-1] : null;
@@ -738,7 +739,7 @@ function receive(socket, payload, req, upstream) {
                                     if (process.env.NODE_ENV !== 'production') util.log("Endpoint received from "+url+"/"+data.submit+" > "+data.payload.remoteAddress);
                                     callback.on('open', function () {
                                         if (process.env.NODE_ENV !== 'production') util.log("Sending data to callback "+url);
-                                        var api = new container(list.list.container, users[name], list.path, i, data.payload, req.session);
+                                        var api = new container(list.list.container, users[name], list.path, i, data.payload, req ? req.session : null);
                                         api.callback = function (out) {
                                             send(callback, {
                                                 id: payload.id,
@@ -865,7 +866,7 @@ function mothership(insert) {
             }, config.heartbeat);
         });
         socket.on('message', function (payload) {
-            receive(socket, payload, socket.upgradeReq, url);
+            receive(socket, payload, null, url);
         });
         socket.on('error', function (err) {
             util.log("Call home to "+url+" failed with "+err+", reconnecting in 20 seconds");
@@ -920,7 +921,7 @@ function reinsert() {
 }
 
 function endpoint(data, callback) {
-    debug('endpoint  : '+JSON.stringify(data));
+    debug('endpoint  : '+JSON.stringify(data)+'  '+(typeof callback));
     var url = 'wss://'+data.submit,
         api = new ws(url);
     api.on('open', function () {
