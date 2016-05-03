@@ -31,7 +31,6 @@ var Shell = function (container, user, list, index, load, session) {
             stack: err.stack
         };
     }
-    this.callback = null;
     var self = this;
     switch (this.container) {
         case 'node':
@@ -447,6 +446,30 @@ function out(user, data, callback) {
     }
 }
 Shell.prototype.out = out;
+
+function message(load) {
+    /* jshint validthis:true */
+    debug('message  : '+this.container+'  '+JSON.stringify(load));
+    switch (this.container) {
+        case 'node':
+            this.node.send({
+                message: 'message',
+                data: {
+                    payload: load
+                }
+            });
+            break;
+        case 'phantom':
+            send(this.socket, {
+                message: 'message',
+                data: {
+                    payload: load
+                }
+            });
+            break;
+    }
+}
+Shell.prototype.message = message;
 
 function kill() {
     /* jshint validthis:true */

@@ -74,6 +74,11 @@ function receive(payload) {
             shell.threadid = -1;
             shell.next();
             break;
+        case 'message':
+            var i = index > -1 ? index : 0,
+                length = index > -1 ? index+1 : list.list.items.length;
+            for (; i < length; i++) shell.message(i, data.payload);
+            break;
         case 'response':
             shell.callbacks[data.id](data.args.error, data.args);
             delete shell.callbacks[data.id];
@@ -176,7 +181,7 @@ function command(probe, name, args, callback) {
         shell.callbacks[shell.callbackid] = function (e, a) {
             debug('request shellCallback  : '+(typeof callback)+'  '+(typeof e === 'object' ? JSON.stringify(e) : e)+'  '+(typeof a === 'object' ? JSON.stringify(a) : a));
             if (callback) callback(e, a);
-            shell.exit(shell.queue);
+            if (probe.run !== 'forever') shell.exit(shell.queue);
         };
         shell.send({
             message: 'request',
@@ -257,7 +262,6 @@ function load(id) {
                     }
                 }
                 shell.command(probe, 'out', {data:out, headers:outheaders, stream:stream});
-                shell.exit();
             }
         });
     } catch (err) {
@@ -266,6 +270,39 @@ function load(id) {
     }
 }
 Shell.prototype.load = load;
+
+function message(index, load) {
+    debug('message  : '+index+'  '+JSON.stringify(shell.threads[index]));
+    var probe = shell.threads[index];
+    try {
+        probe.payload = load;
+/**
+ * Message callback.
+ *
+ * @callback messageCallback
+ * @param    {undefined|Object|string} [out]
+ * @param    {undefined|Object|string} [headers={'Content-Type':'application/json'}]
+ * @param    {undefined|boolean} [stream] Stream out
+ */
+        probe.script.message(probe, function (out, headers, stream) {
+            debug('messageCallback  : '+(typeof out === 'object' ? JSON.stringify(out) : out)+'  '+headers+'  '+stream);
+            if (typeof out !== 'undefined') {
+                var outheaders = {'Content-Type':'application/json'};
+                if (typeof headers !== 'undefined') {
+                    if (typeof headers !== 'object') {
+                        outheaders['Content-Type'] = headers;
+                    } else {
+                        utils.extend(outheaders, headers);
+                    }
+                }
+                shell.command(probe, 'out', {data:out, headers:outheaders, stream:stream});
+            }
+        });
+    } catch (err) {
+        shell.error(err);
+    }
+}
+Shell.prototype.message = message;
 
 function error(err) {
     debug('error  : '+(typeof err === 'object' ? JSON.stringify(err) : err));

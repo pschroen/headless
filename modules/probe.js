@@ -19,6 +19,7 @@
  */
 function Probe(id, i, load) {
     this.id = id;
+    this.run = list.list.run;
     this.shell = list.list.shell;
     this.item = list.list.items[i];
     this.payload = load;

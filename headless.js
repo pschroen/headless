@@ -81,7 +81,8 @@ var insert = [],
     heartbeat = null,
     intervals = [],
     server = null,
-    wss = null;
+    wss = null,
+    daemons = null;
 
 var init = function () {
     debug('init');
@@ -152,7 +153,14 @@ var init = function () {
                                             load.remoteAddress = req.socket.remoteAddress;
                                             load.origin = req.headers.origin;
                                             if (process.env.NODE_ENV !== 'production') util.log("Endpoint requested "+uri.pathname+" > "+load.remoteAddress);
-                                            var api = new container(list.list.container, users[name], list.path, i, load, req.session);
+                                            var api = null;
+                                            if (!daemons) {
+                                                api = new container(list.list.container, users[name], list.path, i, load, req.session);
+                                                if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
+                                            } else {
+                                                api = daemons;
+                                                api.message(load);
+                                            }
                                             api.callback = function (out) {
                                                 debug('local apiCallback  : '+JSON.stringify(out));
                                                 var data = null;
@@ -281,7 +289,14 @@ var init = function () {
                                                         if ('/'+item.text === socket.upgradeReq.url) {
                                                             if (!data.remoteAddress) data.remoteAddress = socket._socket.remoteAddress;
                                                             if (process.env.NODE_ENV !== 'production') util.log("Endpoint served "+socket.upgradeReq.url+" > "+data.remoteAddress);
-                                                            var api = new container(list.list.container, users[name], list.path, i, data, socket.upgradeReq.session);
+                                                            var api = null;
+                                                            if (!daemons) {
+                                                                api = new container(list.list.container, users[name], list.path, i, data, socket.upgradeReq.session);
+                                                                if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
+                                                            } else {
+                                                                api = daemons;
+                                                                api.message(data);
+                                                            }
                                                             api.callback = function (out) {
                                                                 if (out.data.message === 'data' && out.data.data.command === 'box' &&
                                                                     out.data.data.args.boxes[0].data &&
@@ -351,13 +366,14 @@ var init = function () {
                             seconds = (list.list.run/1000)%60;
                         var loop = function () {
                             util.log("Running "+list.path+" with "+hours+" hour"+(minutes ? " "+minutes+" minute" : "")+(seconds ? " "+seconds+" second" : "")+" interval");
-                            var run = new container(list.list.container, users[name], list.path, -1, null, null);
+                            new container(list.list.container, users[name], list.path, -1, null, null);
                         };
                         intervals.push(setInterval(loop, list.list.run));
                         loop();
                     } else {
                         util.log("Running "+list.path);
                         var run = new container(list.list.container, users[name], list.path, -1, null, null);
+                        if (list.list.shell === 'api' && list.list.run === 'forever') daemons = run;
                     }
                 }
             });
@@ -739,7 +755,14 @@ function receive(socket, payload, req, upstream) {
                                     if (process.env.NODE_ENV !== 'production') util.log("Endpoint received from "+url+"/"+data.submit+" > "+data.payload.remoteAddress);
                                     callback.on('open', function () {
                                         if (process.env.NODE_ENV !== 'production') util.log("Sending data to callback "+url);
-                                        var api = new container(list.list.container, users[name], list.path, i, data.payload, req ? req.session : null);
+                                        var api = null;
+                                        if (!daemons) {
+                                            api = new container(list.list.container, users[name], list.path, i, data.payload, req ? req.session : null);
+                                            if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
+                                        } else {
+                                            api = daemons;
+                                            api.message(data.payload);
+                                        }
                                         api.callback = function (out) {
                                             send(callback, {
                                                 id: payload.id,
