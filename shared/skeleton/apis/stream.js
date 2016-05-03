@@ -1,14 +1,13 @@
 /**
  * Headless Audio Stream.
  *
- * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @author   Patrick Schroen / https://github.com/pschroen
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, node:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, phantom:true, indent:4 */
+/* globals shell */
+"use strict";
 
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Audio Stream");
@@ -28,7 +27,6 @@ var types = {
  * @param    {undefined|initCallback} [callback]
  */
 function init(probe, callback) {
-    "use strict";
     var payload = probe.payload,
         src = payload.src,
         type = types[shell.extname(src).substring(1)];

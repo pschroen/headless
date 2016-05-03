@@ -3,17 +3,16 @@
  *
  * Parts abducted from node-phantom's bridge.js.
  *
- * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @author   Patrick Schroen / https://github.com/pschroen
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, phantom:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, phantom:true, indent:4 */
+/* globals fs, webpage, utils, shell */
+"use strict";
 
 if (typeof phantom === 'undefined') {
-    console.error("Headless shell needs to be executed from mothership");
+    console.error("Headless shell needs to be executed from a mothership");
 }
 
 var Shell = function () {};
@@ -27,7 +26,6 @@ Shell.prototype.list = {path:phantom.args[1], list:JSON.parse(fs.read(phantom.ar
 Shell.prototype.index = parseInt(phantom.args[2], 10);
 
 function timeout(f, millisec) {
-    "use strict";
     // Hack for PhantomJS setTimout/setInterval issue
     // https://github.com/ariya/phantomjs/issues/10832
     var out;
@@ -39,7 +37,6 @@ function timeout(f, millisec) {
 Shell.prototype.setTimeout = timeout;
 
 function interval(f, millisec) {
-    "use strict";
     // Hack for PhantomJS setTimout/setInterval issue
     // https://github.com/ariya/phantomjs/issues/10832
     var out;
@@ -52,13 +49,11 @@ Shell.prototype.setInterval = interval;
 
 // PhantomJS to NodeJS bridge
 function send(data) {
-    "use strict";
     shell.controlpage.evaluate("function(){socket.send('"+utils.addslashes(JSON.stringify(data))+"');}");
 }
 Shell.prototype.send = send;
 
 function exit(exit) {
-    "use strict";
     if (exit) {
         shell.queue--;
     } else if (!shell.queue) {
@@ -73,7 +68,6 @@ function exit(exit) {
 Shell.prototype.exit = exit;
 
 function kill() {
-    "use strict";
     shell.controlpage.close();
     phantom.exit();
 }
@@ -81,13 +75,11 @@ Shell.prototype.kill = kill;
 
 var controlpage = webpage.create();
 controlpage.onAlert = function (payload) {
-    "use strict";
     shell.receive(payload);
 };
 controlpage.open('http://127.0.0.1:'+phantom.args[0]+'/', function (status) {
-    "use strict";
     if (status !== 'success') {
-        console.error("Headless shell needs to be executed from mothership");
+        console.error("Headless shell needs to be executed from a mothership");
         phantom.exit();
     }
 });

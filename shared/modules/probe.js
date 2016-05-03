@@ -1,14 +1,13 @@
 /**
  * Headless probe instance.
  *
- * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @author   Patrick Schroen / https://github.com/pschroen
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, node:true, phantom:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, phantom:true, indent:4 */
+/* globals shell, ghost, list */
+"use strict";
 
 /**
  * Probe instance.
@@ -19,7 +18,6 @@
  * @param    {undefined|Object} [load] Payload
  */
 function Probe(id, i, load) {
-    "use strict";
     this.id = id;
     this.shell = list.list.shell;
     this.item = list.list.items[i];
@@ -83,6 +81,17 @@ function Probe(id, i, load) {
     };
     this.audio = function (args) {
         shell.command(this, 'audio', args);
+    };
+    this.session = function (name, value) {
+        var args = null,
+            callback = null;
+        if (typeof value !== 'function') {
+            args = {name:name, value:value};
+        } else {
+            args = {name:name};
+            callback = value;
+        }
+        shell.command(this, 'session', args, callback);
     };
 }
 module.exports = exports = Probe;

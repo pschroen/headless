@@ -1,14 +1,11 @@
 /**
  * Headless alien interface.
  *
- * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @author   Patrick Schroen / https://github.com/pschroen
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false,
- loopfunc:true, shadow:true, browser:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, browser:true, indent:4 */
 
 function pad(n) {
     "use strict";
@@ -55,7 +52,7 @@ var d = document,
     probes = [],
     memory = {},
     socket = null,
-    audio = d.createElement('audio'),
+    audio = null,
     audioargs = null;
 
 alien.probe = function (ghost, platform) {
@@ -476,6 +473,7 @@ alien.mothership = function () {
                                         editor.focus();
                                     });
                                     errmsg.element.innerHTML = error.message;
+                                    actionbox.resize();
                                     errmsg.show();
                                     error = null;
                                 }
@@ -557,6 +555,7 @@ alien.mothership = function () {
                 // TODO: Video playback
                 } else if (data.command === 'audio') {
                     console.log(data.args);
+                    if (!audio) audio = new Audio();
                     audio.pause();
                     if (audioargs) {
                         audioargs.progress = null;
@@ -2600,6 +2599,7 @@ save.element.onclick = function () {
                                     editor.setCursor(error.line, error.ch);
                                 });
                                 errmsg.element.innerHTML = error.message;
+                                actionbox.resize();
                                 errmsg.show();
                                 error = null;
                             }

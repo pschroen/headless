@@ -9,8 +9,7 @@ Headless is a web 3.0 framework for managing Internet connected devices and scri
 1. Visit [https://headless.io/setup/](https://headless.io/setup/) with [Chrome](https://www.google.com/chrome/).
 
 ```sh
-curl -O -L https://github.com/pschroen/headless/archive/stable.zip
-unzip stable.zip
+curl -L -s https://github.com/pschroen/headless/archive/stable.tar.gz | tar xvzf -
 cd headless-stable
 npm install
 npm start
@@ -22,7 +21,7 @@ Return to the setup page, create your first user and happy scripting! :)
 ## Running Forever
 
 ```sh
-[sudo] npm install forever -g
+sudo npm -g install forever
 forever start headless.js
 forever list
 ```
@@ -50,4 +49,4 @@ su - <user> -c "cd <install path> && forever start headless.js"
 
 ## Copyright & License
 
-Copyright (c) 2014-2015 Patrick Schroen - Released under the [MIT License](LICENSE).
+Copyright (c) 2014-2016 Patrick Schroen - Released under the [MIT License](LICENSE).

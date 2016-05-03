@@ -1,17 +1,16 @@
 /**
  * Headless phantom file utilities.
  *
- * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @author   Patrick Schroen / https://github.com/pschroen
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, phantom:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, phantom:true, indent:4 */
+/* globals fs, utils, shell, error:true */
+"use strict";
 
 if (typeof phantom === 'undefined') {
-    console.error("Headless shell needs to be executed from mothership");
+    console.error("Headless shell needs to be executed from a mothership");
 }
 
 var Shell = function () {};
@@ -27,7 +26,6 @@ Shell.prototype.separator = fs.separator;
  * @returns  {string}
  */
 function dirname(p) {
-    "use strict";
     return p.replace(/\\/g, '/').replace(/\/[^\/]*$/, '');
 }
 Shell.prototype.dirname = dirname;
@@ -40,7 +38,6 @@ Shell.prototype.dirname = dirname;
  * @returns  {string}
  */
 function basename(p, ext) {
-    "use strict";
     var str = p.replace(/\\/g, '/').replace(/.*\//, '');
     return ext ? str.replace(new RegExp(ext+'$'), '') : str;
 }
@@ -52,7 +49,6 @@ function basename(p, ext) {
  * @returns  {string}
  */
 function extname(p) {
-    "use strict";
     var str = p.split('.').pop();
     return str !== p ? '.'+str : '';
 }
@@ -65,7 +61,6 @@ Shell.prototype.extname = extname;
  * @returns  {string}
  */
 function join() {
-    "use strict";
     return Array.prototype.join.call(arguments, fs.separator);
 }
 Shell.prototype.join = join;
@@ -77,7 +72,6 @@ Shell.prototype.join = join;
  * @returns  {boolean}
  */
 function exists(filepath) {
-    "use strict";
     return fs.exists(filepath);
 }
 Shell.prototype.exists = exists;
@@ -89,7 +83,6 @@ Shell.prototype.exists = exists;
  * @returns  {Object}
  */
 function read(filename) {
-    "use strict";
     return fs.read(filename);
 }
 Shell.prototype.read = read;
@@ -101,7 +94,6 @@ Shell.prototype.read = read;
  * @returns  {string[]}
  */
 function readdir(dir) {
-    "use strict";
     return fs.list(dir);
 }
 Shell.prototype.readdir = readdir;
@@ -114,7 +106,6 @@ Shell.prototype.readdir = readdir;
  * @returns  {string[]}
  */
 function files(dir, paths) {
-    "use strict";
     if (typeof paths === 'undefined') paths = [];
     var filenames = readdir(dir);
     filenames.sort(function (a, b) {
@@ -139,7 +130,6 @@ Shell.prototype.files = files;
  * @returns  {string[]}
  */
 function lists(dir) {
-    "use strict";
     var paths = [],
         filenames = readdir(dir);
     filenames.sort(function (a, b) {
@@ -176,7 +166,6 @@ Shell.prototype.lists = lists;
  * @returns  {Object}
  */
 function move(src, dest) {
-    "use strict";
     return fs.move(src, dest);
 }
 Shell.prototype.move = move;
@@ -189,7 +178,6 @@ Shell.prototype.move = move;
  * @returns  {Object}
  */
 function write(filename, data) {
-    "use strict";
     return fs.write(filename, data, 'w');
 }
 Shell.prototype.write = write;
@@ -200,7 +188,6 @@ Shell.prototype.write = write;
  * @param    {string} dir Path
  */
 function mkdir(dir) {
-    "use strict";
     fs.makeTree(dir);
 }
 Shell.prototype.mkdir = mkdir;
@@ -212,7 +199,6 @@ Shell.prototype.mkdir = mkdir;
  * @param    {string} dest Path
  */
 function cpdir(src, dest) {
-    "use strict";
     fs.copyTree(src, dest);
 }
 Shell.prototype.cpdir = cpdir;
@@ -224,7 +210,6 @@ Shell.prototype.cpdir = cpdir;
  * @param    {undefined|boolean} [empty] Remove empty directory tree
  */
 function rmdir(dir, empty) {
-    "use strict";
     fs.removeTree(dir);
     if (empty) rmdirEmpty(dir);
 }
@@ -236,7 +221,6 @@ Shell.prototype.rmdir = rmdir;
  * @param    {string} dir Path
  */
 function rmdirEmpty(dir) {
-    "use strict";
     var parts = dir.split(fs.separator);
     for (var i = parts.length; i > 0; i--) {
         var fullpath = parts.slice(0, i).join(fs.separator);

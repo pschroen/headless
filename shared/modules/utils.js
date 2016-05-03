@@ -1,14 +1,12 @@
 /**
  * Headless utilities.
  *
- * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @author   Patrick Schroen / https://github.com/pschroen
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, node:true, phantom:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, phantom:true, indent:4 */
+"use strict";
 
 /**
  * Utils constructor.
@@ -16,7 +14,6 @@
  * @constructor
  */
 var __Utils__ = function () {
-    "use strict";
     var ctor = function () {
         this.Utils = this.constructor;
     };
@@ -28,7 +25,6 @@ var Utils = __Utils__();
 Utils.prototype.__Utils__ = __Utils__;
 
 function pad(n) {
-    "use strict";
     return n < 10 ? '0'+n.toString(10) : n.toString(10);
 }
 
@@ -36,7 +32,6 @@ var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oc
 
 // 26 Feb 16:19:34
 function timestamp() {
-    "use strict";
     var d = new Date();
     var time = [
         pad(d.getHours()),
@@ -56,7 +51,6 @@ Utils.prototype.timestamp = timestamp;
  * @returns  {*}
  */
 function clone(o) {
-    "use strict";
     return JSON.parse(JSON.stringify(o));
 }
 Utils.prototype.clone = clone;
@@ -70,7 +64,6 @@ Utils.prototype.clone = clone;
  * @param    {function} superCtor Constructor to inherit prototype from
  */
 function inherits(ctor, superCtor) {
-    "use strict";
     ctor.super_ = ctor.__super__ = superCtor;
     ctor.prototype = Object.create(superCtor.prototype, {
         constructor: {
@@ -94,11 +87,8 @@ Utils.prototype.inherits = inherits;
  * @returns  {Object}
  */
 function extend(origin, add, opts) {
-    "use strict";
-
     var options = opts || {},
         keepReferences = options.keepReferences;
-
     for (var p in add) {
         if (add[p] && add[p].constructor === Object) {
             if (origin[p] && origin[p].constructor === Object) {
@@ -123,7 +113,6 @@ Utils.prototype.extend = extend;
  * @returns  {string}
  */
 function format(f) {
-    "use strict";
     var i = 1;
     var args = arguments;
     var len = args.length;
@@ -160,7 +149,6 @@ Utils.prototype.format = format;
  * @returns  {string}
  */
 function addslashes(str) {
-    "use strict";
     return str.replace(/\\/g, '\\\\').
     replace(/\u0008/g, '\\b').
     replace(/\t/g, '\\t').
@@ -182,7 +170,6 @@ Utils.prototype.addslashes = addslashes;
  * @returns  {string}
  */
 function basename(str, ext) {
-    "use strict";
     ext = ext || '.js';
     return str.replace(/\\/g, '/').replace(/.*\//, '').replace(new RegExp(ext+'$'), '');
 }
@@ -194,7 +181,6 @@ Utils.prototype.basename = basename;
  * @constructor
  */
 var Script = function () {
-    "use strict";
     var ctor = function () {
         this.Script = this.constructor;
     };
@@ -222,7 +208,6 @@ Utils.prototype.Script = Script;
  * @returns  {string}
  */
 function termsToPattern(str) {
-    "use strict";
     var out = '^',
         terms = str.split(' ');
     for (var i = 0; i < terms.length; i++) {
@@ -248,7 +233,6 @@ Utils.prototype.termsToPattern = termsToPattern;
  * @returns  {string}
  */
 function textToPattern(str) {
-    "use strict";
     var texts = str.split('.');
     for (var i = 0; i < texts.length; i++) {
         var text = texts[i];
@@ -289,7 +273,6 @@ Utils.prototype.textToPattern = textToPattern;
  * @returns  {number}
  */
 function filesize(input) {
-    "use strict";
     var validAmount = function (n) {
         return !isNaN(parseFloat(n)) && isFinite(n);
     };

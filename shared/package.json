@@ -1,6 +1,6 @@
 {
   "name": "headless",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "NodeJS and PhantomJS shell",
   "homepage": "https://headless.io/",
   "keywords": [
@@ -10,11 +10,7 @@
     "shell",
     "phantomjs"
   ],
-  "author": {
-    "name": "Patrick Schroen",
-    "email": "ps@ufotechnologies.com",
-    "url": "http://blog.ufotechnologies.com/"
-  },
+  "author": "Patrick Schroen <ps@ufotechnologies.com> (http://blog.ufotechnologies.com/)",
   "repository": {
     "type": "git",
     "url": "https://github.com/pschroen/headless"
@@ -32,13 +28,16 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "bcrypt": "*",
-    "isbinaryfile": "*",
-    "js-beautify": "*",
-    "node-static": "*",
-    "node-uuid": "*",
-    "stream-throttle": "*",
-    "uname": "*",
-    "ws": "*"
+    "bcrypt": "~0.8.6",
+    "compression": "~1.6.1",
+    "connect": "~3.4.1",
+    "cookie-session": "~1.2.0",
+    "debug": "~2.2.0",
+    "isbinaryfile": "~3.0.0",
+    "node-static": "~0.7.7",
+    "node-uuid": "~1.4.7",
+    "request": "~2.72.0",
+    "stream-throttle": "~0.1.3",
+    "ws": "~1.1.0"
   }
 }

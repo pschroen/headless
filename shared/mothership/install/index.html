@@ -160,8 +160,7 @@
 <br>2. Visit <a href="https://headless.io/setup/" target="_blank">https://headless.io/setup/</a> with <a href="https://www.google.com/chrome/" target="_blank">Chrome</a>.
 
 <pre>
-curl -O -L https://github.com/pschroen/headless/archive/stable.zip
-unzip stable.zip
+curl -L -s https://github.com/pschroen/headless/archive/stable.tar.gz | tar xvzf -
 cd headless-stable
 npm install
 npm start
@@ -172,8 +171,8 @@ Return to the setup page and create your first user! :)
 
 <h1>Downloads</h1>
 
-<a href="https://github.com/pschroen/headless/releases/download/v0.1.2/qpkg_latest.zip"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;QNAP NAS package (arm-x19 QPKG)</a>
-<br><a href="https://github.com/pschroen/headless/releases/download/v0.1.2/pihead_latest.zip"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;PiHead (Raspbian minimal image)</a>
+<a href="https://github.com/pschroen/headless/releases/download/v0.1.3/qpkg_latest.zip"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;QNAP NAS package (arm-x19 QPKG)</a>
+<br><a href="https://github.com/pschroen/headless/releases/download/v0.1.3/pihead_latest.zip"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;PiHead (Raspbian minimal image)</a>
 <br><a href="/headless.png" target="_blank"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;Headless logo</a>
 <br>&nbsp;
 
@@ -195,14 +194,11 @@ Inherit and chain together scripts
 /**
  * Headless alien interface.
  *
- * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @author   Patrick Schroen / https://github.com/pschroen
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false,
- loopfunc:true, shadow:true, browser:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, browser:true, indent:4 */
 
 var d = document,
     page = 0,

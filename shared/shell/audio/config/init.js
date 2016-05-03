@@ -1,14 +1,13 @@
 /**
  * Headless Audio Init.
  *
- * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @author   Patrick Schroen / https://github.com/pschroen
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, node:true, phantom:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, phantom:true, indent:4 */
+/* globals shell */
+"use strict";
 
 var utils = require('./utils'),
     Script = utils.Script(module.id, "Audio Init");
@@ -28,7 +27,6 @@ var types = {
  * @param    {undefined|initCallback} [callback]
  */
 function init(probe, callback) {
-    "use strict";
     probe.log("["+exports.id+"] Loading "+exports.name+" and searching for "+probe.item.text);
     var memory = probe.memory.list[probe.item.text],
         src = null,
@@ -41,8 +39,10 @@ function init(probe, callback) {
         probe.audio({src:src, type:type});
         probe.exit();
     } else {
-        var find = require(shell.path+'/shell/find/config/init.js');
-        src = find.files(probe, shell.audio.path, new RegExp(utils.termsToPattern(probe.item.text), 'i'));
+        var find = require(shell.path+'/shell/find/config/init.js'),
+            termstypes = [];
+        for (var key in types) termstypes.push('\\.'+key);
+        src = find.files(probe, shell.audio.path, new RegExp(utils.termsToPattern(probe.item.text+' '+termstypes.join('|')), 'i'), false);
         type = src ? types[shell.extname(src).substring(1)] : null;
         if (type) {
             probe.log("["+exports.id+"] Playing "+src);

@@ -3,24 +3,21 @@
  *
  * Parts abducted from node-phantom's node-phantom.js.
  *
- * @author   Patrick Schroen <ps@ufotechnologies.com>
+ * @author   Patrick Schroen / https://github.com/pschroen
  * @license  MIT Licensed
  */
 
-/*jshint
- strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true,
- loopfunc:true, shadow:true, node:true, indent:4
-*/
+/* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, indent:4 */
+/* globals os, fs, cp, http, request, util, url, ws, config, utils, shell, version, error:true, send */
+"use strict";
 
 if (typeof process === 'undefined') {
-    console.error("Headless shell needs to be executed from mothership");
+    console.error("Headless shell needs to be executed from a mothership");
 }
 
-var uname = require('uname'),
-    utsname = uname.uname();
+var debug = require('debug')('headless:container');
 
-var Shell = function (container, user, list, index, load) {
-    "use strict";
+var Shell = function (container, user, list, index, load, session) {
     this.container = container;
     try {
         this.list = JSON.parse(fs.readFileSync(list).toString());
@@ -40,6 +37,7 @@ var Shell = function (container, user, list, index, load) {
         case 'node':
             var node = cp.fork('shell.js', [list, index]);
             node.on('message', function (payload) {
+                debug('node message  : '+JSON.stringify(payload));
                 var message = payload.message,
                     data = payload.data;
                 switch (message) {
@@ -76,6 +74,27 @@ var Shell = function (container, user, list, index, load) {
                         }
                         if (args.error) error = args.error;
                         break;
+                    case 'session':
+                        var args = data.args;
+                        if (session) {
+                            if (typeof args.value !== 'undefined') {
+                                session[args.name] = args.value;
+                            } else if (typeof args.name !== 'object') {
+                                args.value = session[args.name];
+                            } else {
+                                utils.extend(session, args.name);
+                            }
+                        }
+                        node.send({
+                            message: 'response',
+                            data: {
+                                id: data.id,
+                                command: data.command,
+                                args: args
+                            }
+                        });
+                        if (args.error) error = args.error;
+                        break;
                     case 'error':
                         if (user) {
                             send(user.socket, {
@@ -84,11 +103,12 @@ var Shell = function (container, user, list, index, load) {
                                 data: data
                             });
                         }
-                        util.error(data.stack);
+                        console.error(data.stack);
                         break;
                 }
             });
             node.on('exit', function (code, signal) {
+                debug('node exit  : '+code+'  '+signal);
                 if (user) {
                     send(user.socket, {
                         name: user.name,
@@ -125,7 +145,7 @@ var Shell = function (container, user, list, index, load) {
                 data: {
                     headlessVersion: version,
                     version: process.version.substring(1),
-                    arch: os.platform()+"-"+utsname.machine,
+                    arch: os.platform()+"-"+process.arch,
                     hostname: os.hostname(),
                     payload: load
                 }
@@ -143,7 +163,7 @@ var Shell = function (container, user, list, index, load) {
                             data: {\n\
                                 headlessVersion: '"+version+"',\n\
                                 version: '"+process.version.substring(1)+"',\n\
-                                arch: '"+os.platform()+"-"+utsname.machine+"',\n\
+                                arch: '"+os.platform()+"-"+process.arch+"',\n\
                                 hostname: '"+os.hostname()+"',\n\
                                 payload: JSON.parse('"+utils.addslashes(JSON.stringify(load))+"')\n\
                             }\n\
@@ -159,9 +179,10 @@ var Shell = function (container, user, list, index, load) {
                     util.log("Phantom stdout: "+data);
                 });
                 phantom.stderr.on('data', function (data) {
-                    util.error("Phantom stderr: "+data);
+                    console.error("Phantom stderr: "+data);
                 });
                 phantom.on('exit', function (code, signal) {
+                    debug('phantom exit  : '+code+'  '+signal);
                     if (user) {
                         send(user.socket, {
                             name: user.name,
@@ -198,6 +219,7 @@ var Shell = function (container, user, list, index, load) {
                 var wss = new ws.Server({server:server});
                 wss.on('connection', function (socket) {
                     socket.on('message', function (payload) {
+                        debug('phantom message  : '+payload);
                         payload = JSON.parse(payload);
                         var message = payload.message,
                             data = payload.data;
@@ -235,6 +257,27 @@ var Shell = function (container, user, list, index, load) {
                                 }
                                 if (args.error) error = args.error;
                                 break;
+                            case 'session':
+                                var args = data.args;
+                                if (session) {
+                                    if (typeof args.value !== 'undefined') {
+                                        session[args.name] = args.value;
+                                    } else if (typeof args.name !== 'object') {
+                                        args.value = session[args.name];
+                                    } else {
+                                        utils.extend(session, args.name);
+                                    }
+                                }
+                                send(socket, {
+                                    message: 'response',
+                                    data: {
+                                        id: data.id,
+                                        command: data.command,
+                                        args: args
+                                    }
+                                });
+                                if (args.error) error = args.error;
+                                break;
                             case 'error':
                                 if (user) {
                                     send(user.socket, {
@@ -243,166 +286,91 @@ var Shell = function (container, user, list, index, load) {
                                         data: data
                                     });
                                 }
-                                util.error(data.stack);
+                                console.error(data.stack);
                                 break;
                         }
                     });
                     self.socket = socket;
                 });
                 wss.on('close', function () {
-                    util.error("Phantom control page disconnected");
+                    console.error("Phantom control page disconnected");
                 });
             });
             break;
         default:
-            util.error("Container "+this.container+" not an option");
+            console.error("Container "+this.container+" not an option");
             return;
     }
 };
 
 function get(user, data, callback) {
-    "use strict";
+    debug('get  : '+user.name+'  '+JSON.stringify(data)+'  '+(typeof callback));
     var args = data.args,
-        uri = url.parse(args.url),
         options = {
-            host: uri.hostname,
-            port: uri.port,
-            path: uri.path
+            url: args.url
         };
     if (args.headers) options.headers = args.headers;
-    http.get(options, function (res) {
-        if (res.statusCode === 200) {
-            var body = '';
-            res.on('data', function (chunk) {
-                body += chunk;
-            }).on('end', function (error) {
-                args.error = error;
-                args.body = body;
-                args.headers = res.headers;
-                callback(args);
-            });
-        } else {
-            args.error = res.statusCode;
-            args.body = null;
-            args.headers = res.headers;
-            callback(args);
-        }
-    }).on('error', function (error) {
-        args.error = error.message;
-        args.body = null;
-        args.headers = null;
+    request(options, function (error, response, body) {
+        debug('get response  : '+error+'  '+response.statusCode+'  '+body);
+        args.error = response.statusCode === 200 ? error : error || response.statusCode;
+        args.body = body;
+        args.headers = response.headers;
         callback(args);
     });
 }
 Shell.prototype.get = get;
 
 function download(user, data, callback) {
-    "use strict";
+    debug('download  : '+user.name+'  '+JSON.stringify(data)+'  '+(typeof callback));
     var args = data.args,
         uri = url.parse(args.url),
         options = {
-            host: uri.hostname,
-            port: uri.port,
-            path: uri.path
+            url: args.url
         };
     if (args.headers) options.headers = args.headers;
-    http.get(options, function (res) {
-        if (res.statusCode === 200) {
-            res.setEncoding('binary');
-            var body = '';
-            res.on('data', function (chunk) {
-                body += chunk;
-            }).on('end', function (error) {
-                var dest = args.dest+'/'+(res.headers['content-disposition'] ? res.headers['content-disposition'].split('"')[1] : uri.path.replace(/.*\//, ''));
-                if (!files.exists(dest)) {
-                    fs.open(dest, "a", 755, function (error, fd) {
-                        if (!error) {
-                            fs.write(fd, body, null, 'binary', function (err, written) {
-                                args.error = err;
-                                args.dest = dest;
-                                callback(args);
-                            });
-                        } else {
-                            args.error = error;
-                            args.dest = dest;
-                            callback(args);
-                        }
-                    });
-                } else {
-                    if (user) {
-                        send(user.socket, {
-                            name: user.name,
-                            message: 'data',
-                            data: {
-                                args: {
-                                    error: null,
-                                    message: "File exists",
-                                    progress: null
-                                }
-                            }
-                        });
-                    }
-                    args.error = null;
-                    args.dest = dest;
-                    callback(args);
-                }
+    request(options, function (error, response, body) {
+        debug('download response  : '+error+'  '+response.statusCode);
+        if (!error && response.statusCode === 200) {
+            var dest = args.dest+'/'+(response.headers['content-disposition'] ? response.headers['content-disposition'].split('"')[1] : uri.path.replace(/.*\//, ''));
+            response.pipe(fs.createWriteStream(dest)).on('finish', function () {
+                args.error = error;
+                args.dest = dest;
+                args.headers = response.headers;
+                callback(args);
             });
         } else {
-            args.error = res.statusCode;
+            args.error = error || response.statusCode;
             args.dest = null;
+            args.headers = response.headers;
             callback(args);
         }
-    }).on('error', function (error) {
-        args.error = error.message;
-        args.dest = null;
-        callback(args);
     });
 }
 Shell.prototype.download = download;
 
 function post(user, data, callback) {
-    "use strict";
+    debug('post  : '+user.name+'  '+JSON.stringify(data)+'  '+(typeof callback));
     var args = data.args,
-        uri = url.parse(args.url),
         options = {
-            host: uri.hostname,
-            port: uri.port,
-            path: uri.path,
-            method: 'POST',
-            headers: args.headers
+            url: args.url,
+            form: args.form
         };
-    var req = http.request(options, function (res) {
-        if (res.statusCode === 200) {
-            var body = '';
-            res.on('data', function (chunk) {
-                body += chunk;
-            }).on('end', function (error) {
-                args.error = error;
-                args.body = body;
-                args.headers = res.headers;
-                callback(args);
-            });
-        } else {
-            args.error = res.statusCode;
-            args.body = null;
-            args.headers = res.headers;
-            callback(args);
-        }
-    }).on('error', function (error) {
-        args.error = error.message;
-        args.body = null;
-        args.headers = null;
+    if (args.headers) options.headers = args.headers;
+    request.post(options, function (error, response, body) {
+        debug('post response  : '+error+'  '+response.statusCode+'  '+body);
+        args.error = response.statusCode === 200 ? error : error || response.statusCode;
+        args.body = body;
+        args.headers = response.headers;
         callback(args);
     });
-    req.write(args.data);
-    req.end();
 }
 Shell.prototype.post = post;
 
 function exec(user, data, callback) {
-    "use strict";
+    debug('exec  : '+user.name+'  '+JSON.stringify(data)+'  '+(typeof callback));
     var args = data.args;
     cp.exec(args.command, args.options, function (error, stdout, stderr) {
+        debug('exec response  : '+error+'  '+stdout+'  '+stderr);
         args.error = error;
         args.stdout = stdout;
         args.stderr = stderr;
@@ -412,10 +380,10 @@ function exec(user, data, callback) {
 Shell.prototype.exec = exec;
 
 function out(user, data, callback) {
-    "use strict";
-    /*jshint validthis:true */
+    /* jshint validthis:true */
     var self = this,
         args = data.args;
+    debug('out  : '+user.name+'  '+JSON.stringify(data)+'  '+(typeof callback)+'  '+(typeof self.callback));
     if (self.callback) {
         if (user && args.stream) {
             fs.stat(args.data, function (err, stats) {
@@ -431,7 +399,7 @@ function out(user, data, callback) {
                             }
                         }
                     });
-                    self.callback({stream:'start', type:args.type, size:stats.size});
+                    self.callback({stream:'start', headers:args.headers, length:stats.size});
                     var stream = fs.createReadStream(args.data).pipe(new (require('stream-throttle').Throttle)({rate:config.streamrate}));
                     stream.on('data', function (data) {
                         self.callback({stream:'data', data:data.toString('base64')});
@@ -453,6 +421,7 @@ function out(user, data, callback) {
                         callback(args);
                     });
                 } else {
+                    self.callback(args);
                     self.callback = null;
                     send(user.socket, {
                         name: user.name,
@@ -473,13 +442,15 @@ function out(user, data, callback) {
             self.callback = null;
             callback(args);
         }
+    } else {
+        callback(args);
     }
 }
 Shell.prototype.out = out;
 
 function kill() {
-    "use strict";
-    /*jshint validthis:true */
+    /* jshint validthis:true */
+    debug('kill  : '+this.container);
     switch (this.container) {
         case 'node':
             this.node.send({message:'kill'});
