@@ -66,7 +66,7 @@ function receive(payload) {
             var i = index > -1 ? index : 0,
                 length = index > -1 ? index+1 : list.list.items.length;
             try {
-                for (; i < length; i++) shell.threads.push(new probe(++shell.threadid, i, data.payload));
+                for (; i < length; i++) shell.threads.push(new probe(data.id, ++shell.threadid, i, data.payload));
             } catch (err) {
                 shell.error(err);
                 shell.kill();
@@ -75,9 +75,10 @@ function receive(payload) {
             shell.next();
             break;
         case 'message':
-            var i = index > -1 ? index : 0,
+            var index = data.index,
+                i = index > -1 ? index : 0,
                 length = index > -1 ? index+1 : list.list.items.length;
-            for (; i < length; i++) shell.message(i, data.payload);
+            for (; i < length; i++) shell.message(data.id, i, data.payload);
             break;
         case 'response':
             shell.callbacks[data.id](data.args.error, data.args);
@@ -181,7 +182,7 @@ function command(probe, name, args, callback) {
         shell.callbacks[shell.callbackid] = function (e, a) {
             debug('request shellCallback  : '+(typeof callback)+'  '+(typeof e === 'object' ? JSON.stringify(e) : e)+'  '+(typeof a === 'object' ? JSON.stringify(a) : a));
             if (callback) callback(e, a);
-            if (probe.run !== 'forever') shell.exit(shell.queue);
+            shell.exit(shell.queue);
         };
         shell.send({
             message: 'request',
@@ -250,9 +251,9 @@ function load(id) {
  * @param    {undefined|Object|string} [headers={'Content-Type':'application/json'}]
  * @param    {undefined|boolean} [stream] Stream out
  */
-        probe.config.init(probe, function (out, headers, stream) {
+        probe.config.init(probe, probe.payload, function (out, headers, stream) {
             debug('initCallback  : '+(typeof out === 'object' ? JSON.stringify(out) : out)+'  '+headers+'  '+stream);
-            if (typeof out !== 'undefined') {
+            if (probe.callbackid !== null && typeof out !== 'undefined') {
                 var outheaders = {'Content-Type':'application/json'};
                 if (typeof headers !== 'undefined') {
                     if (typeof headers !== 'object') {
@@ -261,7 +262,8 @@ function load(id) {
                         utils.extend(outheaders, headers);
                     }
                 }
-                shell.command(probe, 'out', {data:out, headers:outheaders, stream:stream});
+                shell.command(probe, 'out', {id:probe.callbackid, data:out, headers:outheaders, stream:stream});
+                if (probe.run !== 'forever') shell.exit();
             }
         });
     } catch (err) {
@@ -271,11 +273,10 @@ function load(id) {
 }
 Shell.prototype.load = load;
 
-function message(index, load) {
-    debug('message  : '+index+'  '+JSON.stringify(shell.threads[index]));
+function message(callbackid, index, load) {
+    debug('message  : '+callbackid+'  '+index+'  '+JSON.stringify(load)+'  '+JSON.stringify(shell.threads[index]));
     var probe = shell.threads[index];
     try {
-        probe.payload = load;
 /**
  * Message callback.
  *
@@ -284,9 +285,9 @@ function message(index, load) {
  * @param    {undefined|Object|string} [headers={'Content-Type':'application/json'}]
  * @param    {undefined|boolean} [stream] Stream out
  */
-        probe.script.message(probe, function (out, headers, stream) {
+        probe.script.message(probe, load, function (out, headers, stream) {
             debug('messageCallback  : '+(typeof out === 'object' ? JSON.stringify(out) : out)+'  '+headers+'  '+stream);
-            if (typeof out !== 'undefined') {
+            if (callbackid !== null && typeof out !== 'undefined') {
                 var outheaders = {'Content-Type':'application/json'};
                 if (typeof headers !== 'undefined') {
                     if (typeof headers !== 'object') {
@@ -295,7 +296,7 @@ function message(index, load) {
                         utils.extend(outheaders, headers);
                     }
                 }
-                shell.command(probe, 'out', {data:out, headers:outheaders, stream:stream});
+                shell.command(probe, 'out', {id:callbackid, data:out, headers:outheaders, stream:stream});
             }
         });
     } catch (err) {

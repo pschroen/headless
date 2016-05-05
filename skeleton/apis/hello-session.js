@@ -16,16 +16,15 @@ var utils = require(shell.path+'/modules/utils'),
  * Initialize.
  *
  * @param    {Probe} probe Instance
+ * @param    {undefined|Object} [load] Payload
  * @param    {undefined|initCallback} [callback]
  */
-function init(probe, callback) {
-    var payload = probe.payload,
-        origin = payload.origin,
-        headers = {
-            'Access-Control-Allow-Origin': origin,
+function init(probe, load, callback) {
+    var headers = {
+            'Access-Control-Allow-Origin': load.origin,
             'Access-Control-Allow-Credentials': 'true'
         };
-    probe.log(exports.name);
+    probe.log("["+exports.id+"] "+exports.name);
 
     // Retrieve username
     probe.session('username', function (error, args) {

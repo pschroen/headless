@@ -110,7 +110,7 @@ var init = function () {
                     load.remoteAddress = req.socket.remoteAddress;
                     load.origin = req.headers.origin;
                     callbacks[callbackid] = function (out) {
-                        debug('remote apiCallback  : '+JSON.stringify(out));
+                        debug('remote http apiCallback  : '+JSON.stringify(out));
                         var data = null;
                         if (!out.stream) {
                             data = out.data;
@@ -153,16 +153,7 @@ var init = function () {
                                             load.remoteAddress = req.socket.remoteAddress;
                                             load.origin = req.headers.origin;
                                             if (process.env.NODE_ENV !== 'production') util.log("Endpoint requested "+uri.pathname+" > "+load.remoteAddress);
-                                            var api = null;
-                                            if (!daemons) {
-                                                api = new container(list.list.container, users[name], list.path, i, load, req.session);
-                                                if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
-                                            } else {
-                                                api = daemons;
-                                                api.message(load);
-                                            }
-                                            api.callback = function (out) {
-                                                debug('local apiCallback  : '+JSON.stringify(out));
+                                            callbacks[callbackid] = function (out) {
                                                 var data = null;
                                                 if (!out.stream) {
                                                     data = out.data;
@@ -178,6 +169,19 @@ var init = function () {
                                                 }
                                                 if (!out.stream || out.stream === 'end') res.end();
                                             };
+                                            var api = null;
+                                            if (!daemons) {
+                                                api = new container(callbackid, list.list.container, users[name], list.path, i, load, req.session, function (id, out) {
+                                                    debug('local http apiCallback  : '+id+'  '+JSON.stringify(out));
+                                                    callbacks[id](out);
+                                                    if (!out.stream || out.stream === 'end') delete callbacks[id];
+                                                });
+                                                if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
+                                            } else {
+                                                api = daemons;
+                                                api.message(callbackid, i, load);
+                                            }
+                                            callbackid++;
                                             break;
                                         }
                                     }
@@ -256,6 +260,7 @@ var init = function () {
                             if (match && users[name] && users[name].host) {
                                 if (!data.remoteAddress) data.remoteAddress = socket._socket.remoteAddress;
                                 callbacks[callbackid] = function (out) {
+                                    debug('remote wss apiCallback  : '+JSON.stringify(out));
                                     send(socket, {
                                         message: 'endpoint',
                                         data: out.data,
@@ -273,7 +278,7 @@ var init = function () {
                                 });
                                 callbackid++;
                             } else {
-                                if (isFinite(payload.id)) {
+                                if (payload.id !== null) {
                                     callbacks[payload.id](data);
                                     if (!data.stream || data.stream === 'end') delete callbacks[payload.id];
                                 } else {
@@ -289,15 +294,7 @@ var init = function () {
                                                         if ('/'+item.text === socket.upgradeReq.url) {
                                                             if (!data.remoteAddress) data.remoteAddress = socket._socket.remoteAddress;
                                                             if (process.env.NODE_ENV !== 'production') util.log("Endpoint served "+socket.upgradeReq.url+" > "+data.remoteAddress);
-                                                            var api = null;
-                                                            if (!daemons) {
-                                                                api = new container(list.list.container, users[name], list.path, i, data, socket.upgradeReq.session);
-                                                                if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
-                                                            } else {
-                                                                api = daemons;
-                                                                api.message(data);
-                                                            }
-                                                            api.callback = function (out) {
+                                                            callbacks[callbackid] = function (out) {
                                                                 if (out.data.message === 'data' && out.data.data.command === 'box' &&
                                                                     out.data.data.args.boxes[0].data &&
                                                                     out.data.data.args.boxes[0].data.insert
@@ -312,6 +309,19 @@ var init = function () {
                                                                     time: payload.time
                                                                 });
                                                             };
+                                                            var api = null;
+                                                            if (!daemons) {
+                                                                api = new container(callbackid, list.list.container, users[name], list.path, i, data, socket.upgradeReq.session, function (id, out) {
+                                                                    debug('local wss apiCallback  : '+id+'  '+JSON.stringify(out));
+                                                                    callbacks[id](out);
+                                                                    if (!out.stream || out.stream === 'end') delete callbacks[id];
+                                                                });
+                                                                if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
+                                                            } else {
+                                                                api = daemons;
+                                                                api.message(callbackid, i, data);
+                                                            }
+                                                            callbackid++;
                                                             break;
                                                         }
                                                     }
@@ -360,19 +370,23 @@ var init = function () {
             var listslist = files.lists(lists);
             listslist.forEach(function (list) {
                 if (list.list.run) {
-                    if (list.list.run.constructor === Number) {
+                    if (typeof list.list.run === 'number') {
                         var hours = (list.list.run/1000/60/60)<<0,
                             minutes = (list.list.run/1000/60)%60*60,
                             seconds = (list.list.run/1000)%60;
                         var loop = function () {
                             util.log("Running "+list.path+" with "+hours+" hour"+(minutes ? " "+minutes+" minute" : "")+(seconds ? " "+seconds+" second" : "")+" interval");
-                            new container(list.list.container, users[name], list.path, -1, null, null);
+                            new container(null, list.list.container, users[name], list.path, -1, null, null, null);
                         };
                         intervals.push(setInterval(loop, list.list.run));
                         loop();
                     } else {
                         util.log("Running "+list.path);
-                        var run = new container(list.list.container, users[name], list.path, -1, null, null);
+                        var run = new container(null, list.list.container, users[name], list.path, -1, null, null, function (id, out) {
+                            debug('local daemon apiCallback  : '+id+'  '+JSON.stringify(out));
+                            callbacks[id](out);
+                            if (!out.stream || out.stream === 'end') delete callbacks[id];
+                        });
                         if (list.list.shell === 'api' && list.list.run === 'forever') daemons = run;
                     }
                 }
@@ -666,7 +680,7 @@ function receive(socket, payload, req, upstream) {
                                 break;
                             case 'list':
                                 if (!users[name].containers) users[name].containers = [];
-                                users[name].containers.push(new container(data.container, users[name], data.list, data.index, null, req ? req.session : null));
+                                users[name].containers.push(new container(null, data.container, users[name], data.list, data.index, null, req ? req.session : null, null));
                                 break;
                             case 'kill':
                                 var contain = users[name].containers ? users[name].containers[users[name].containers.length-1] : null;
@@ -755,15 +769,7 @@ function receive(socket, payload, req, upstream) {
                                     if (process.env.NODE_ENV !== 'production') util.log("Endpoint received from "+url+"/"+data.submit+" > "+data.payload.remoteAddress);
                                     callback.on('open', function () {
                                         if (process.env.NODE_ENV !== 'production') util.log("Sending data to callback "+url);
-                                        var api = null;
-                                        if (!daemons) {
-                                            api = new container(list.list.container, users[name], list.path, i, data.payload, req ? req.session : null);
-                                            if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
-                                        } else {
-                                            api = daemons;
-                                            api.message(data.payload);
-                                        }
-                                        api.callback = function (out) {
+                                        callbacks[callbackid] = function (out) {
                                             send(callback, {
                                                 id: payload.id,
                                                 message: 'endpoint',
@@ -775,6 +781,19 @@ function receive(socket, payload, req, upstream) {
                                                 callback.close();
                                             }
                                         };
+                                        var api = null;
+                                        if (!daemons) {
+                                            api = new container(callbackid, list.list.container, users[name], list.path, i, data.payload, req ? req.session : null, function (id, out) {
+                                                debug('local apiCallback  : '+id+'  '+JSON.stringify(out));
+                                                callbacks[id](out);
+                                                if (!out.stream || out.stream === 'end') delete callbacks[id];
+                                            });
+                                            if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
+                                        } else {
+                                            api = daemons;
+                                            api.message(callbackid, i, data.payload);
+                                        }
+                                        callbackid++;
                                     });
                                     callback.on('error', function (err) {
                                         if (process.env.NODE_ENV !== 'production') util.log("Callback "+url+" failed with "+err);

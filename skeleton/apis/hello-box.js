@@ -16,12 +16,12 @@ var utils = require(shell.path+'/modules/utils'),
  * Initialize.
  *
  * @param    {Probe} probe Instance
+ * @param    {undefined|Object} [load] Payload
  * @param    {undefined|initCallback} [callback]
  */
-function init(probe, callback) {
-    var payload = probe.payload,
-        name = payload.name,
-        id = payload.id,
+function init(probe, load, callback) {
+    var name = load.name,
+        id = load.id,
         box = {
             fields: {
                 hello: {
@@ -32,11 +32,11 @@ function init(probe, callback) {
                 payload: {
                     type: 'info',
                     title: "Payload",
-                    text: JSON.stringify(payload)
+                    text: JSON.stringify(load)
                 }
             }
         };
-    probe.log(exports.name);
+    probe.log("["+exports.id+"] "+exports.name);
     callback(shell.box(name, id, [box]));
 }
 Script.prototype.init = init;

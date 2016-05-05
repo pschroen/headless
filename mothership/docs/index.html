@@ -211,7 +211,7 @@ Headless is list-based, what this means is everything you do is managed through 
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(require('./inherit2').Script, module.id, "Inherit 1");
 
-function init(probe, callback) {
+function init(probe, load, callback) {
     probe.log("Inheritance "+exports.sanity+" "+exports.check);
     probe.exit();
 }
@@ -252,7 +252,7 @@ Scripts are also chain-able using the <code>init()</code> and <code>callback()</
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Chain 1");
 
-function init(probe, callback) {
+function init(probe, load, callback) {
     probe.log("Loading "+exports.name);
     probe.script = require('./chain2');
     probe.script.init(probe, function (name) {
@@ -271,7 +271,7 @@ module.exports = exports = new Script();
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Chain 2");
 
-function init(probe, callback) {
+function init(probe, load, callback) {
     probe.log("Loading "+exports.name);
     callback(exports.name);
 }
@@ -329,7 +329,6 @@ var box = {
         }
     };
 probe.item.infobox = {boxes:[box]};
-probe.box("Infobox");
 </pre>
 
 <!--More <code>Infobox</code> examples can be found on <a href="https://github.com/pschroen/headless/wiki">The Wiki</a>.-->
@@ -644,9 +643,8 @@ Force exit the <code>Probe</code> process.
 Send an <code>Infobox</code> object to the connected user's <em>interface</em>.
 
 <pre data-lang="javascript">
-var payload = probe.payload,
-    name = payload.name,
-    id = payload.id,
+var name = load.name,
+    id = load.id,
     box = {
         fields: {
             hello: {
@@ -658,11 +656,10 @@ var payload = probe.payload,
             payload: {
                 type: 'info',
                 title: "Payload",
-                text: JSON.stringify(payload)
+                text: JSON.stringify(load)
             }
         }
     };
-probe.log("Infobox");
 callback(shell.box(name, id, [box]));
 </pre>
 
@@ -731,8 +728,7 @@ You may have noticed the default APIs list is empty, this is intentional as any 
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Hello World");
 
-function init(probe, callback) {
-    probe.log(exports.name);
+function init(probe, load, callback) {
     callback({
         title: exports.name,
         text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
@@ -754,9 +750,8 @@ Add the basename of the script (without <code>.js</code>) to your APIs list to m
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Hello World");
 
-function init(probe, callback) {
+function init(probe, load, callback) {
     var headers = {'Access-Control-Allow-Origin':'*'};
-    probe.log(exports.name);
     callback({
         title: exports.name,
         text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
@@ -774,14 +769,11 @@ module.exports = exports = new Script();
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Hello World");
 
-function init(probe, callback) {
-    var payload = probe.payload,
-        origin = payload.origin,
-        headers = {
-            'Access-Control-Allow-Origin': origin,
+function init(probe, load, callback) {
+    var headers = {
+            'Access-Control-Allow-Origin': load.origin,
             'Access-Control-Allow-Credentials': 'true'
         };
-    probe.log(exports.name);
     callback({
         title: exports.name,
         text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
@@ -793,7 +785,7 @@ Script.prototype.init = init;
 module.exports = exports = new Script();
 </pre>
 
-<h2>Session</h2>
+<h2>Sessions</h2>
 
 <h3>apis/hello-session.js</h3>
 
@@ -801,26 +793,19 @@ module.exports = exports = new Script();
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Hello World");
 
-function init(probe, callback) {
-    var payload = probe.payload,
-        origin = payload.origin,
-        headers = {
-            'Access-Control-Allow-Origin': origin,
+function init(probe, load, callback) {
+    var headers = {
+            'Access-Control-Allow-Origin': load.origin,
             'Access-Control-Allow-Credentials': 'true'
         };
-    probe.log(exports.name);
-
     // Retrieve username
     probe.session('username', function (error, args) {
         probe.log("Session response: "+JSON.stringify(args));
-
         // Store username, must be called before the callback
         probe.session('username', 'helloworld');
-
         // Retrieve username that we just stored
         probe.session('username', function (error, args) {
             probe.log("Session response: "+JSON.stringify(args));
-
             callback({
                 title: exports.name,
                 text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
@@ -830,6 +815,34 @@ function init(probe, callback) {
     });
 }
 Script.prototype.init = init;
+
+module.exports = exports = new Script();
+</pre>
+
+<h2>Daemons</h2>
+
+By default scripts are loaded and then exit when done. Setting the APIs Lists <em>Run mode</em> to <code>forever</code> will keep the script in-memory, <code>init()</code> on the first load and <code>message()</code> on every subsequent request, for super-fast response times.
+
+<h3>apis/hello-daemon.js</h3>
+
+<pre data-lang="javascript">
+var utils = require(shell.path+'/modules/utils'),
+    Script = utils.Script(module.id, "Hello World");
+
+function init(probe, load, callback) {
+    probe.log("Loading "+exports.name);
+    message(probe, load, callback);
+}
+Script.prototype.init = init;
+
+function message(probe, load, callback) {
+    callback({
+        title: exports.name,
+        text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
+            The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+    });
+}
+Script.prototype.message = message;
 
 module.exports = exports = new Script();
 </pre>
@@ -866,7 +879,7 @@ var app = require('express')(),
     server = require('http').Server(app),
     io = require('socket.io')(server);
 
-function init(probe, callback) {
+function init(probe, load, callback) {
     server.listen(shell.express.port);
     app.get('/', function (req, res) {
         res.send(exports.name);

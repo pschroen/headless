@@ -16,10 +16,11 @@ var utils = require(shell.path+'/modules/utils'),
  * Initialize.
  *
  * @param    {Probe} probe Instance
+ * @param    {undefined|Object} [load] Payload
  * @param    {undefined|initCallback} [callback]
  */
-function init(probe, callback) {
-    probe.log(exports.name);
+function init(probe, load, callback) {
+    probe.log("["+exports.id+"] "+exports.name);
     callback({
         title: exports.name,
         text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. The name of this file is your endpoint, for example; <a href="/hello" target="_blank">/hello</a>.'
