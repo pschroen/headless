@@ -18,23 +18,9 @@ npm start
 Return to the setup page, create your first user and happy scripting! :)
 
 
-## Running Forever
+## Running your own headless server
 
-```sh
-sudo npm -g install forever
-forever start headless.js
-forever list
-```
-
-
-## Really running forever
-
-For Linux-based systems add the following to your `/etc/rc.local` before the final `exit 0`.
-
-```sh
-# Headless
-su - <user> -c "cd <install path> && forever start headless.js"
-```
+For production use and installation on embedded computers, refer to the [Server configuration](https://github.com/pschroen/headless/wiki/Server-configuration) wiki for your environment.
 
 
 ## Resources
@@ -49,4 +35,4 @@ su - <user> -c "cd <install path> && forever start headless.js"
 
 ## Copyright & License
 
-Copyright (c) 2014-2016 Patrick Schroen - Released under the [MIT License](LICENSE).
+Copyright (c) 2016 Patrick Schroen - Released under the [MIT License](LICENSE).
