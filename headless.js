@@ -128,7 +128,7 @@ var init = function () {
                     };
                     send(users[name].host, {
                         id: callbackid,
-                        message: 'endpoint',
+                        message: 'hook',
                         data: {
                             submit: uri.pathname.substring(1),
                             payload: load
@@ -152,7 +152,7 @@ var init = function () {
                                             utils.extend(load, querystring.parse(uri.query));
                                             load.remoteAddress = req.socket.remoteAddress;
                                             load.origin = req.headers.origin;
-                                            if (process.env.NODE_ENV !== 'production') util.log("Endpoint requested "+uri.pathname+" > "+load.remoteAddress);
+                                            if (process.env.NODE_ENV !== 'production') util.log("HTTP webhook "+uri.pathname+" > "+load.remoteAddress);
                                             callbacks[callbackid] = function (out) {
                                                 var data = null;
                                                 if (!out.stream) {
@@ -254,7 +254,7 @@ var init = function () {
                                 });
                             }
                             break;
-                        case 'endpoint':
+                        case 'hook':
                             var match = /(.*)\.headless\.io/.exec(socket.upgradeReq.headers.host),
                                 name = match && /\./.test(match[1]) ? match[1].split('.')[0] : match ? match[1] : null;
                             if (match && users[name] && users[name].host) {
@@ -262,14 +262,14 @@ var init = function () {
                                 callbacks[callbackid] = function (out) {
                                     debug('remote wss apiCallback  : '+JSON.stringify(out));
                                     send(socket, {
-                                        message: 'endpoint',
+                                        message: 'hook',
                                         data: out.data,
                                         time: payload.time
                                     });
                                 };
                                 send(users[name].host, {
                                     id: callbackid,
-                                    message: 'endpoint',
+                                    message: 'hook',
                                     data: {
                                         submit: socket.upgradeReq.url.substring(1),
                                         payload: data
@@ -293,7 +293,7 @@ var init = function () {
                                                         var item = list.list.items[i];
                                                         if ('/'+item.text === socket.upgradeReq.url) {
                                                             if (!data.remoteAddress) data.remoteAddress = socket._socket.remoteAddress;
-                                                            if (process.env.NODE_ENV !== 'production') util.log("Endpoint served "+socket.upgradeReq.url+" > "+data.remoteAddress);
+                                                            if (process.env.NODE_ENV !== 'production') util.log("WSS webhook "+socket.upgradeReq.url+" > "+data.remoteAddress);
                                                             callbacks[callbackid] = function (out) {
                                                                 if (out.data.message === 'data' && out.data.data.command === 'box' &&
                                                                     out.data.data.args.boxes[0].data &&
@@ -304,7 +304,7 @@ var init = function () {
                                                                     keys = keys+'|'+user.key;
                                                                 }
                                                                 send(socket, {
-                                                                    message: 'endpoint',
+                                                                    message: 'hook',
                                                                     data: out.data,
                                                                     time: payload.time
                                                                 });
@@ -415,8 +415,8 @@ var init = function () {
     debug('init');
 };
 
-function receive(socket, payload, req, upstream) {
-    debug('receive  : '+payload+'  '+(typeof req)+'  '+upstream);
+function receive(socket, payload, req, response_url) {
+    debug('receive  : '+payload+'  '+(typeof req)+'  '+response_url);
     payload = JSON.parse(payload);
     var message = payload.message,
         data = payload.data;
@@ -427,7 +427,7 @@ function receive(socket, payload, req, upstream) {
                     auth = path.join('users', name, 'auth.json'),
                     user = files.exists(auth) ? JSON.parse(files.read(auth)) : null;
                 if (user && bcrypt.compareSync(data.auth, '$2a$08$'+user.auth)) {
-                    if (!upstream) socket.user = user;
+                    if (!response_url) socket.user = user;
                     if (!socket.users) socket.users = {};
                     if (!socket.users[name]) socket.users[name] = {};
                     socket.users[name].handshake = true;
@@ -687,7 +687,7 @@ function receive(socket, payload, req, upstream) {
                                 if (contain) contain.kill();
                                 break;
                             case 'restart':
-                                if (upstream) {
+                                if (response_url) {
                                     socket.off('close');
                                     socket.close();
                                 }
@@ -730,7 +730,7 @@ function receive(socket, payload, req, upstream) {
                             case 'api':
                                 if (data.api.submit === 'headless.io/namespace' || data.api.submit === 'headless.io/release')
                                     data.api.user = JSON.parse(files.read(path.join('users', data.api.name, 'auth.json')));
-                                endpoint(data.api, function (out) {
+                                hook(data.api, function (out) {
                                     send(socket, out);
                                     if (out.message === 'data' && out.data.command === 'box' &&
                                         out.data.args.boxes[0].data &&
@@ -752,7 +752,7 @@ function receive(socket, payload, req, upstream) {
                 }
             }
             break;
-        case 'endpoint':
+        case 'hook':
             var userslist = files.readdir('users');
             userslist.forEach(function (name) {
                 var lists = path.join('users', name, 'lists');
@@ -763,16 +763,16 @@ function receive(socket, payload, req, upstream) {
                             for (var i = 0; i < list.list.items.length; i++) {
                                 var item = list.list.items[i];
                                 if (item.text === data.submit) {
-                                    var url = upstream,
+                                    var url = response_url,
                                         callback = new ws(url);
                                     if (!data.payload.remoteAddress) data.payload.remoteAddress = socket._socket.remoteAddress;
-                                    if (process.env.NODE_ENV !== 'production') util.log("Endpoint received from "+url+"/"+data.submit+" > "+data.payload.remoteAddress);
+                                    if (process.env.NODE_ENV !== 'production') util.log("Received webhook "+url+"/"+data.submit+" > "+data.payload.remoteAddress);
                                     callback.on('open', function () {
                                         if (process.env.NODE_ENV !== 'production') util.log("Sending data to callback "+url);
                                         callbacks[callbackid] = function (out) {
                                             send(callback, {
                                                 id: payload.id,
-                                                message: 'endpoint',
+                                                message: 'hook',
                                                 data: out,
                                                 time: payload.time
                                             });
@@ -807,7 +807,7 @@ function receive(socket, payload, req, upstream) {
             });
             break;
         case 'heartbeat':
-            if (!upstream) {
+            if (!response_url) {
                 send(socket, {
                     message: 'heartbeat',
                     time: payload.time
@@ -817,7 +817,7 @@ function receive(socket, payload, req, upstream) {
             }
             break;
         case 'setup':
-            if (!upstream) {
+            if (!response_url) {
                 if (!data) {
                     if (process.env.NODE_ENV !== 'production') util.log("Setup "+socket._socket.remoteAddress+" socket");
                     if (!users[socket._socket.remoteAddress]) users[socket._socket.remoteAddress] = {};
@@ -962,26 +962,26 @@ function reinsert() {
     debug('reinsert');
 }
 
-function endpoint(data, callback) {
-    debug('endpoint  : '+JSON.stringify(data)+'  '+(typeof callback));
+function hook(data, callback) {
+    debug('hook  : '+JSON.stringify(data)+'  '+(typeof callback));
     var url = 'wss://'+data.submit,
         api = new ws(url);
     api.on('open', function () {
-        if (process.env.NODE_ENV !== 'production') util.log("Sending data to endpoint "+url);
+        if (process.env.NODE_ENV !== 'production') util.log("Sending data to "+url);
         send(api, {
-            message: 'endpoint',
+            message: 'hook',
             data: data,
             time: Date.now()
         });
     });
     api.on('message', function (payload) {
         payload = JSON.parse(payload);
-        if (process.env.NODE_ENV !== 'production') util.log("Received data from endpoint "+url+" in "+(Date.now()-payload.time)+"ms, closing connection");
+        if (process.env.NODE_ENV !== 'production') util.log("Received data from "+url+" in "+(Date.now()-payload.time)+"ms, closing connection");
         callback(payload.data);
         api.close();
     });
     api.on('error', function (err) {
-        if (process.env.NODE_ENV !== 'production') util.log("Endpoint "+url+" failed with "+err);
+        if (process.env.NODE_ENV !== 'production') util.log("Webhook "+url+" failed with "+err);
     });
 }
 

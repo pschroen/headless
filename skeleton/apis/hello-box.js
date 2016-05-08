@@ -27,7 +27,7 @@ function init(probe, load, callback) {
                 hello: {
                     type: 'info',
                     title: exports.name,
-                    text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. The name of this file is your endpoint, for example; <a href="/hello" target="_blank">/hello</a>.'
+                    text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. The name of this file is your webhook, for example; <a href="/hello" target="_blank">/hello</a>.'
                 },
                 payload: {
                     type: 'info',

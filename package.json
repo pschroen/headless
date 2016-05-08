@@ -1,9 +1,10 @@
 {
   "name": "headless",
   "version": "0.1.3",
-  "description": "Node.js and PhantomJS shell",
+  "description": "Webhooks for everyone!",
   "homepage": "https://headless.io/",
   "keywords": [
+    "webhook",
     "websocket",
     "relay",
     "ghost",
