@@ -1,7 +1,7 @@
 {
   "name": "headless",
   "version": "0.1.3",
-  "description": "NodeJS and PhantomJS shell",
+  "description": "Node.js and PhantomJS shell",
   "homepage": "https://headless.io/",
   "keywords": [
     "websocket",

@@ -1286,7 +1286,7 @@ alien.listseditor = function () {
                         container: {
                             type: 'toggle',
                             buttons: [{
-                                label: "NodeJS",
+                                label: "Node.js",
                                 value: 'node'
                             }, {
                                 label: "PhantomJS",
