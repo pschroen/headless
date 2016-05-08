@@ -252,7 +252,7 @@ function load(id) {
  */
         probe.config.init(probe, probe.payload, function (out, headers, stream) {
             debug('initCallback  : '+(typeof out === 'object' ? JSON.stringify(out) : out)+'  '+headers+'  '+stream);
-            if (probe.callbackid !== null && typeof out !== 'undefined') {
+            if (isFinite(probe.callbackid) && typeof out !== 'undefined') {
                 var outheaders = {'Content-Type':'application/json'};
                 if (typeof headers !== 'undefined') {
                     if (typeof headers !== 'object') {
@@ -286,7 +286,7 @@ function message(callbackid, index, load) {
  */
         probe.script.message(probe, load, function (out, headers, stream) {
             debug('messageCallback  : '+(typeof out === 'object' ? JSON.stringify(out) : out)+'  '+headers+'  '+stream);
-            if (callbackid !== null && typeof out !== 'undefined') {
+            if (isFinite(callbackid) && typeof out !== 'undefined') {
                 var outheaders = {'Content-Type':'application/json'};
                 if (typeof headers !== 'undefined') {
                     if (typeof headers !== 'object') {

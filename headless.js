@@ -278,7 +278,7 @@ var init = function () {
                                 });
                                 callbackid++;
                             } else {
-                                if (payload.id !== null) {
+                                if (isFinite(payload.id)) {
                                     callbacks[payload.id](data);
                                     if (!data.stream || data.stream === 'end') delete callbacks[payload.id];
                                 } else {
@@ -376,13 +376,13 @@ var init = function () {
                             seconds = (list.list.run/1000)%60;
                         var loop = function () {
                             util.log("Running "+list.path+" with "+hours+" hour"+(minutes ? " "+minutes+" minute" : "")+(seconds ? " "+seconds+" second" : "")+" interval");
-                            new container(null, list.list.container, users[name], list.path, -1, null, null, null);
+                            new container(undefined, list.list.container, users[name], list.path, -1, null, null, null);
                         };
                         intervals.push(setInterval(loop, list.list.run));
                         loop();
                     } else {
                         util.log("Running "+list.path);
-                        var run = new container(null, list.list.container, users[name], list.path, -1, null, null, function (id, out) {
+                        var run = new container(undefined, list.list.container, users[name], list.path, -1, null, null, function (id, out) {
                             debug('local daemon apiCallback  : '+id+'  '+JSON.stringify(out));
                             callbacks[id](out);
                             if (!out.stream || out.stream === 'end') delete callbacks[id];
@@ -680,7 +680,7 @@ function receive(socket, payload, req, response_url) {
                                 break;
                             case 'list':
                                 if (!users[name].containers) users[name].containers = [];
-                                users[name].containers.push(new container(null, data.container, users[name], data.list, data.index, null, req ? req.session : null, null));
+                                users[name].containers.push(new container(undefined, data.container, users[name], data.list, data.index, null, req ? req.session : null, null));
                                 break;
                             case 'kill':
                                 var contain = users[name].containers ? users[name].containers[users[name].containers.length-1] : null;
