@@ -75,9 +75,8 @@ function receive(payload) {
             shell.next();
             break;
         case 'message':
-            var index = data.index,
-                i = index > -1 ? index : 0,
-                length = index > -1 ? index+1 : list.list.items.length;
+            var i = data.index > -1 ? data.index : 0,
+                length = data.index > -1 ? data.index+1 : list.list.items.length;
             for (; i < length; i++) shell.message(data.id, i, data.payload);
             break;
         case 'response':
