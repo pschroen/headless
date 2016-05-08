@@ -47,7 +47,7 @@ function interval(f, millisec) {
 }
 Shell.prototype.setInterval = interval;
 
-// PhantomJS to NodeJS bridge
+// PhantomJS to Node.js bridge
 function send(data) {
     shell.controlpage.evaluate("function(){socket.send('"+utils.addslashes(JSON.stringify(data))+"');}");
 }

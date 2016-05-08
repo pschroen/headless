@@ -13,12 +13,15 @@
  * Probe instance.
  *
  * @constructor
+ * @param    {number} callbackid
  * @param    {number} id Thread
  * @param    {number} i List item index
  * @param    {undefined|Object} [load] Payload
  */
-function Probe(id, i, load) {
+function Probe(callbackid, id, i, load) {
+    this.callbackid = callbackid;
     this.id = id;
+    this.run = list.list.run;
     this.shell = list.list.shell;
     this.item = list.list.items[i];
     this.payload = load;

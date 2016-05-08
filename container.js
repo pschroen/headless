@@ -17,8 +17,10 @@ if (typeof process === 'undefined') {
 
 var debug = require('debug')('headless:container');
 
-var Shell = function (container, user, list, index, load, session) {
+var Shell = function (callbackid, container, user, list, index, load, session, callback) {
+    debug('constructor  : '+callbackid+'  '+container+'  '+user.name+'  '+list+'  '+index+'  '+JSON.stringify(load)+'  '+JSON.stringify(session)+'  '+(typeof callback));
     this.container = container;
+    this.callback = callback;
     try {
         this.list = JSON.parse(fs.readFileSync(list).toString());
     } catch (err) {
@@ -31,7 +33,6 @@ var Shell = function (container, user, list, index, load, session) {
             stack: err.stack
         };
     }
-    this.callback = null;
     var self = this;
     switch (this.container) {
         case 'node':
@@ -137,12 +138,13 @@ var Shell = function (container, user, list, index, load, session) {
                             }
                         });
                     }
-                    var run = new Shell(container, user, list, index, load);
+                    new Shell(callbackid, container, user, list, index, load, session, callback);
                 }
             });
             node.send({
                 message: 'init',
                 data: {
+                    id: callbackid,
                     headlessVersion: version,
                     version: process.version.substring(1),
                     arch: os.platform()+"-"+process.arch,
@@ -161,6 +163,7 @@ var Shell = function (container, user, list, index, load, session) {
                         alert(JSON.stringify({\n\
                             message: 'init',\n\
                             data: {\n\
+                                id: "+callbackid+",\n\
                                 headlessVersion: '"+version+"',\n\
                                 version: '"+process.version.substring(1)+"',\n\
                                 arch: '"+os.platform()+"-"+process.arch+"',\n\
@@ -399,14 +402,13 @@ function out(user, data, callback) {
                             }
                         }
                     });
-                    self.callback({stream:'start', headers:args.headers, length:stats.size});
+                    self.callback(args.id, {stream:'start', headers:args.headers, length:stats.size});
                     var stream = fs.createReadStream(args.data).pipe(new (require('stream-throttle').Throttle)({rate:config.streamrate}));
                     stream.on('data', function (data) {
-                        self.callback({stream:'data', data:data.toString('base64')});
+                        self.callback(args.id, {stream:'data', data:data.toString('base64')});
                     });
                     stream.on('end', function () {
-                        self.callback({stream:'end'});
-                        self.callback = null;
+                        self.callback(args.id, {stream:'end'});
                         send(user.socket, {
                             name: user.name,
                             message: 'data',
@@ -421,8 +423,7 @@ function out(user, data, callback) {
                         callback(args);
                     });
                 } else {
-                    self.callback(args);
-                    self.callback = null;
+                    self.callback(args.id, {data:args.data, headers:args.headers, stream:args.stream});
                     send(user.socket, {
                         name: user.name,
                         message: 'data',
@@ -438,8 +439,7 @@ function out(user, data, callback) {
                 }
             });
         } else {
-            self.callback(args);
-            self.callback = null;
+            self.callback(args.id, {data:args.data, headers:args.headers, stream:args.stream});
             callback(args);
         }
     } else {
@@ -447,6 +447,34 @@ function out(user, data, callback) {
     }
 }
 Shell.prototype.out = out;
+
+function message(callbackid, index, load) {
+    /* jshint validthis:true */
+    debug('message  : '+this.container+'  '+callbackid+'  '+index+'  '+JSON.stringify(load));
+    switch (this.container) {
+        case 'node':
+            this.node.send({
+                message: 'message',
+                data: {
+                    id: callbackid,
+                    index: index,
+                    payload: load
+                }
+            });
+            break;
+        case 'phantom':
+            send(this.socket, {
+                message: 'message',
+                data: {
+                    id: callbackid,
+                    index: index,
+                    payload: load
+                }
+            });
+            break;
+    }
+}
+Shell.prototype.message = message;
 
 function kill() {
     /* jshint validthis:true */

@@ -37,7 +37,7 @@ function interval(f, millisec) {
 }
 Shell.prototype.setInterval = interval;
 
-// NodeJS to NodeJS bridge
+// Node.js to Node.js bridge
 function send(data) {
     debug('send  : '+JSON.stringify(data));
     process.send(data);

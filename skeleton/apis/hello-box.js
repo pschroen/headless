@@ -16,27 +16,27 @@ var utils = require(shell.path+'/modules/utils'),
  * Initialize.
  *
  * @param    {Probe} probe Instance
+ * @param    {undefined|Object} [load] Payload
  * @param    {undefined|initCallback} [callback]
  */
-function init(probe, callback) {
-    var payload = probe.payload,
-        name = payload.name,
-        id = payload.id,
+function init(probe, load, callback) {
+    var name = load.name,
+        id = load.id,
         box = {
             fields: {
                 hello: {
                     type: 'info',
                     title: exports.name,
-                    text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. The name of this file is your endpoint, for example; <a href="/hello" target="_blank">/hello</a>.'
+                    text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. The name of this file is your webhook, for example; <a href="/hello" target="_blank">/hello</a>.'
                 },
                 payload: {
                     type: 'info',
                     title: "Payload",
-                    text: JSON.stringify(payload)
+                    text: JSON.stringify(load)
                 }
             }
         };
-    probe.log(exports.name);
+    probe.log("["+exports.id+"] "+exports.name);
     callback(shell.box(name, id, [box]));
 }
 Script.prototype.init = init;

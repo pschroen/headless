@@ -1,0 +1,17 @@
+[Unit]
+Description=Headless Node.js and PhantomJS shell
+
+[Service]
+WorkingDirectory=/opt/headless
+ExecStart=/usr/local/bin/node headless.js
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=headless
+User=headless
+Group=headless
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

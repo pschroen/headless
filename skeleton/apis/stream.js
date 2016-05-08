@@ -24,11 +24,11 @@ var types = {
  * Initialize.
  *
  * @param    {Probe} probe Instance
+ * @param    {undefined|Object} [load] Payload
  * @param    {undefined|initCallback} [callback]
  */
-function init(probe, callback) {
-    var payload = probe.payload,
-        src = payload.src,
+function init(probe, load, callback) {
+    var src = load.src,
         type = types[shell.extname(src).substring(1)];
     probe.log("["+exports.id+"] Loading "+exports.name+" for "+src);
     callback(src, type, true);
