@@ -25,18 +25,14 @@ function init(probe, load, callback) {
             'Access-Control-Allow-Credentials': 'true'
         };
     probe.log("["+exports.id+"] "+exports.name);
-
     // Retrieve username
     probe.session('username', function (error, args) {
         probe.log("Session response: "+JSON.stringify(args));
-
         // Store username, must be called before the callback
         probe.session('username', 'helloworld');
-
         // Retrieve username that we just stored
         probe.session('username', function (error, args) {
             probe.log("Session response: "+JSON.stringify(args));
-
             callback({
                 title: exports.name,
                 text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. The name of this file is your webhook, for example; <a href="/hello" target="_blank">/hello</a>.'
