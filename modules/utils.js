@@ -8,6 +8,8 @@
 /* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, phantom:true, indent:4 */
 "use strict";
 
+var util = require('util');
+
 /**
  * Utils constructor.
  *
@@ -313,5 +315,21 @@ function filesize(input) {
     throw unit+" doesn't appear to be a valid unit";
 }
 Utils.prototype.filesize = filesize;
+
+/**
+ * Log helper.
+ *
+ * In production environments `syslog` takes care of the timestamp.
+ *
+ * @param    {string} message
+ */
+function log(message) {
+    if (process.env.NODE_ENV !== 'production') {
+        util.log(message);
+    } else {
+        console.log(message);
+    }
+}
+Utils.prototype.log = log;
 
 module.exports = exports = new Utils();

@@ -29,7 +29,6 @@ global.http = require('http'),
 global.https = require('https'),
 global.connect = require('connect'),
 global.request = require('request'),
-global.util = require('util'),
 global.url = require('url'),
 global.querystring = require('querystring'),
 global.file = new (require('node-static')).Server('./mothership'),
@@ -152,7 +151,7 @@ var init = function () {
                                             utils.extend(load, querystring.parse(uri.query));
                                             load.remoteAddress = req.socket.remoteAddress;
                                             load.origin = req.headers.origin;
-                                            if (process.env.NODE_ENV !== 'production') util.log("HTTP webhook "+uri.pathname+" > "+load.remoteAddress);
+                                            if (process.env.NODE_ENV !== 'production') utils.log("HTTP webhook "+uri.pathname+" > "+load.remoteAddress);
                                             callbacks[callbackid] = function (out) {
                                                 var data = null;
                                                 if (!out.stream) {
@@ -204,7 +203,7 @@ var init = function () {
         wss.on('connection', function (socket) {
             debug('connection  : '+socket.upgradeReq.headers['user-agent']);
             if (socket.upgradeReq.headers['user-agent']) {
-                if (process.env.NODE_ENV !== 'production') util.log("Hello "+socket._socket.remoteAddress);
+                if (process.env.NODE_ENV !== 'production') utils.log("Hello "+socket._socket.remoteAddress);
                 socket.on('message', function (payload) {
                     receive(socket, payload, socket.upgradeReq);
                 });
@@ -237,7 +236,7 @@ var init = function () {
                                                 }
                                                 if (!users[name]) users[name] = {name:name};
                                                 users[name].host = socket;
-                                                if (process.env.NODE_ENV !== 'production') util.log("Hello "+socket._socket.remoteAddress+" > "+name);
+                                                if (process.env.NODE_ENV !== 'production') utils.log("Hello "+socket._socket.remoteAddress+" > "+name);
                                             }
                                         }
                                     });
@@ -293,7 +292,7 @@ var init = function () {
                                                         var item = list.list.items[i];
                                                         if ('/'+item.text === socket.upgradeReq.url) {
                                                             if (!data.remoteAddress) data.remoteAddress = socket._socket.remoteAddress;
-                                                            if (process.env.NODE_ENV !== 'production') util.log("WSS webhook "+socket.upgradeReq.url+" > "+data.remoteAddress);
+                                                            if (process.env.NODE_ENV !== 'production') utils.log("WSS webhook "+socket.upgradeReq.url+" > "+data.remoteAddress);
                                                             callbacks[callbackid] = function (out) {
                                                                 if (out.data.message === 'data' && out.data.data.command === 'box' &&
                                                                     out.data.data.args.boxes[0].data &&
@@ -359,7 +358,7 @@ var init = function () {
                 });
             }
         });
-        util.log("Headless daemon listening on https://"+server.address().address+":"+server.address().port);
+        utils.log("Headless daemon listening on https://"+server.address().address+":"+server.address().port);
     });
 
     var userslist = files.exists('users') ? files.readdir('users') : [];
@@ -375,13 +374,13 @@ var init = function () {
                             minutes = (list.list.run/1000/60)%60*60,
                             seconds = (list.list.run/1000)%60;
                         var loop = function () {
-                            util.log("Running "+list.path+" with "+hours+" hour"+(minutes ? " "+minutes+" minute" : "")+(seconds ? " "+seconds+" second" : "")+" interval");
+                            utils.log("Running "+list.path+" with "+hours+" hour"+(minutes ? " "+minutes+" minute" : "")+(seconds ? " "+seconds+" second" : "")+" interval");
                             new container(undefined, list.list.container, users[name], list.path, -1, null, null, null);
                         };
                         intervals.push(setInterval(loop, list.list.run));
                         loop();
                     } else {
-                        util.log("Running "+list.path);
+                        utils.log("Running "+list.path);
                         var run = new container(undefined, list.list.container, users[name], list.path, -1, null, null, function (id, out) {
                             debug('local daemon apiCallback  : '+id+'  '+JSON.stringify(out));
                             callbacks[id](out);
@@ -556,7 +555,7 @@ function receive(socket, payload, req, response_url) {
                                                     '+git+' pull origin stable';
                                                 debug('shell save  : '+command);
                                                 var log = "Installing shell "+list.shell;
-                                                util.log(log);
+                                                utils.log(log);
                                                 send(socket, {
                                                     name: name,
                                                     message: 'data',
@@ -572,7 +571,7 @@ function receive(socket, payload, req, response_url) {
                                                 cp.exec(command, function (error, stdout, stderr) {
                                                     if (!error) {
                                                         var log = "Install of shell "+list.shell+" complete";
-                                                        util.log(log);
+                                                        utils.log(log);
                                                         send(socket, {
                                                             name: name,
                                                             message: 'data',
@@ -586,7 +585,7 @@ function receive(socket, payload, req, response_url) {
                                                         });
                                                     } else {
                                                         var log = "Install of shell "+list.shell+" failed with "+error;
-                                                        util.log(log);
+                                                        utils.log(log);
                                                         send(socket, {
                                                             name: name,
                                                             message: 'data',
@@ -699,10 +698,10 @@ function receive(socket, payload, req, response_url) {
                                     }
                                 }
                                 if (config.restart) {
-                                    util.log("Restarting with "+config.restart);
+                                    utils.log("Restarting with "+config.restart);
                                     cp.exec(config.restart);
                                 } else {
-                                    util.log("Forcing restart by quitting");
+                                    utils.log("Forcing restart by quitting");
                                     process.exit();
                                 }
                                 break;
@@ -710,7 +709,7 @@ function receive(socket, payload, req, response_url) {
                                 var name = data.pass.name,
                                     auth = path.join('users', name, 'auth.json'),
                                     user = JSON.parse(files.read(auth));
-                                util.log("Updating "+name+"'s password");
+                                utils.log("Updating "+name+"'s password");
                                 user.auth = bcrypt.hashSync(data.pass.auth, 8).substring(7);
                                 user.keys = bcrypt.hashSync(uuid.v4(), 8).substring(7);
                                 files.write(auth, JSON.stringify(user));
@@ -766,9 +765,9 @@ function receive(socket, payload, req, response_url) {
                                     var url = response_url,
                                         callback = new ws(url);
                                     if (!data.payload.remoteAddress) data.payload.remoteAddress = socket._socket.remoteAddress;
-                                    if (process.env.NODE_ENV !== 'production') util.log("Received webhook "+url+"/"+data.submit+" > "+data.payload.remoteAddress);
+                                    if (process.env.NODE_ENV !== 'production') utils.log("Received webhook "+url+"/"+data.submit+" > "+data.payload.remoteAddress);
                                     callback.on('open', function () {
-                                        if (process.env.NODE_ENV !== 'production') util.log("Sending data to callback "+url);
+                                        if (process.env.NODE_ENV !== 'production') utils.log("Sending data to callback "+url);
                                         callbacks[callbackid] = function (out) {
                                             send(callback, {
                                                 id: payload.id,
@@ -777,7 +776,7 @@ function receive(socket, payload, req, response_url) {
                                                 time: payload.time
                                             });
                                             if (!out.stream || out.stream === 'end') {
-                                                if (process.env.NODE_ENV !== 'production') util.log("Send complete, closing connection");
+                                                if (process.env.NODE_ENV !== 'production') utils.log("Send complete, closing connection");
                                                 callback.close();
                                             }
                                         };
@@ -796,7 +795,7 @@ function receive(socket, payload, req, response_url) {
                                         callbackid++;
                                     });
                                     callback.on('error', function (err) {
-                                        if (process.env.NODE_ENV !== 'production') util.log("Callback "+url+" failed with "+err);
+                                        if (process.env.NODE_ENV !== 'production') utils.log("Callback "+url+" failed with "+err);
                                     });
                                     break;
                                 }
@@ -813,13 +812,13 @@ function receive(socket, payload, req, response_url) {
                     time: payload.time
                 });
             } else {
-                util.log("Heartbeat with "+(Date.now()-payload.time)+"ms latency");
+                utils.log("Heartbeat with "+(Date.now()-payload.time)+"ms latency");
             }
             break;
         case 'setup':
             if (!response_url) {
                 if (!data) {
-                    if (process.env.NODE_ENV !== 'production') util.log("Setup "+socket._socket.remoteAddress+" socket");
+                    if (process.env.NODE_ENV !== 'production') utils.log("Setup "+socket._socket.remoteAddress+" socket");
                     if (!users[socket._socket.remoteAddress]) users[socket._socket.remoteAddress] = {};
                     users[socket._socket.remoteAddress].socket = socket;
                 } else if (users[socket._socket.remoteAddress] && users[socket._socket.remoteAddress].host) {
@@ -853,7 +852,7 @@ function receive(socket, payload, req, response_url) {
                     }],
                     userAgent: data.userAgent
                 }));
-                util.log("Setup "+name);
+                utils.log("Setup "+name);
                 clearInterval(setup);
             }
             break;
@@ -866,7 +865,7 @@ function mothership(insert) {
         var url = 'wss://'+host,
             socket = new ws(url);
         socket.on('open', function () {
-            util.log("Connected to mothership "+url+" with "+minutes+" minute"+(seconds ? " "+seconds+" second" : "")+" heartbeat");
+            utils.log("Connected to mothership "+url+" with "+minutes+" minute"+(seconds ? " "+seconds+" second" : "")+" heartbeat");
             device = function (link) {
                 send(socket, {
                     message: 'mothership',
@@ -883,7 +882,7 @@ function mothership(insert) {
                 device(insert);
             } else {
                 var localhost = function () {
-                    util.log("Setup localhost with 20 second interval");
+                    utils.log("Setup localhost with 20 second interval");
                     send(socket, {
                         message: 'mothership',
                         data: {
@@ -911,14 +910,14 @@ function mothership(insert) {
             receive(socket, payload, null, url);
         });
         socket.on('error', function (err) {
-            util.log("Call home to "+url+" failed with "+err+", reconnecting in 20 seconds");
+            utils.log("Call home to "+url+" failed with "+err+", reconnecting in 20 seconds");
             clearInterval(heartbeat);
             setTimeout(function () {
                 mothership(insert);
             }, 20000);
         });
         socket.on('close', function () {
-            util.log("Mothership "+url+" disconnected, reconnecting in 20 seconds");
+            utils.log("Mothership "+url+" disconnected, reconnecting in 20 seconds");
             clearInterval(heartbeat);
             setTimeout(function () {
                 mothership(insert);
@@ -954,7 +953,7 @@ function reinsert() {
         }
     });
     shell.mothership.forEach(function (host) {
-        util.log("Relinking with mothership wss://"+host);
+        utils.log("Relinking with mothership wss://"+host);
         device(insert);
     });
     keys = keys.join('|');
@@ -967,7 +966,7 @@ function hook(data, callback) {
     var url = 'wss://'+data.submit,
         api = new ws(url);
     api.on('open', function () {
-        if (process.env.NODE_ENV !== 'production') util.log("Sending data to "+url);
+        if (process.env.NODE_ENV !== 'production') utils.log("Sending data to "+url);
         send(api, {
             message: 'hook',
             data: data,
@@ -976,12 +975,12 @@ function hook(data, callback) {
     });
     api.on('message', function (payload) {
         payload = JSON.parse(payload);
-        if (process.env.NODE_ENV !== 'production') util.log("Received data from "+url+" in "+(Date.now()-payload.time)+"ms, closing connection");
+        if (process.env.NODE_ENV !== 'production') utils.log("Received data from "+url+" in "+(Date.now()-payload.time)+"ms, closing connection");
         callback(payload.data);
         api.close();
     });
     api.on('error', function (err) {
-        if (process.env.NODE_ENV !== 'production') util.log("Webhook "+url+" failed with "+err);
+        if (process.env.NODE_ENV !== 'production') utils.log("Webhook "+url+" failed with "+err);
     });
 }
 

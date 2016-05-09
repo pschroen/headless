@@ -125,7 +125,7 @@ var Shell = function (callbackid, container, user, list, index, load, session, c
                 }
                 if (self.list.run === 'forever') {
                     if (user) {
-                        util.log("Respawning "+list);
+                        utils.log("Respawning "+list);
                         send(user.socket, {
                             name: user.name,
                             message: 'data',
@@ -179,7 +179,7 @@ var Shell = function (callbackid, container, user, list, index, load, session, c
             }).listen(function () {
                 var phantom = cp.spawn(config.phantomjs ? config.phantomjs : require('phantomjs').path, ['--ignore-ssl-errors=true', 'shell.js', server.address().port, list, index]);
                 phantom.stdout.on('data', function (data) {
-                    util.log("Phantom stdout: "+data);
+                    utils.log("Phantom stdout: "+data);
                 });
                 phantom.stderr.on('data', function (data) {
                     console.error("Phantom stderr: "+data);
@@ -202,7 +202,7 @@ var Shell = function (callbackid, container, user, list, index, load, session, c
                     server.close(function () {
                         if (self.list.run === 'forever') {
                             if (user) {
-                                util.log("Respawning "+list);
+                                utils.log("Respawning "+list);
                                 send(user.socket, {
                                     name: user.name,
                                     message: 'data',
