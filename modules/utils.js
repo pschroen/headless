@@ -8,8 +8,6 @@
 /* jshint strict:true, eqeqeq:true, newcap:false, multistr:true, expr:true, loopfunc:true, shadow:true, node:true, phantom:true, indent:4 */
 "use strict";
 
-var util = require('util');
-
 /**
  * Utils constructor.
  *
@@ -325,7 +323,7 @@ Utils.prototype.filesize = filesize;
  */
 function log(message) {
     if (process.env.NODE_ENV !== 'production') {
-        util.log(message);
+        console.log('%s - %s', timestamp(), message);
     } else {
         console.log(message);
     }
