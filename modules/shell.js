@@ -232,7 +232,7 @@ function next() {
                 break;
             }
         }
-        if (!queue) shell.exit();
+        if (!queue && list.list.run !== 'forever') shell.exit();
     }
 }
 Shell.prototype.next = next;
@@ -262,7 +262,7 @@ function load(id) {
                     }
                 }
                 shell.command(probe, 'out', {id:probe.callbackid, data:out, headers:outheaders, stream:stream});
-                if (probe.run !== 'forever') shell.exit();
+                if (list.list.run !== 'forever') shell.exit();
             }
         });
     } catch (err) {

@@ -20,9 +20,22 @@ var utils = require(shell.path+'/modules/utils'),
  * @param    {undefined|initCallback} [callback]
  */
 function init(probe, load, callback) {
-    probe.log("["+exports.id+"] "+exports.name);
-    callback(load.remoteAddress, 'text/plain');
+    console.log("Loading "+exports.name);
+    if (load) message(probe, load, callback);
+    probe.next();
 }
 Script.prototype.init = init;
+
+/**
+ * Message.
+ *
+ * @param    {Probe} probe Instance
+ * @param    {undefined|Object} [load] Payload
+ * @param    {undefined|initCallback} [callback]
+ */
+function message(probe, load, callback) {
+    callback(load.remoteAddress, 'text/plain');
+}
+Script.prototype.message = message;
 
 module.exports = exports = new Script();
