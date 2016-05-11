@@ -108,8 +108,22 @@ var init = function () {
                     utils.extend(load, querystring.parse(uri.query));
                     load.remoteAddress = req.socket.remoteAddress;
                     load.origin = req.headers.origin;
-                    callbacks[callbackid] = function (out) {
-                        debug('remote http apiCallback  : '+JSON.stringify(out));
+                    callbacks[callbackid] = {};
+                    callbacks[callbackid].session = function (out) {
+                        if (typeof out.value !== 'undefined') {
+                            req.session[out.name] = out.value;
+                        } else if (typeof out.name !== 'object') {
+                            out.value = req.session[out.name];
+                        } else {
+                            utils.extend(req.session, out.name);
+                        }
+                        send(users[name].host, {
+                            id: out.callbackid,
+                            message: 'session',
+                            data: out
+                        });
+                    };
+                    callbacks[callbackid].callback = function (out) {
                         var data = null;
                         if (!out.stream) {
                             data = out.data;
@@ -127,6 +141,7 @@ var init = function () {
                     };
                     send(users[name].host, {
                         id: callbackid,
+                        type: 'http',
                         message: 'hook',
                         data: {
                             submit: uri.pathname.substring(1),
@@ -152,7 +167,18 @@ var init = function () {
                                             load.remoteAddress = req.socket.remoteAddress;
                                             load.origin = req.headers.origin;
                                             if (process.env.NODE_ENV !== 'production') utils.log("HTTP webhook "+uri.pathname+" > "+load.remoteAddress);
-                                            callbacks[callbackid] = function (out) {
+                                            callbacks[callbackid] = {};
+                                            callbacks[callbackid].session = function (out) {
+                                                if (typeof out.value !== 'undefined') {
+                                                    req.session[out.name] = out.value;
+                                                } else if (typeof out.name !== 'object') {
+                                                    out.value = req.session[out.name];
+                                                } else {
+                                                    utils.extend(req.session, out.name);
+                                                }
+                                                this.api.callbacks[out.id]({name:out.name, value:out.value});
+                                            };
+                                            callbacks[callbackid].callback = function (out) {
                                                 var data = null;
                                                 if (!out.stream) {
                                                     data = out.data;
@@ -170,16 +196,20 @@ var init = function () {
                                             };
                                             var api = null;
                                             if (!daemons) {
-                                                api = new container(callbackid, list.list.container, users[name], list.path, i, load, req.session, function (id, out) {
+                                                api = new container(list.list.container, users[name], list.path, i, {id:callbackid, type:'http', data:load}, function (id, out) {
+                                                    debug('local http sessionCallback  : '+id+'  '+JSON.stringify(out));
+                                                    callbacks[id].session(out);
+                                                }, function (id, out) {
                                                     debug('local http apiCallback  : '+id+'  '+JSON.stringify(out));
-                                                    callbacks[id](out);
+                                                    callbacks[id].callback(out);
                                                     if (!out.stream || out.stream === 'end') delete callbacks[id];
                                                 });
                                                 if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
                                             } else {
                                                 api = daemons;
-                                                api.message(callbackid, i, load);
+                                                api.message(i, {id:callbackid, type:'http', data:load});
                                             }
+                                            callbacks[callbackid].api = api;
                                             callbackid++;
                                             break;
                                         }
@@ -205,7 +235,7 @@ var init = function () {
             if (socket.upgradeReq.headers['user-agent']) {
                 if (process.env.NODE_ENV !== 'production') utils.log("Hello "+socket._socket.remoteAddress);
                 socket.on('message', function (payload) {
-                    receive(socket, payload, socket.upgradeReq);
+                    receive(socket, payload);
                 });
                 socket.on('close', function () {
                     if (users[socket._socket.remoteAddress] && users[socket._socket.remoteAddress].socket) delete users[socket._socket.remoteAddress].socket;
@@ -253,13 +283,16 @@ var init = function () {
                                 });
                             }
                             break;
+                        case 'session':
+                            debug('remote sessionCallback  : '+payload.id+'  '+JSON.stringify(data));
+                            callbacks[payload.id].session(data);
+                            break;
                         case 'hook':
                             var match = /(.*)\.headless\.io/.exec(socket.upgradeReq.headers.host),
                                 name = match && /\./.test(match[1]) ? match[1].split('.')[0] : match ? match[1] : null;
                             if (match && users[name] && users[name].host) {
                                 if (!data.remoteAddress) data.remoteAddress = socket._socket.remoteAddress;
                                 callbacks[callbackid] = function (out) {
-                                    debug('remote wss apiCallback  : '+JSON.stringify(out));
                                     send(socket, {
                                         message: 'hook',
                                         data: out.data,
@@ -268,6 +301,7 @@ var init = function () {
                                 };
                                 send(users[name].host, {
                                     id: callbackid,
+                                    type: 'ws',
                                     message: 'hook',
                                     data: {
                                         submit: socket.upgradeReq.url.substring(1),
@@ -278,7 +312,8 @@ var init = function () {
                                 callbackid++;
                             } else {
                                 if (isFinite(payload.id)) {
-                                    callbacks[payload.id](data);
+                                    debug('remote '+payload.type+' apiCallback  : '+payload.id+'  '+JSON.stringify(data));
+                                    callbacks[payload.id].callback(data);
                                     if (!data.stream || data.stream === 'end') delete callbacks[payload.id];
                                 } else {
                                     var userslist = files.readdir('users');
@@ -292,8 +327,9 @@ var init = function () {
                                                         var item = list.list.items[i];
                                                         if ('/'+item.text === socket.upgradeReq.url) {
                                                             if (!data.remoteAddress) data.remoteAddress = socket._socket.remoteAddress;
-                                                            if (process.env.NODE_ENV !== 'production') utils.log("WSS webhook "+socket.upgradeReq.url+" > "+data.remoteAddress);
-                                                            callbacks[callbackid] = function (out) {
+                                                            if (process.env.NODE_ENV !== 'production') utils.log("WS webhook "+socket.upgradeReq.url+" > "+data.remoteAddress);
+                                                            callbacks[callbackid] = {};
+                                                            callbacks[callbackid].callback = function (out) {
                                                                 if (out.data.message === 'data' && out.data.data.command === 'box' &&
                                                                     out.data.data.args.boxes[0].data &&
                                                                     out.data.data.args.boxes[0].data.insert
@@ -310,16 +346,17 @@ var init = function () {
                                                             };
                                                             var api = null;
                                                             if (!daemons) {
-                                                                api = new container(callbackid, list.list.container, users[name], list.path, i, data, socket.upgradeReq.session, function (id, out) {
-                                                                    debug('local wss apiCallback  : '+id+'  '+JSON.stringify(out));
-                                                                    callbacks[id](out);
+                                                                api = new container(list.list.container, users[name], list.path, i, {id:callbackid, type:'ws', data:data}, null, function (id, out) {
+                                                                    debug('local ws apiCallback  : '+id+'  '+JSON.stringify(out));
+                                                                    callbacks[id].callback(out);
                                                                     if (!out.stream || out.stream === 'end') delete callbacks[id];
                                                                 });
                                                                 if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
                                                             } else {
                                                                 api = daemons;
-                                                                api.message(callbackid, i, data);
+                                                                api.message(i, {id:callbackid, type:'ws', data:data});
                                                             }
+                                                            callbacks[callbackid].api = api;
                                                             callbackid++;
                                                             break;
                                                         }
@@ -375,15 +412,18 @@ var init = function () {
                             seconds = (list.list.run/1000)%60;
                         var loop = function () {
                             utils.log("Running "+list.path+" with "+hours+" hour"+(minutes ? " "+minutes+" minute" : "")+(seconds ? " "+seconds+" second" : "")+" interval");
-                            new container(undefined, list.list.container, users[name], list.path, -1, null, null, null);
+                            new container(list.list.container, users[name], list.path, -1, null, null, null);
                         };
                         intervals.push(setInterval(loop, list.list.run));
                         loop();
                     } else {
                         utils.log("Running "+list.path);
-                        var run = new container(undefined, list.list.container, users[name], list.path, -1, null, null, function (id, out) {
+                        var run = new container(list.list.container, users[name], list.path, -1, null, function (id, out) {
+                            debug('local daemon sessionCallback  : '+id+'  '+JSON.stringify(out));
+                            callbacks[id].session(out);
+                        }, function (id, out) {
                             debug('local daemon apiCallback  : '+id+'  '+JSON.stringify(out));
-                            callbacks[id](out);
+                            callbacks[id].callback(out);
                             if (!out.stream || out.stream === 'end') delete callbacks[id];
                         });
                         if (list.list.shell === 'api' && list.list.run === 'forever') daemons = run;
@@ -414,8 +454,8 @@ var init = function () {
     debug('init');
 };
 
-function receive(socket, payload, req, response_url) {
-    debug('receive  : '+payload+'  '+(typeof req)+'  '+response_url);
+function receive(socket, payload, response_url) {
+    debug('receive  : '+payload+'  '+response_url);
     payload = JSON.parse(payload);
     var message = payload.message,
         data = payload.data;
@@ -679,7 +719,7 @@ function receive(socket, payload, req, response_url) {
                                 break;
                             case 'list':
                                 if (!users[name].containers) users[name].containers = [];
-                                users[name].containers.push(new container(undefined, data.container, users[name], data.list, data.index, null, req ? req.session : null, null));
+                                users[name].containers.push(new container(data.container, users[name], data.list, data.index, null, null, null));
                                 break;
                             case 'kill':
                                 var contain = users[name].containers ? users[name].containers[users[name].containers.length-1] : null;
@@ -751,6 +791,10 @@ function receive(socket, payload, req, response_url) {
                 }
             }
             break;
+        case 'session':
+            debug('local sessionCallback  : '+payload.id+'  '+JSON.stringify(data));
+            callbacks[payload.id].api.callbacks[data.id]({name:data.name, value:data.value});
+            break;
         case 'hook':
             var userslist = files.readdir('users');
             userslist.forEach(function (name) {
@@ -768,7 +812,15 @@ function receive(socket, payload, req, response_url) {
                                     if (process.env.NODE_ENV !== 'production') utils.log("Received webhook "+url+"/"+data.submit+" > "+data.payload.remoteAddress);
                                     callback.on('open', function () {
                                         if (process.env.NODE_ENV !== 'production') utils.log("Sending data to callback "+url);
-                                        callbacks[callbackid] = function (out) {
+                                        callbacks[callbackid] = {};
+                                        callbacks[callbackid].session = function (out) {
+                                            send(callback, {
+                                                id: payload.id,
+                                                message: 'session',
+                                                data: out
+                                            });
+                                        };
+                                        callbacks[callbackid].callback = function (out) {
                                             send(callback, {
                                                 id: payload.id,
                                                 message: 'hook',
@@ -782,16 +834,20 @@ function receive(socket, payload, req, response_url) {
                                         };
                                         var api = null;
                                         if (!daemons) {
-                                            api = new container(callbackid, list.list.container, users[name], list.path, i, data.payload, req ? req.session : null, function (id, out) {
-                                                debug('local apiCallback  : '+id+'  '+JSON.stringify(out));
-                                                callbacks[id](out);
+                                            api = new container(list.list.container, users[name], list.path, i, {id:callbackid, type:payload.type, data:data.payload}, function (id, out) {
+                                                debug('local '+payload.type+' sessionCallback  : '+id+'  '+JSON.stringify(out));
+                                                callbacks[id].session(out);
+                                            }, function (id, out) {
+                                                debug('local '+payload.type+' apiCallback  : '+id+'  '+JSON.stringify(out));
+                                                callbacks[id].callback(out);
                                                 if (!out.stream || out.stream === 'end') delete callbacks[id];
                                             });
                                             if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
                                         } else {
                                             api = daemons;
-                                            api.message(callbackid, i, data.payload);
+                                            api.message(i, {id:callbackid, type:payload.type, data:data.payload});
                                         }
+                                        callbacks[callbackid].api = api;
                                         callbackid++;
                                     });
                                     callback.on('error', function (err) {
@@ -907,7 +963,7 @@ function mothership(insert) {
             }, config.heartbeat);
         });
         socket.on('message', function (payload) {
-            receive(socket, payload, null, url);
+            receive(socket, payload, url);
         });
         socket.on('error', function (err) {
             utils.log("Call home to "+url+" failed with "+err+", reconnecting in 20 seconds");
