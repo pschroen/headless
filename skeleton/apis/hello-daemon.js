@@ -21,7 +21,7 @@ var utils = require(shell.path+'/modules/utils'),
  */
 function init(probe, load, callback) {
     utils.log("Loading "+exports.name);
-    message(probe, load, callback);
+    if (load) message(probe, load, callback);
     probe.next();
 }
 Script.prototype.init = init;

@@ -425,7 +425,7 @@ probe.exec({command:'cat *.js bad_file | wc -l'}, function (error, args) {
 
 <h2>probe.next(message)</h2>
 
-Move onto the next list item, and a <em>Log</em> message.
+Move onto the next list item, and an optional <em>Log</em> message.
 
 <pre data-lang="javascript">
 probe.next("Done");
@@ -718,7 +718,6 @@ You can access these objects from any <code>Script</code> by default.
 <pre data-lang="javascript">
 fs = require('fs'),
 webpage = typeof phantom !== 'undefined' ? require('webpage') : null,
-probe = require('./modules/probe'),
 utils = require('./modules/utils'),
 shell = require('./modules/'+(typeof phantom !== 'undefined' ? 'phantom' : 'node')+'/shell'),
 user = shell.user,
@@ -842,8 +841,8 @@ var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Hello World");
 
 function init(probe, load, callback) {
-    console.log("Loading "+exports.name);
-    message(probe, load, callback);
+    utils.log("Loading "+exports.name);
+    if (load) message(probe, load, callback);
     probe.next();
 }
 Script.prototype.init = init;

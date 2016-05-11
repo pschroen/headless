@@ -16,6 +16,100 @@ if (!(typeof process !== 'undefined' && typeof process.send !== 'undefined') && 
 var debug = typeof phantom === 'undefined' ? require('debug')('headless:modules:shell') : function () {};
 
 /**
+ * Probe instance.
+ *
+ * @constructor
+ * @param    {number} id Thread
+ * @param    {number} i List item index
+ * @param    {null|Object} payload
+ */
+function Probe(id, i, payload) {
+    this.id = id;
+    this.shell = list.list.shell;
+    this.item = list.list.items[i];
+    this.payload = payload;
+    if (!ghost.memory) ghost.memory = {};
+    this.memory = ghost.memory;
+    if (!this.memory.list) this.memory.list = {};
+    if (!this.memory.list[this.item.text]) this.memory.list[this.item.text] = {};
+    this.search = [];
+    this.searchid = 0;
+    this.list = [];
+    this.length = 0;
+    this.memoryid = [];
+    this.shadow = null;
+    this.loading = true;
+    this.progress = null;
+    this.status = null;
+    this.log = function (message) {
+        shell.command(this, 'log', {
+            error: null,
+            message: message
+        });
+    };
+    this.error = function (message, error) {
+        shell.command(this, 'error', {
+            error: error || message,
+            message: message
+        });
+    };
+    this.get = function (args, callback) {
+        shell.command(this, 'get', args, callback);
+    };
+    this.download = function (args, callback) {
+        shell.command(this, 'download', args, callback);
+    };
+    this.post = function (args, callback) {
+        shell.command(this, 'post', args, callback);
+    };
+    this.exec = function (args, callback) {
+        shell.command(this, 'exec', args, callback);
+    };
+    this.reload = function () {
+        this.list = [];
+        this.length = 0;
+        this.memoryid = [];
+        shell.load(id);
+    };
+    this.next = function (message) {
+        this.loading = null;
+        if (message) this.log(message);
+        shell.next();
+    };
+    this.exit = shell.exit;
+    this.remember = function (memory) {
+        return shell.remember(this, memory);
+    };
+    this.merge = shell.merge;
+    this.box = function (message) {
+        this.next(message);
+        shell.command(this, 'box', this.item.infobox);
+    };
+    this.audio = function (args) {
+        shell.command(this, 'audio', args);
+    };
+    this.session = function (name, value) {
+        if (this.payload && this.payload.type === 'http') {
+            var args = null,
+                callback = null;
+            if (typeof value !== 'function') {
+                args = {id:this.payload.id, name:name, value:value};
+            } else {
+                args = {id:this.payload.id, name:name};
+                callback = value;
+            }
+            shell.command(this, 'session', args, callback);
+        } else {
+            var message = "Session requires HTTP payload";
+            shell.command(this, 'error', {
+                error: message,
+                message: message
+            });
+        }
+    };
+}
+
+/**
  * Shell constructor.
  *
  * @constructor
@@ -66,7 +160,7 @@ function receive(payload) {
             var i = index > -1 ? index : 0,
                 length = index > -1 ? index+1 : list.list.items.length;
             try {
-                for (; i < length; i++) shell.threads.push(new probe(data.id, ++shell.threadid, i, data.payload));
+                for (; i < length; i++) shell.threads.push(new Probe(++shell.threadid, i, data.payload));
             } catch (err) {
                 shell.error(err);
                 shell.kill();
@@ -77,7 +171,7 @@ function receive(payload) {
         case 'message':
             var i = data.index > -1 ? data.index : 0,
                 length = data.index > -1 ? data.index+1 : list.list.items.length;
-            for (; i < length; i++) shell.message(data.id, i, data.payload);
+            for (; i < length; i++) shell.message(i, data.payload);
             break;
         case 'response':
             shell.callbacks[data.id](data.args.error, data.args);
@@ -160,22 +254,6 @@ function command(probe, name, args, callback) {
             }
         });
         shell.callbackid++;
-    } else if (name === 'session') {
-        shell.queue++;
-        shell.callbacks[shell.callbackid] = function (e, a) {
-            debug('session shellCallback  : '+(typeof callback)+'  '+(typeof e === 'object' ? JSON.stringify(e) : e)+'  '+(typeof a === 'object' ? JSON.stringify(a) : a));
-            if (callback) callback(e, a);
-            shell.exit(shell.queue);
-        };
-        shell.send({
-            message: 'session',
-            data: {
-                id: shell.callbackid,
-                command: name,
-                args: args
-            }
-        });
-        shell.callbackid++;
     } else {
         shell.queue++;
         shell.callbacks[shell.callbackid] = function (e, a) {
@@ -250,9 +328,12 @@ function load(id) {
  * @param    {undefined|Object|string} [headers={'Content-Type':'application/json'}]
  * @param    {undefined|boolean} [stream] Stream out
  */
-        probe.config.init(probe, probe.payload, function (out, headers, stream) {
-            debug('initCallback  : '+(typeof out === 'object' ? JSON.stringify(out) : out)+'  '+headers+'  '+stream);
-            if (isFinite(probe.callbackid) && typeof out !== 'undefined') {
+        probe.config.init(probe, probe.payload ? probe.payload.data : null, function (out, headers, stream) {
+            debug('initCallback  : '+
+                (typeof out === 'object' ? JSON.stringify(out) : out)+'  '+
+                (typeof out === 'object' ? JSON.stringify(headers) : headers)+'  '+
+                stream);
+            if (probe.payload && isFinite(probe.payload.id) && typeof out !== 'undefined') {
                 var outheaders = {'Content-Type':'application/json'};
                 if (typeof headers !== 'undefined') {
                     if (typeof headers !== 'object') {
@@ -261,7 +342,7 @@ function load(id) {
                         utils.extend(outheaders, headers);
                     }
                 }
-                shell.command(probe, 'out', {id:probe.callbackid, data:out, headers:outheaders, stream:stream});
+                shell.command(probe, 'out', {id:probe.payload.id, data:out, headers:outheaders, stream:stream});
                 if (list.list.run !== 'forever') shell.exit();
             }
         });
@@ -272,10 +353,11 @@ function load(id) {
 }
 Shell.prototype.load = load;
 
-function message(callbackid, index, load) {
-    debug('message  : '+callbackid+'  '+index+'  '+JSON.stringify(load)+'  '+JSON.stringify(shell.threads[index]));
-    var probe = shell.threads[index];
+function message(i, payload) {
+    debug('message  : '+i+'  '+JSON.stringify(payload)+'  '+JSON.stringify(shell.threads[i]));
+    var probe = new Probe(i, i, payload);
     try {
+        probe.script = shell.threads[i].script;
 /**
  * Message callback.
  *
@@ -284,9 +366,12 @@ function message(callbackid, index, load) {
  * @param    {undefined|Object|string} [headers={'Content-Type':'application/json'}]
  * @param    {undefined|boolean} [stream] Stream out
  */
-        probe.script.message(probe, load, function (out, headers, stream) {
-            debug('messageCallback  : '+(typeof out === 'object' ? JSON.stringify(out) : out)+'  '+headers+'  '+stream);
-            if (isFinite(callbackid) && typeof out !== 'undefined') {
+        probe.script.message(probe, probe.payload.data, function (out, headers, stream) {
+            debug('messageCallback  : '+
+                (typeof out === 'object' ? JSON.stringify(out) : out)+'  '+
+                (typeof out === 'object' ? JSON.stringify(headers) : headers)+'  '+
+                stream);
+            if (typeof out !== 'undefined') {
                 var outheaders = {'Content-Type':'application/json'};
                 if (typeof headers !== 'undefined') {
                     if (typeof headers !== 'object') {
@@ -295,7 +380,7 @@ function message(callbackid, index, load) {
                         utils.extend(outheaders, headers);
                     }
                 }
-                shell.command(probe, 'out', {id:callbackid, data:out, headers:outheaders, stream:stream});
+                shell.command(probe, 'out', {id:probe.payload.id, data:out, headers:outheaders, stream:stream});
             }
         });
     } catch (err) {
