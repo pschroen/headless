@@ -832,7 +832,7 @@ module.exports = exports = new Script();
 
 <h2>Daemons</h2>
 
-By default scripts are loaded and then exit when done. Setting the APIs Lists <em>Run mode</em> to <code>forever</code> will keep the script in-memory, <code>init()</code> on the first load and <code>message()</code> on every subsequent request, for super-fast response times.
+By default scripts are loaded and then exit when done. Setting the APIs Lists <em>Run mode</em> to <code>forever</code> will keep the script in-memory, <code>init()</code> on load and <code>message()</code> on every subsequent request, for super-fast response times.
 
 <h3>apis/hello-daemon.js</h3>
 
