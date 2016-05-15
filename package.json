@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "bcrypt": "~0.8.6",
-    "compression": "~1.6.1",
+    "compression": "~1.6.2",
     "connect": "~3.4.1",
     "cookie-session": "~1.2.0",
     "debug": "~2.2.0",
