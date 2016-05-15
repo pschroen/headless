@@ -796,7 +796,7 @@ alien.legal = function () {
     div.innerHTML = 'TM & &copy; UFO Technologies Ltd.';
     element.appendChild(div);
     div = d.createElement('div');
-    div.innerHTML = '<a href="http://blog.ufotechnologies.com/" target="_blank">Made with &#10084; in Toronto, Canada</a>';
+    div.innerHTML = '<a href="http://blog.ufotechnologies.com/" target="_blank">Made with <i class="icon icon-heart-empty">&#xe800;</i> in Toronto, Canada</a>';
     element.appendChild(div);
     var object = new alien.element(element);
     return object;
