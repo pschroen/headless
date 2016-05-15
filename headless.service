@@ -3,6 +3,7 @@ Description=Headless Node.js and PhantomJS shell
 
 [Service]
 WorkingDirectory=/opt/headless
+#ExecStartPre=/bin/sh upgrade.sh
 ExecStart=/usr/local/bin/node headless.js
 Restart=always
 RestartSec=10
