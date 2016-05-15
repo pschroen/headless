@@ -78,18 +78,16 @@ pre {
     font-family: 'icons-headless';
     font-style: normal;
     font-weight: normal;
+    font-variant: normal;
+    line-height: 1em;
     speak: none;
     display: inline-block;
     text-decoration: inherit;
     width: 1em;
-    margin-right: .2em;
     text-align: center;
-    font-variant: normal;
     text-transform: none;
-    line-height: 1em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-shadow: 1px 1px 1px rgba(127, 127, 127, 0.3);
 }
 .we-come-in-peace {
     position: absolute;
