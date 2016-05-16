@@ -6,9 +6,8 @@ UPGRADE=$(curl -s -L -k https://github.com/pschroen/headless/raw/stable/package.
     ")
 if [ "$UPGRADE" = "true" ]; then
     echo "Upgrading to latest stable..."
-    curl -s -O -L -k https://github.com/pschroen/headless/archive/stable.tar.gz
-    tar xzf stable.tar.gz --overwrite --strip=1 --exclude='config.js' --exclude='shell/config.json'
-    rm stable.tar.gz
+    curl -sLk https://github.com/pschroen/headless/archive/stable.tar.gz | tar -zx --strip=1 --overwrite --exclude='config.js' --exclude='shell/config.json'
+    #sed -i "/\"phantomjs\":/d" package.json
     npm install
     cd shell
     git pull origin stable

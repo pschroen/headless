@@ -9,7 +9,7 @@ Headless is a web 3.0 framework for managing Internet connected devices and scri
 1. Visit [https://headless.io/setup/](https://headless.io/setup/) with [Chrome](https://www.google.com/chrome/).
 
 ```sh
-curl -L -s https://github.com/pschroen/headless/archive/stable.tar.gz | tar xvzf -
+curl -sL https://github.com/pschroen/headless/archive/stable.tar.gz | tar -zxv
 cd headless-stable
 npm install
 npm start
