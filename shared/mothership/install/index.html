@@ -13,10 +13,10 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Headless - NodeJS and PhantomJS shell</title>
-    <meta name="title"                                  content="Headless - NodeJS and PhantomJS shell">
+    <title>Headless - Webhooks for everyone!</title>
+    <meta name="title"                                  content="Headless - Webhooks for everyone!">
     <meta name="description"                            content="Headless is a web 3.0 framework for managing Internet connected devices and scripting anything you can imagine with JavaScript.">
-    <meta name="keywords"                               content="headless, daemon, javascript, framework, web, 3.0, data, semantic, interface, internet, things, websocket, relay, ghost, shell, nodejs, phantomjs">
+    <meta name="keywords"                               content="headless, daemon, javascript, framework, web, 3.0, data, semantic, interface, internet, things, iot, webhook, websocket, relay, ghost, shell, nodejs, phantomjs">
     <meta name="author"                                 content="Patrick Schroen">
     <meta name="viewport"                               content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="apple-mobile-web-app-title"             content="Headless">
@@ -34,8 +34,8 @@
     <link rel="apple-touch-icon" sizes="144x144"        href="/apple-touch-icon-144x144.png">
     <link rel="apple-touch-icon" sizes="152x152"        href="/apple-touch-icon-152x152.png">
     <meta property="og:type"                            content="Website">
-    <meta property="og:site_name"                       content="Headless - NodeJS and PhantomJS shell">
-    <meta property="og:title"                           content="Headless - NodeJS and PhantomJS shell">
+    <meta property="og:site_name"                       content="Headless - Webhooks for everyone!">
+    <meta property="og:title"                           content="Headless - Webhooks for everyone!">
     <meta property="og:description"                     content="Headless is a web 3.0 framework for managing Internet connected devices and scripting anything you can imagine with JavaScript.">
     <meta property="og:url"                             content="https://headless.io/">
     <meta property="og:image"                           content="/facebook-icon.png">
@@ -50,6 +50,16 @@
                  url('/OpenSans-Regular-webfont.woff') format('woff'),
                  url('/OpenSans-Regular-webfont.ttf') format('truetype'),
                  url('/OpenSans-Regular-webfont.svg#OpenSansRegular') format('svg');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'icons-headless';
+            src: url('/icons-headless.eot');
+            src: url('/icons-headless.eot#iefix') format('embedded-opentype'),
+                 url('/icons-headless.woff') format('woff'),
+                 url('/icons-headless.ttf') format('truetype'),
+                 url('/icons-headless.svg#icons-headless') format('svg');
             font-weight: normal;
             font-style: normal;
         }
@@ -101,6 +111,21 @@
             font-family: monaco, monospace;
             font-size: 12px;
             line-height: 14px;
+        }
+        .icon {
+            font-family: 'icons-headless';
+            font-style: normal;
+            font-weight: normal;
+            font-variant: normal;
+            line-height: 1em;
+            speak: none;
+            display: inline-block;
+            text-decoration: inherit;
+            width: 1em;
+            text-align: center;
+            text-transform: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         .btn {
             position: absolute;
@@ -160,7 +185,7 @@
 <br>2. Visit <a href="https://headless.io/setup/" target="_blank">https://headless.io/setup/</a> with <a href="https://www.google.com/chrome/" target="_blank">Chrome</a>.
 
 <pre>
-curl -L -s https://github.com/pschroen/headless/archive/stable.tar.gz | tar xvzf -
+curl -sL https://github.com/pschroen/headless/archive/stable.tar.gz | tar -zxv
 cd headless-stable
 npm install
 npm start
@@ -171,8 +196,8 @@ Return to the setup page and create your first user! :)
 
 <h1>Downloads</h1>
 
-<a href="https://github.com/pschroen/headless/releases/download/v0.1.3/qpkg_latest.zip"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;QNAP NAS package (arm-x19 QPKG)</a>
-<br><a href="https://github.com/pschroen/headless/releases/download/v0.1.3/pihead_latest.zip"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;PiHead (Raspbian minimal image)</a>
+<a href="https://github.com/pschroen/headless/releases/download/v0.1.4/qpkg_latest.zip"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;QNAP NAS package (arm-x19 QPKG)</a>
+<br><a href="https://github.com/pschroen/headless/releases/download/v0.1.4/pihead_latest.zip"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;PiHead (Raspbian minimal image)</a>
 <br><a href="/headless.png" target="_blank"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;Headless logo</a>
 <br>&nbsp;
 
@@ -183,7 +208,7 @@ Inherit and chain together scripts
 <br>Remotely access your device from anywhere
 <br>Multiple users per device with user management
 <br>Simple web IDE with built-in debugger and <a href="http://jshint.com/" target="_blank">JSHint</a>
-<br>Normalized shell functions for <a href="http://nodejs.org/" target="_blank">NodeJS</a> and <a href="http://phantomjs.org/" target="_blank">PhantomJS</a>
+<br>Normalized shell functions for <a href="http://nodejs.org/" target="_blank">Node.js</a> and <a href="http://phantomjs.org/" target="_blank">PhantomJS</a>
 <br>Stream audio from the Internet and your own device
 <br>&nbsp;
 <br>&nbsp;
@@ -292,7 +317,7 @@ alien.legal = function () {
     div.innerHTML = 'TM & &copy; UFO Technologies Ltd.';
     element.appendChild(div);
     div = d.createElement('div');
-    div.innerHTML = '<a href="http://blog.ufotechnologies.com/" target="_blank">Made with &#10084; in Toronto, Canada</a>';
+    div.innerHTML = '<a href="http://blog.ufotechnologies.com/" target="_blank">Made with <i class="icon icon-heart-empty">&#xe800;</i> in Toronto, Canada</a>';
     element.appendChild(div);
     var object = new alien.element(element);
     return object;

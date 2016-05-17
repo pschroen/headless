@@ -16,13 +16,26 @@ var utils = require(shell.path+'/modules/utils'),
  * Initialize.
  *
  * @param    {Probe} probe Instance
+ * @param    {undefined|Object} [load] Payload
  * @param    {undefined|initCallback} [callback]
  */
-function init(probe, callback) {
-    var payload = probe.payload;
-    probe.log(exports.name);
-    callback(payload.remoteAddress, 'text/plain');
+function init(probe, load, callback) {
+    utils.log("Loading "+exports.name);
+    if (load) message(probe, load, callback);
+    probe.next();
 }
 Script.prototype.init = init;
+
+/**
+ * Message.
+ *
+ * @param    {Probe} probe Instance
+ * @param    {undefined|Object} [load] Payload
+ * @param    {undefined|initCallback} [callback]
+ */
+function message(probe, load, callback) {
+    callback(load.remoteAddress, 'text/plain');
+}
+Script.prototype.message = message;
 
 module.exports = exports = new Script();

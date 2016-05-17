@@ -13,10 +13,10 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Headless - NodeJS and PhantomJS shell</title>
-    <meta name="title"                                  content="Headless - NodeJS and PhantomJS shell">
+    <title>Headless - Webhooks for everyone!</title>
+    <meta name="title"                                  content="Headless - Webhooks for everyone!">
     <meta name="description"                            content="Headless is a web 3.0 framework for managing Internet connected devices and scripting anything you can imagine with JavaScript.">
-    <meta name="keywords"                               content="headless, daemon, javascript, framework, web, 3.0, data, semantic, interface, internet, things, websocket, relay, ghost, shell, nodejs, phantomjs">
+    <meta name="keywords"                               content="headless, daemon, javascript, framework, web, 3.0, data, semantic, interface, internet, things, iot, webhook, websocket, relay, ghost, shell, nodejs, phantomjs">
     <meta name="author"                                 content="Patrick Schroen">
     <meta name="viewport"                               content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="apple-mobile-web-app-title"             content="Headless">
@@ -34,8 +34,8 @@
     <link rel="apple-touch-icon" sizes="144x144"        href="/apple-touch-icon-144x144.png">
     <link rel="apple-touch-icon" sizes="152x152"        href="/apple-touch-icon-152x152.png">
     <meta property="og:type"                            content="Website">
-    <meta property="og:site_name"                       content="Headless - NodeJS and PhantomJS shell">
-    <meta property="og:title"                           content="Headless - NodeJS and PhantomJS shell">
+    <meta property="og:site_name"                       content="Headless - Webhooks for everyone!">
+    <meta property="og:title"                           content="Headless - Webhooks for everyone!">
     <meta property="og:description"                     content="Headless is a web 3.0 framework for managing Internet connected devices and scripting anything you can imagine with JavaScript.">
     <meta property="og:url"                             content="https://headless.io/">
     <meta property="og:image"                           content="/facebook-icon.png">
@@ -50,6 +50,16 @@
                  url('/OpenSans-Regular-webfont.woff') format('woff'),
                  url('/OpenSans-Regular-webfont.ttf') format('truetype'),
                  url('/OpenSans-Regular-webfont.svg#OpenSansRegular') format('svg');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'icons-headless';
+            src: url('/icons-headless.eot');
+            src: url('/icons-headless.eot#iefix') format('embedded-opentype'),
+                 url('/icons-headless.woff') format('woff'),
+                 url('/icons-headless.ttf') format('truetype'),
+                 url('/icons-headless.svg#icons-headless') format('svg');
             font-weight: normal;
             font-style: normal;
         }
@@ -97,6 +107,21 @@
             font-family: monaco, monospace;
             font-size: 12px;
             line-height: 14px;
+        }
+        .icon {
+            font-family: 'icons-headless';
+            font-style: normal;
+            font-weight: normal;
+            font-variant: normal;
+            line-height: 1em;
+            speak: none;
+            display: inline-block;
+            text-decoration: inherit;
+            width: 1em;
+            text-align: center;
+            text-transform: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         .btn {
             position: absolute;
@@ -158,7 +183,7 @@
 <br>2. Visit <a href="https://headless.io/setup/" target="_blank">https://headless.io/setup/</a> with <a href="https://www.google.com/chrome/" target="_blank">Chrome</a>.
 
 <pre>
-curl -L -s https://github.com/pschroen/headless/archive/stable.tar.gz | tar xvzf -
+curl -sL https://github.com/pschroen/headless/archive/stable.tar.gz | tar -zxv
 cd headless-stable
 npm install
 npm start
@@ -169,8 +194,8 @@ Return to the setup page and create your first user! :)
 
 <h1>Downloads</h1>
 
-<a href="https://github.com/pschroen/headless/releases/download/v0.1.3/qpkg_latest.zip"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;QNAP NAS package (arm-x19 QPKG)</a>
-<br><a href="https://github.com/pschroen/headless/releases/download/v0.1.3/pihead_latest.zip"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;PiHead (Raspbian minimal image)</a>
+<a href="https://github.com/pschroen/headless/releases/download/v0.1.4/qpkg_latest.zip"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;QNAP NAS package (arm-x19 QPKG)</a>
+<br><a href="https://github.com/pschroen/headless/releases/download/v0.1.4/pihead_latest.zip"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;PiHead (Raspbian minimal image)</a>
 <br><a href="/headless.png" target="_blank"><img src="/apple-touch-icon-57x57.png" vspace="5" alt="Headless" style="height:29px; width:29px; vertical-align:middle;">&nbsp;&nbsp;Headless logo</a>
 <br>&nbsp;
 
@@ -181,7 +206,7 @@ Inherit and chain together scripts
 <br>Remotely access your device from anywhere
 <br>Multiple users per device with user management
 <br>Simple web IDE with built-in debugger and <a href="http://jshint.com/" target="_blank">JSHint</a>
-<br>Normalized shell functions for <a href="http://nodejs.org/" target="_blank">NodeJS</a> and <a href="http://phantomjs.org/" target="_blank">PhantomJS</a>
+<br>Normalized shell functions for <a href="http://nodejs.org/" target="_blank">Node.js</a> and <a href="http://phantomjs.org/" target="_blank">PhantomJS</a>
 <br>Stream audio from the Internet and your own device
 <br>&nbsp;
 
@@ -211,7 +236,7 @@ Headless is list-based, what this means is everything you do is managed through 
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(require('./inherit2').Script, module.id, "Inherit 1");
 
-function init(probe, callback) {
+function init(probe, load, callback) {
     probe.log("Inheritance "+exports.sanity+" "+exports.check);
     probe.exit();
 }
@@ -252,7 +277,7 @@ Scripts are also chain-able using the <code>init()</code> and <code>callback()</
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Chain 1");
 
-function init(probe, callback) {
+function init(probe, load, callback) {
     probe.log("Loading "+exports.name);
     probe.script = require('./chain2');
     probe.script.init(probe, function (name) {
@@ -271,7 +296,7 @@ module.exports = exports = new Script();
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Chain 2");
 
-function init(probe, callback) {
+function init(probe, load, callback) {
     probe.log("Loading "+exports.name);
     callback(exports.name);
 }
@@ -329,7 +354,6 @@ var box = {
         }
     };
 probe.item.infobox = {boxes:[box]};
-probe.box("Infobox");
 </pre>
 
 <!--More <code>Infobox</code> examples can be found on <a href="https://github.com/pschroen/headless/wiki">The Wiki</a>.-->
@@ -426,7 +450,7 @@ probe.exec({command:'cat *.js bad_file | wc -l'}, function (error, args) {
 
 <h2>probe.next(message)</h2>
 
-Move onto the next list item, and a <em>Log</em> message.
+Move onto the next list item, and an optional <em>Log</em> message.
 
 <pre data-lang="javascript">
 probe.next("Done");
@@ -644,25 +668,23 @@ Force exit the <code>Probe</code> process.
 Send an <code>Infobox</code> object to the connected user's <em>interface</em>.
 
 <pre data-lang="javascript">
-var payload = probe.payload,
-    name = payload.name,
-    id = payload.id,
+var name = load.name,
+    id = load.id,
     box = {
         fields: {
             hello: {
                 type: 'info',
                 title: exports.name,
                 text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
-                    The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+                    The name of this file is your webhook, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
             },
             payload: {
                 type: 'info',
                 title: "Payload",
-                text: JSON.stringify(payload)
+                text: JSON.stringify(load)
             }
         }
     };
-probe.log("Infobox");
 callback(shell.box(name, id, [box]));
 </pre>
 
@@ -685,6 +707,10 @@ Inherit the prototype methods from one constructor into another.
 
 Object recursive merging utility.
 
+<h2>utils.format(f)</h2>
+
+Formats a string with passed parameters.
+
 <h2>utils.addslashes(str)</h2>
 
 Add slashes equivalent of PHP <code>addslashes()</code>.
@@ -700,6 +726,14 @@ Convert date or number ranges in string to a regular expression. Currently only 
 <h2>utils.filesize(input)</h2>
 
 Convert human readable file sizes to their byte equivalent.
+
+<h2>utils.log(message)</h2>
+
+In production environments <code>syslog</code> takes care of the timestamp.
+
+<h2>utils.timestamp()</h2>
+
+<code>26 Feb 16:19:34</code> format.
 <br>&nbsp;
 
 <h1>Globals</h1>
@@ -709,7 +743,6 @@ You can access these objects from any <code>Script</code> by default.
 <pre data-lang="javascript">
 fs = require('fs'),
 webpage = typeof phantom !== 'undefined' ? require('webpage') : null,
-probe = require('./modules/probe'),
 utils = require('./modules/utils'),
 shell = require('./modules/'+(typeof phantom !== 'undefined' ? 'phantom' : 'node')+'/shell'),
 user = shell.user,
@@ -731,12 +764,11 @@ You may have noticed the default APIs list is empty, this is intentional as any 
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Hello World");
 
-function init(probe, callback) {
-    probe.log(exports.name);
+function init(probe, load, callback) {
     callback({
         title: exports.name,
         text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
-            The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+            The name of this file is your webhook, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
     });
 }
 Script.prototype.init = init;
@@ -754,13 +786,12 @@ Add the basename of the script (without <code>.js</code>) to your APIs list to m
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Hello World");
 
-function init(probe, callback) {
+function init(probe, load, callback) {
     var headers = {'Access-Control-Allow-Origin':'*'};
-    probe.log(exports.name);
     callback({
         title: exports.name,
         text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
-            The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+            The name of this file is your webhook, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
     }, headers);
 }
 Script.prototype.init = init;
@@ -774,18 +805,15 @@ module.exports = exports = new Script();
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Hello World");
 
-function init(probe, callback) {
-    var payload = probe.payload,
-        origin = payload.origin,
-        headers = {
-            'Access-Control-Allow-Origin': origin,
+function init(probe, load, callback) {
+    var headers = {
+            'Access-Control-Allow-Origin': load.origin,
             'Access-Control-Allow-Credentials': 'true'
         };
-    probe.log(exports.name);
     callback({
         title: exports.name,
         text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
-            The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+            The name of this file is your webhook, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
     }, headers);
 }
 Script.prototype.init = init;
@@ -793,7 +821,7 @@ Script.prototype.init = init;
 module.exports = exports = new Script();
 </pre>
 
-<h2>Session</h2>
+<h2>Sessions</h2>
 
 <h3>apis/hello-session.js</h3>
 
@@ -801,35 +829,57 @@ module.exports = exports = new Script();
 var utils = require(shell.path+'/modules/utils'),
     Script = utils.Script(module.id, "Hello World");
 
-function init(probe, callback) {
-    var payload = probe.payload,
-        origin = payload.origin,
-        headers = {
-            'Access-Control-Allow-Origin': origin,
+function init(probe, load, callback) {
+    var headers = {
+            'Access-Control-Allow-Origin': load.origin,
             'Access-Control-Allow-Credentials': 'true'
         };
-    probe.log(exports.name);
-
     // Retrieve username
     probe.session('username', function (error, args) {
         probe.log("Session response: "+JSON.stringify(args));
-
         // Store username, must be called before the callback
         probe.session('username', 'helloworld');
-
         // Retrieve username that we just stored
         probe.session('username', function (error, args) {
             probe.log("Session response: "+JSON.stringify(args));
-
             callback({
                 title: exports.name,
                 text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
-                    The name of this file is your endpoint, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+                    The name of this file is your webhook, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
             }, headers);
         });
     });
 }
 Script.prototype.init = init;
+
+module.exports = exports = new Script();
+</pre>
+
+<h2>Daemons</h2>
+
+By default scripts are loaded and then exit when done. Setting the APIs Lists <em>Run mode</em> to <code>forever</code> will keep the script in-memory, <code>init()</code> on load and <code>message()</code> on every subsequent request, for super-fast response times.
+
+<h3>apis/hello-daemon.js</h3>
+
+<pre data-lang="javascript">
+var utils = require(shell.path+'/modules/utils'),
+    Script = utils.Script(module.id, "Hello World");
+
+function init(probe, load, callback) {
+    utils.log("Loading "+exports.name);
+    if (load) message(probe, load, callback);
+    probe.next();
+}
+Script.prototype.init = init;
+
+function message(probe, load, callback) {
+    callback({
+        title: exports.name,
+        text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. \
+            The name of this file is your webhook, for example; &lt;a href="/hello" target="_blank"&gt;/hello&lt;/a&gt;.'
+    });
+}
+Script.prototype.message = message;
 
 module.exports = exports = new Script();
 </pre>
@@ -866,7 +916,7 @@ var app = require('express')(),
     server = require('http').Server(app),
     io = require('socket.io')(server);
 
-function init(probe, callback) {
+function init(probe, load, callback) {
     server.listen(shell.express.port);
     app.get('/', function (req, res) {
         res.send(exports.name);
@@ -1022,7 +1072,7 @@ alien.legal = function () {
     div.innerHTML = 'TM & &copy; UFO Technologies Ltd.';
     element.appendChild(div);
     div = d.createElement('div');
-    div.innerHTML = '<a href="http://blog.ufotechnologies.com/" target="_blank">Made with &#10084; in Toronto, Canada</a>';
+    div.innerHTML = '<a href="http://blog.ufotechnologies.com/" target="_blank">Made with <i class="icon icon-heart-empty">&#xe800;</i> in Toronto, Canada</a>';
     element.appendChild(div);
     var object = new alien.element(element);
     element.style.position = 'relative';

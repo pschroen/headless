@@ -9,7 +9,7 @@ Headless is a web 3.0 framework for managing Internet connected devices and scri
 1. Visit [https://headless.io/setup/](https://headless.io/setup/) with [Chrome](https://www.google.com/chrome/).
 
 ```sh
-curl -L -s https://github.com/pschroen/headless/archive/stable.tar.gz | tar xvzf -
+curl -sL https://github.com/pschroen/headless/archive/stable.tar.gz | tar -zxv
 cd headless-stable
 npm install
 npm start
@@ -18,23 +18,16 @@ npm start
 Return to the setup page, create your first user and happy scripting! :)
 
 
-## Running Forever
+## Slack integration
 
-```sh
-sudo npm -g install forever
-forever start headless.js
-forever list
-```
+Headless was created specifically for developing webhooks to devices, and with that it's perfectly suited for creating public webhooks you can use in your own Slack projects. If you've created a Slack integration with Headless that you want to share, feel free to open a pull request to contribute to the list here.
+
+* [Slack Amp](https://github.com/pschroen/twitspot/wiki/Slack-integration)
 
 
-## Really running forever
+## Running your own headless server
 
-For Linux-based systems add the following to your `/etc/rc.local` before the final `exit 0`.
-
-```sh
-# Headless
-su - <user> -c "cd <install path> && forever start headless.js"
-```
+For production use and installation on embedded computers, refer to the [Server configuration](https://github.com/pschroen/headless/wiki/Server-configuration) wiki for your environment.
 
 
 ## Resources
@@ -49,4 +42,4 @@ su - <user> -c "cd <install path> && forever start headless.js"
 
 ## Copyright & License
 
-Copyright (c) 2014-2016 Patrick Schroen - Released under the [MIT License](LICENSE).
+Copyright (c) 2016 Patrick Schroen - Released under the [MIT License](LICENSE).

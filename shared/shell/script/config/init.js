@@ -16,12 +16,13 @@ var utils = require('./utils'),
  * Initialize.
  *
  * @param    {Probe} probe Instance
+ * @param    {undefined|Object} [load] Payload
  * @param    {undefined|initCallback} [callback]
  */
-function init(probe, callback) {
+function init(probe, load, callback) {
     probe.log("["+exports.id+"] Loading "+exports.name);
     probe.script = require(shell.path+'/users/'+user+'/scripts/'+probe.item.text+'.js');
-    probe.script.init(probe);
+    probe.script.init(probe, load);
     if (callback) callback();
 }
 Script.prototype.init = init;

@@ -29,7 +29,6 @@ global.http = require('http'),
 global.https = require('https'),
 global.connect = require('connect'),
 global.request = require('request'),
-global.util = require('util'),
 global.url = require('url'),
 global.querystring = require('querystring'),
 global.file = new (require('node-static')).Server('./mothership'),
@@ -81,7 +80,8 @@ var insert = [],
     heartbeat = null,
     intervals = [],
     server = null,
-    wss = null;
+    wss = null,
+    daemons = null;
 
 var init = function () {
     debug('init');
@@ -108,8 +108,22 @@ var init = function () {
                     utils.extend(load, querystring.parse(uri.query));
                     load.remoteAddress = req.socket.remoteAddress;
                     load.origin = req.headers.origin;
-                    callbacks[callbackid] = function (out) {
-                        debug('remote apiCallback  : '+JSON.stringify(out));
+                    callbacks[callbackid] = {};
+                    callbacks[callbackid].session = function (out) {
+                        if (typeof out.value !== 'undefined') {
+                            req.session[out.name] = out.value;
+                        } else if (typeof out.name !== 'object') {
+                            out.value = req.session[out.name];
+                        } else {
+                            utils.extend(req.session, out.name);
+                        }
+                        send(users[name].host, {
+                            id: out.callbackid,
+                            message: 'session',
+                            data: out
+                        });
+                    };
+                    callbacks[callbackid].callback = function (out) {
                         var data = null;
                         if (!out.stream) {
                             data = out.data;
@@ -127,7 +141,8 @@ var init = function () {
                     };
                     send(users[name].host, {
                         id: callbackid,
-                        message: 'endpoint',
+                        type: 'http',
+                        message: 'hook',
                         data: {
                             submit: uri.pathname.substring(1),
                             payload: load
@@ -151,10 +166,19 @@ var init = function () {
                                             utils.extend(load, querystring.parse(uri.query));
                                             load.remoteAddress = req.socket.remoteAddress;
                                             load.origin = req.headers.origin;
-                                            if (process.env.NODE_ENV !== 'production') util.log("Endpoint requested "+uri.pathname+" > "+load.remoteAddress);
-                                            var api = new container(list.list.container, users[name], list.path, i, load, req.session);
-                                            api.callback = function (out) {
-                                                debug('local apiCallback  : '+JSON.stringify(out));
+                                            if (process.env.NODE_ENV !== 'production') utils.log("HTTP webhook "+uri.pathname+" > "+load.remoteAddress);
+                                            callbacks[callbackid] = {};
+                                            callbacks[callbackid].session = function (out) {
+                                                if (typeof out.value !== 'undefined') {
+                                                    req.session[out.name] = out.value;
+                                                } else if (typeof out.name !== 'object') {
+                                                    out.value = req.session[out.name];
+                                                } else {
+                                                    utils.extend(req.session, out.name);
+                                                }
+                                                this.api.callbacks[out.id]({name:out.name, value:out.value});
+                                            };
+                                            callbacks[callbackid].callback = function (out) {
                                                 var data = null;
                                                 if (!out.stream) {
                                                     data = out.data;
@@ -170,6 +194,23 @@ var init = function () {
                                                 }
                                                 if (!out.stream || out.stream === 'end') res.end();
                                             };
+                                            var api = null;
+                                            if (!daemons) {
+                                                api = new container(list.list.container, users[name], list.path, i, {id:callbackid, type:'http', data:load}, function (id, out) {
+                                                    debug('local http sessionCallback  : '+id+'  '+JSON.stringify(out));
+                                                    callbacks[id].session(out);
+                                                }, function (id, out) {
+                                                    debug('local http apiCallback  : '+id+'  '+JSON.stringify(out));
+                                                    callbacks[id].callback(out);
+                                                    if (!out.stream || out.stream === 'end') delete callbacks[id];
+                                                });
+                                                if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
+                                            } else {
+                                                api = daemons;
+                                                api.message(i, {id:callbackid, type:'http', data:load});
+                                            }
+                                            callbacks[callbackid].api = api;
+                                            callbackid++;
                                             break;
                                         }
                                     }
@@ -192,9 +233,9 @@ var init = function () {
         wss.on('connection', function (socket) {
             debug('connection  : '+socket.upgradeReq.headers['user-agent']);
             if (socket.upgradeReq.headers['user-agent']) {
-                if (process.env.NODE_ENV !== 'production') util.log("Hello "+socket._socket.remoteAddress);
+                if (process.env.NODE_ENV !== 'production') utils.log("Hello "+socket._socket.remoteAddress);
                 socket.on('message', function (payload) {
-                    receive(socket, payload, socket.upgradeReq);
+                    receive(socket, payload);
                 });
                 socket.on('close', function () {
                     if (users[socket._socket.remoteAddress] && users[socket._socket.remoteAddress].socket) delete users[socket._socket.remoteAddress].socket;
@@ -225,7 +266,7 @@ var init = function () {
                                                 }
                                                 if (!users[name]) users[name] = {name:name};
                                                 users[name].host = socket;
-                                                if (process.env.NODE_ENV !== 'production') util.log("Hello "+socket._socket.remoteAddress+" > "+name);
+                                                if (process.env.NODE_ENV !== 'production') utils.log("Hello "+socket._socket.remoteAddress+" > "+name);
                                             }
                                         }
                                     });
@@ -242,21 +283,26 @@ var init = function () {
                                 });
                             }
                             break;
-                        case 'endpoint':
+                        case 'session':
+                            debug('remote sessionCallback  : '+payload.id+'  '+JSON.stringify(data));
+                            callbacks[payload.id].session(data);
+                            break;
+                        case 'hook':
                             var match = /(.*)\.headless\.io/.exec(socket.upgradeReq.headers.host),
                                 name = match && /\./.test(match[1]) ? match[1].split('.')[0] : match ? match[1] : null;
                             if (match && users[name] && users[name].host) {
                                 if (!data.remoteAddress) data.remoteAddress = socket._socket.remoteAddress;
                                 callbacks[callbackid] = function (out) {
                                     send(socket, {
-                                        message: 'endpoint',
+                                        message: 'hook',
                                         data: out.data,
                                         time: payload.time
                                     });
                                 };
                                 send(users[name].host, {
                                     id: callbackid,
-                                    message: 'endpoint',
+                                    type: 'ws',
+                                    message: 'hook',
                                     data: {
                                         submit: socket.upgradeReq.url.substring(1),
                                         payload: data
@@ -266,7 +312,8 @@ var init = function () {
                                 callbackid++;
                             } else {
                                 if (isFinite(payload.id)) {
-                                    callbacks[payload.id](data);
+                                    debug('remote '+payload.type+' apiCallback  : '+payload.id+'  '+JSON.stringify(data));
+                                    callbacks[payload.id].callback(data);
                                     if (!data.stream || data.stream === 'end') delete callbacks[payload.id];
                                 } else {
                                     var userslist = files.readdir('users');
@@ -280,9 +327,9 @@ var init = function () {
                                                         var item = list.list.items[i];
                                                         if ('/'+item.text === socket.upgradeReq.url) {
                                                             if (!data.remoteAddress) data.remoteAddress = socket._socket.remoteAddress;
-                                                            if (process.env.NODE_ENV !== 'production') util.log("Endpoint served "+socket.upgradeReq.url+" > "+data.remoteAddress);
-                                                            var api = new container(list.list.container, users[name], list.path, i, data, socket.upgradeReq.session);
-                                                            api.callback = function (out) {
+                                                            if (process.env.NODE_ENV !== 'production') utils.log("WS webhook "+socket.upgradeReq.url+" > "+data.remoteAddress);
+                                                            callbacks[callbackid] = {};
+                                                            callbacks[callbackid].callback = function (out) {
                                                                 if (out.data.message === 'data' && out.data.data.command === 'box' &&
                                                                     out.data.data.args.boxes[0].data &&
                                                                     out.data.data.args.boxes[0].data.insert
@@ -292,11 +339,25 @@ var init = function () {
                                                                     keys = keys+'|'+user.key;
                                                                 }
                                                                 send(socket, {
-                                                                    message: 'endpoint',
+                                                                    message: 'hook',
                                                                     data: out.data,
                                                                     time: payload.time
                                                                 });
                                                             };
+                                                            var api = null;
+                                                            if (!daemons) {
+                                                                api = new container(list.list.container, users[name], list.path, i, {id:callbackid, type:'ws', data:data}, null, function (id, out) {
+                                                                    debug('local ws apiCallback  : '+id+'  '+JSON.stringify(out));
+                                                                    callbacks[id].callback(out);
+                                                                    if (!out.stream || out.stream === 'end') delete callbacks[id];
+                                                                });
+                                                                if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
+                                                            } else {
+                                                                api = daemons;
+                                                                api.message(i, {id:callbackid, type:'ws', data:data});
+                                                            }
+                                                            callbacks[callbackid].api = api;
+                                                            callbackid++;
                                                             break;
                                                         }
                                                     }
@@ -334,7 +395,7 @@ var init = function () {
                 });
             }
         });
-        util.log("Headless daemon listening on https://"+server.address().address+":"+server.address().port);
+        utils.log("Headless daemon listening on https://"+server.address().address+":"+server.address().port);
     });
 
     var userslist = files.exists('users') ? files.readdir('users') : [];
@@ -345,19 +406,27 @@ var init = function () {
             var listslist = files.lists(lists);
             listslist.forEach(function (list) {
                 if (list.list.run) {
-                    if (list.list.run.constructor === Number) {
+                    if (typeof list.list.run === 'number') {
                         var hours = (list.list.run/1000/60/60)<<0,
                             minutes = (list.list.run/1000/60)%60*60,
                             seconds = (list.list.run/1000)%60;
                         var loop = function () {
-                            util.log("Running "+list.path+" with "+hours+" hour"+(minutes ? " "+minutes+" minute" : "")+(seconds ? " "+seconds+" second" : "")+" interval");
-                            var run = new container(list.list.container, users[name], list.path, -1, null, null);
+                            utils.log("Running "+list.path+" with "+hours+" hour"+(minutes ? " "+minutes+" minute" : "")+(seconds ? " "+seconds+" second" : "")+" interval");
+                            new container(list.list.container, users[name], list.path, -1, null, null, null);
                         };
                         intervals.push(setInterval(loop, list.list.run));
                         loop();
                     } else {
-                        util.log("Running "+list.path);
-                        var run = new container(list.list.container, users[name], list.path, -1, null, null);
+                        utils.log("Running "+list.path);
+                        var run = new container(list.list.container, users[name], list.path, -1, null, function (id, out) {
+                            debug('local daemon sessionCallback  : '+id+'  '+JSON.stringify(out));
+                            callbacks[id].session(out);
+                        }, function (id, out) {
+                            debug('local daemon apiCallback  : '+id+'  '+JSON.stringify(out));
+                            callbacks[id].callback(out);
+                            if (!out.stream || out.stream === 'end') delete callbacks[id];
+                        });
+                        if (list.list.shell === 'api' && list.list.run === 'forever') daemons = run;
                     }
                 }
             });
@@ -385,8 +454,8 @@ var init = function () {
     debug('init');
 };
 
-function receive(socket, payload, req, upstream) {
-    debug('receive  : '+payload+'  '+(typeof req)+'  '+upstream);
+function receive(socket, payload, response_url) {
+    debug('receive  : '+payload+'  '+response_url);
     payload = JSON.parse(payload);
     var message = payload.message,
         data = payload.data;
@@ -397,7 +466,7 @@ function receive(socket, payload, req, upstream) {
                     auth = path.join('users', name, 'auth.json'),
                     user = files.exists(auth) ? JSON.parse(files.read(auth)) : null;
                 if (user && bcrypt.compareSync(data.auth, '$2a$08$'+user.auth)) {
-                    if (!upstream) socket.user = user;
+                    if (!response_url) socket.user = user;
                     if (!socket.users) socket.users = {};
                     if (!socket.users[name]) socket.users[name] = {};
                     socket.users[name].handshake = true;
@@ -526,7 +595,7 @@ function receive(socket, payload, req, upstream) {
                                                     '+git+' pull origin stable';
                                                 debug('shell save  : '+command);
                                                 var log = "Installing shell "+list.shell;
-                                                util.log(log);
+                                                utils.log(log);
                                                 send(socket, {
                                                     name: name,
                                                     message: 'data',
@@ -542,7 +611,7 @@ function receive(socket, payload, req, upstream) {
                                                 cp.exec(command, function (error, stdout, stderr) {
                                                     if (!error) {
                                                         var log = "Install of shell "+list.shell+" complete";
-                                                        util.log(log);
+                                                        utils.log(log);
                                                         send(socket, {
                                                             name: name,
                                                             message: 'data',
@@ -556,7 +625,7 @@ function receive(socket, payload, req, upstream) {
                                                         });
                                                     } else {
                                                         var log = "Install of shell "+list.shell+" failed with "+error;
-                                                        util.log(log);
+                                                        utils.log(log);
                                                         send(socket, {
                                                             name: name,
                                                             message: 'data',
@@ -650,14 +719,14 @@ function receive(socket, payload, req, upstream) {
                                 break;
                             case 'list':
                                 if (!users[name].containers) users[name].containers = [];
-                                users[name].containers.push(new container(data.container, users[name], data.list, data.index, null, req ? req.session : null));
+                                users[name].containers.push(new container(data.container, users[name], data.list, data.index, null, null, null));
                                 break;
                             case 'kill':
                                 var contain = users[name].containers ? users[name].containers[users[name].containers.length-1] : null;
                                 if (contain) contain.kill();
                                 break;
                             case 'restart':
-                                if (upstream) {
+                                if (response_url) {
                                     socket.off('close');
                                     socket.close();
                                 }
@@ -669,10 +738,10 @@ function receive(socket, payload, req, upstream) {
                                     }
                                 }
                                 if (config.restart) {
-                                    util.log("Restarting with "+config.restart);
+                                    utils.log("Restarting with "+config.restart);
                                     cp.exec(config.restart);
                                 } else {
-                                    util.log("Forcing restart by quitting");
+                                    utils.log("Forcing restart by quitting");
                                     process.exit();
                                 }
                                 break;
@@ -680,7 +749,7 @@ function receive(socket, payload, req, upstream) {
                                 var name = data.pass.name,
                                     auth = path.join('users', name, 'auth.json'),
                                     user = JSON.parse(files.read(auth));
-                                util.log("Updating "+name+"'s password");
+                                utils.log("Updating "+name+"'s password");
                                 user.auth = bcrypt.hashSync(data.pass.auth, 8).substring(7);
                                 user.keys = bcrypt.hashSync(uuid.v4(), 8).substring(7);
                                 files.write(auth, JSON.stringify(user));
@@ -700,7 +769,7 @@ function receive(socket, payload, req, upstream) {
                             case 'api':
                                 if (data.api.submit === 'headless.io/namespace' || data.api.submit === 'headless.io/release')
                                     data.api.user = JSON.parse(files.read(path.join('users', data.api.name, 'auth.json')));
-                                endpoint(data.api, function (out) {
+                                hook(data.api, function (out) {
                                     send(socket, out);
                                     if (out.message === 'data' && out.data.command === 'box' &&
                                         out.data.args.boxes[0].data &&
@@ -722,7 +791,11 @@ function receive(socket, payload, req, upstream) {
                 }
             }
             break;
-        case 'endpoint':
+        case 'session':
+            debug('local sessionCallback  : '+payload.id+'  '+JSON.stringify(data));
+            callbacks[payload.id].api.callbacks[data.id]({name:data.name, value:data.value});
+            break;
+        case 'hook':
             var userslist = files.readdir('users');
             userslist.forEach(function (name) {
                 var lists = path.join('users', name, 'lists');
@@ -733,28 +806,52 @@ function receive(socket, payload, req, upstream) {
                             for (var i = 0; i < list.list.items.length; i++) {
                                 var item = list.list.items[i];
                                 if (item.text === data.submit) {
-                                    var url = upstream,
+                                    var url = response_url,
                                         callback = new ws(url);
                                     if (!data.payload.remoteAddress) data.payload.remoteAddress = socket._socket.remoteAddress;
-                                    if (process.env.NODE_ENV !== 'production') util.log("Endpoint received from "+url+"/"+data.submit+" > "+data.payload.remoteAddress);
+                                    if (process.env.NODE_ENV !== 'production') utils.log("Received webhook "+url+"/"+data.submit+" > "+data.payload.remoteAddress);
                                     callback.on('open', function () {
-                                        if (process.env.NODE_ENV !== 'production') util.log("Sending data to callback "+url);
-                                        var api = new container(list.list.container, users[name], list.path, i, data.payload, req ? req.session : null);
-                                        api.callback = function (out) {
+                                        if (process.env.NODE_ENV !== 'production') utils.log("Sending data to callback "+url);
+                                        callbacks[callbackid] = {};
+                                        callbacks[callbackid].session = function (out) {
                                             send(callback, {
                                                 id: payload.id,
-                                                message: 'endpoint',
+                                                message: 'session',
+                                                data: out
+                                            });
+                                        };
+                                        callbacks[callbackid].callback = function (out) {
+                                            send(callback, {
+                                                id: payload.id,
+                                                message: 'hook',
                                                 data: out,
                                                 time: payload.time
                                             });
                                             if (!out.stream || out.stream === 'end') {
-                                                if (process.env.NODE_ENV !== 'production') util.log("Send complete, closing connection");
+                                                if (process.env.NODE_ENV !== 'production') utils.log("Send complete, closing connection");
                                                 callback.close();
                                             }
                                         };
+                                        var api = null;
+                                        if (!daemons) {
+                                            api = new container(list.list.container, users[name], list.path, i, {id:callbackid, type:payload.type, data:data.payload}, function (id, out) {
+                                                debug('local '+payload.type+' sessionCallback  : '+id+'  '+JSON.stringify(out));
+                                                callbacks[id].session(out);
+                                            }, function (id, out) {
+                                                debug('local '+payload.type+' apiCallback  : '+id+'  '+JSON.stringify(out));
+                                                callbacks[id].callback(out);
+                                                if (!out.stream || out.stream === 'end') delete callbacks[id];
+                                            });
+                                            if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
+                                        } else {
+                                            api = daemons;
+                                            api.message(i, {id:callbackid, type:payload.type, data:data.payload});
+                                        }
+                                        callbacks[callbackid].api = api;
+                                        callbackid++;
                                     });
                                     callback.on('error', function (err) {
-                                        if (process.env.NODE_ENV !== 'production') util.log("Callback "+url+" failed with "+err);
+                                        if (process.env.NODE_ENV !== 'production') utils.log("Callback "+url+" failed with "+err);
                                     });
                                     break;
                                 }
@@ -765,19 +862,19 @@ function receive(socket, payload, req, upstream) {
             });
             break;
         case 'heartbeat':
-            if (!upstream) {
+            if (!response_url) {
                 send(socket, {
                     message: 'heartbeat',
                     time: payload.time
                 });
             } else {
-                util.log("Heartbeat with "+(Date.now()-payload.time)+"ms latency");
+                utils.log("Heartbeat with "+(Date.now()-payload.time)+"ms latency");
             }
             break;
         case 'setup':
-            if (!upstream) {
+            if (!response_url) {
                 if (!data) {
-                    if (process.env.NODE_ENV !== 'production') util.log("Setup "+socket._socket.remoteAddress+" socket");
+                    if (process.env.NODE_ENV !== 'production') utils.log("Setup "+socket._socket.remoteAddress+" socket");
                     if (!users[socket._socket.remoteAddress]) users[socket._socket.remoteAddress] = {};
                     users[socket._socket.remoteAddress].socket = socket;
                 } else if (users[socket._socket.remoteAddress] && users[socket._socket.remoteAddress].host) {
@@ -811,7 +908,7 @@ function receive(socket, payload, req, upstream) {
                     }],
                     userAgent: data.userAgent
                 }));
-                util.log("Setup "+name);
+                utils.log("Setup "+name);
                 clearInterval(setup);
             }
             break;
@@ -824,7 +921,7 @@ function mothership(insert) {
         var url = 'wss://'+host,
             socket = new ws(url);
         socket.on('open', function () {
-            util.log("Connected to mothership "+url+" with "+minutes+" minute"+(seconds ? " "+seconds+" second" : "")+" heartbeat");
+            utils.log("Connected to mothership "+url+" with "+minutes+" minute"+(seconds ? " "+seconds+" second" : "")+" heartbeat");
             device = function (link) {
                 send(socket, {
                     message: 'mothership',
@@ -841,7 +938,7 @@ function mothership(insert) {
                 device(insert);
             } else {
                 var localhost = function () {
-                    util.log("Setup localhost with 20 second interval");
+                    utils.log("Setup localhost with 20 second interval");
                     send(socket, {
                         message: 'mothership',
                         data: {
@@ -866,17 +963,17 @@ function mothership(insert) {
             }, config.heartbeat);
         });
         socket.on('message', function (payload) {
-            receive(socket, payload, null, url);
+            receive(socket, payload, url);
         });
         socket.on('error', function (err) {
-            util.log("Call home to "+url+" failed with "+err+", reconnecting in 20 seconds");
+            utils.log("Call home to "+url+" failed with "+err+", reconnecting in 20 seconds");
             clearInterval(heartbeat);
             setTimeout(function () {
                 mothership(insert);
             }, 20000);
         });
         socket.on('close', function () {
-            util.log("Mothership "+url+" disconnected, reconnecting in 20 seconds");
+            utils.log("Mothership "+url+" disconnected, reconnecting in 20 seconds");
             clearInterval(heartbeat);
             setTimeout(function () {
                 mothership(insert);
@@ -912,7 +1009,7 @@ function reinsert() {
         }
     });
     shell.mothership.forEach(function (host) {
-        util.log("Relinking with mothership wss://"+host);
+        utils.log("Relinking with mothership wss://"+host);
         device(insert);
     });
     keys = keys.join('|');
@@ -920,26 +1017,26 @@ function reinsert() {
     debug('reinsert');
 }
 
-function endpoint(data, callback) {
-    debug('endpoint  : '+JSON.stringify(data)+'  '+(typeof callback));
+function hook(data, callback) {
+    debug('hook  : '+JSON.stringify(data)+'  '+(typeof callback));
     var url = 'wss://'+data.submit,
         api = new ws(url);
     api.on('open', function () {
-        if (process.env.NODE_ENV !== 'production') util.log("Sending data to endpoint "+url);
+        if (process.env.NODE_ENV !== 'production') utils.log("Sending data to "+url);
         send(api, {
-            message: 'endpoint',
+            message: 'hook',
             data: data,
             time: Date.now()
         });
     });
     api.on('message', function (payload) {
         payload = JSON.parse(payload);
-        if (process.env.NODE_ENV !== 'production') util.log("Received data from endpoint "+url+" in "+(Date.now()-payload.time)+"ms, closing connection");
+        if (process.env.NODE_ENV !== 'production') utils.log("Received data from "+url+" in "+(Date.now()-payload.time)+"ms, closing connection");
         callback(payload.data);
         api.close();
     });
     api.on('error', function (err) {
-        if (process.env.NODE_ENV !== 'production') util.log("Endpoint "+url+" failed with "+err);
+        if (process.env.NODE_ENV !== 'production') utils.log("Webhook "+url+" failed with "+err);
     });
 }
 

@@ -8,6 +8,16 @@
     font-weight: normal;
     font-style: normal;
 }
+@font-face {
+    font-family: 'icons-headless';
+    src: url('/icons-headless.eot');
+    src: url('/icons-headless.eot#iefix') format('embedded-opentype'),
+         url('/icons-headless.woff') format('woff'),
+         url('/icons-headless.ttf') format('truetype'),
+         url('/icons-headless.svg#icons-headless') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
 html, body {
     height: 100%;
     overflow: hidden;
@@ -42,8 +52,8 @@ form {
     display: block;
     width: 96px;
     height: 27px;
-    padding: 0 12px 0 12px;
     margin: 0;
+    padding: 0 12px 0 12px;
     background: #f8f8f0;
     border-radius: 5px;
     box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05), inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
@@ -52,26 +62,32 @@ input {
     position: relative;
     display: block;
     width: 96px;
-    height: 16px;
-    top: 6px;
+    height: 24px;
+    top: 1px;
     left: 0;
     padding: 0;
     border: none;
     font-size: 12px;
-    line-height: 16px;
-    vertical-align: middle;
-    border-radius: 5px;
-    box-shadow: 0 0 0 0, 0 0 0 0;
+    line-height: 24px;
     background-color: #f8f8f0;
-    -webkit-rtl-ordering: logical;
-    -webkit-user-select: text;
-    cursor: auto;
-    -webkit-appearance: textfield;
-    -webkit-box-sizing: content-box;
-    box-sizing: content-box;
 }
 pre {
     margin: 0;
+}
+.icon {
+    font-family: 'icons-headless';
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    line-height: 1em;
+    speak: none;
+    display: inline-block;
+    text-decoration: inherit;
+    width: 1em;
+    text-align: center;
+    text-transform: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 .we-come-in-peace {
     position: absolute;

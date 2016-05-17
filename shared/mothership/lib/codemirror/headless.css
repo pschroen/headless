@@ -16,6 +16,7 @@
 
 .cm-s-headless span.cm-property, .cm-s-headless span.cm-attribute { color: #a6e22e; }
 .cm-s-headless span.cm-keyword { color: #f92672; }
+.cm-s-headless span.cm-builtin { color: #66d9ef; }
 .cm-s-headless span.cm-string { color: #e6db74; }
 
 .cm-s-headless span.cm-variable { color: #f8f8f2; }

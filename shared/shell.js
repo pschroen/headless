@@ -16,7 +16,6 @@ if (!(typeof process !== 'undefined' && typeof process.send !== 'undefined') && 
 // Globals
 global.fs = require('fs'),
 global.webpage = typeof phantom !== 'undefined' ? require('webpage') : null,
-global.probe = require('./modules/probe'),
 global.utils = require('./modules/utils'),
 global.shell = require('./modules/'+(typeof phantom !== 'undefined' ? 'phantom' : 'node')+'/shell'),
 global.user = shell.user,

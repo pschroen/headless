@@ -24,9 +24,10 @@ var types = {
  * Initialize.
  *
  * @param    {Probe} probe Instance
+ * @param    {undefined|Object} [load] Payload
  * @param    {undefined|initCallback} [callback]
  */
-function init(probe, callback) {
+function init(probe, load, callback) {
     probe.log("["+exports.id+"] Loading "+exports.name+" and searching for "+probe.item.text);
     var memory = probe.memory.list[probe.item.text],
         src = null,

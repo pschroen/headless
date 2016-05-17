@@ -16,31 +16,26 @@ var utils = require(shell.path+'/modules/utils'),
  * Initialize.
  *
  * @param    {Probe} probe Instance
+ * @param    {undefined|Object} [load] Payload
  * @param    {undefined|initCallback} [callback]
  */
-function init(probe, callback) {
-    var payload = probe.payload,
-        origin = payload.origin,
-        headers = {
-            'Access-Control-Allow-Origin': origin,
+function init(probe, load, callback) {
+    var headers = {
+            'Access-Control-Allow-Origin': load.origin,
             'Access-Control-Allow-Credentials': 'true'
         };
-    probe.log(exports.name);
-
+    probe.log("["+exports.id+"] "+exports.name);
     // Retrieve username
     probe.session('username', function (error, args) {
-        probe.log("Session response: "+JSON.stringify(args));
-
+        probe.log("["+exports.id+"] Session response: "+JSON.stringify(args));
         // Store username, must be called before the callback
         probe.session('username', 'helloworld');
-
         // Retrieve username that we just stored
         probe.session('username', function (error, args) {
-            probe.log("Session response: "+JSON.stringify(args));
-
+            probe.log("["+exports.id+"] Session response: "+JSON.stringify(args));
             callback({
                 title: exports.name,
-                text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. The name of this file is your endpoint, for example; <a href="/hello" target="_blank">/hello</a>.'
+                text: 'The Headless framework simply receives and sends JavaScript Objects as input and output. The name of this file is your webhook, for example; <a href="/hello" target="_blank">/hello</a>.'
             }, headers);
         });
     });

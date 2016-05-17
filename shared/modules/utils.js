@@ -314,4 +314,20 @@ function filesize(input) {
 }
 Utils.prototype.filesize = filesize;
 
+/**
+ * Log helper.
+ *
+ * In production environments `syslog` takes care of the timestamp.
+ *
+ * @param    {string} message
+ */
+function log(message) {
+    if (process.env.NODE_ENV !== 'production') {
+        console.log('%s - %s', timestamp(), message);
+    } else {
+        console.log(message);
+    }
+}
+Utils.prototype.log = log;
+
 module.exports = exports = new Utils();

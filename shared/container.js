@@ -17,8 +17,13 @@ if (typeof process === 'undefined') {
 
 var debug = require('debug')('headless:container');
 
-var Shell = function (container, user, list, index, load, session) {
-    this.container = container;
+var Shell = function (container, user, list, index, load, sessions, callback) {
+    debug('constructor  : '+container+'  '+user.name+'  '+list+'  '+index+'  '+JSON.stringify(load)+'  '+(typeof sessions)+'  '+(typeof callback));
+    this.callbacks = [],
+    this.callbackid = 0,
+    this.container = container,
+    this.sessions = sessions,
+    this.callback = callback;
     try {
         this.list = JSON.parse(fs.readFileSync(list).toString());
     } catch (err) {
@@ -31,7 +36,6 @@ var Shell = function (container, user, list, index, load, session) {
             stack: err.stack
         };
     }
-    this.callback = null;
     var self = this;
     switch (this.container) {
         case 'node':
@@ -74,27 +78,6 @@ var Shell = function (container, user, list, index, load, session) {
                         }
                         if (args.error) error = args.error;
                         break;
-                    case 'session':
-                        var args = data.args;
-                        if (session) {
-                            if (typeof args.value !== 'undefined') {
-                                session[args.name] = args.value;
-                            } else if (typeof args.name !== 'object') {
-                                args.value = session[args.name];
-                            } else {
-                                utils.extend(session, args.name);
-                            }
-                        }
-                        node.send({
-                            message: 'response',
-                            data: {
-                                id: data.id,
-                                command: data.command,
-                                args: args
-                            }
-                        });
-                        if (args.error) error = args.error;
-                        break;
                     case 'error':
                         if (user) {
                             send(user.socket, {
@@ -124,7 +107,7 @@ var Shell = function (container, user, list, index, load, session) {
                 }
                 if (self.list.run === 'forever') {
                     if (user) {
-                        util.log("Respawning "+list);
+                        utils.log("Respawning "+list);
                         send(user.socket, {
                             name: user.name,
                             message: 'data',
@@ -137,7 +120,7 @@ var Shell = function (container, user, list, index, load, session) {
                             }
                         });
                     }
-                    var run = new Shell(container, user, list, index, load);
+                    new Shell(container, user, list, index, load, sessions, callback);
                 }
             });
             node.send({
@@ -176,7 +159,7 @@ var Shell = function (container, user, list, index, load, session) {
             }).listen(function () {
                 var phantom = cp.spawn(config.phantomjs ? config.phantomjs : require('phantomjs').path, ['--ignore-ssl-errors=true', 'shell.js', server.address().port, list, index]);
                 phantom.stdout.on('data', function (data) {
-                    util.log("Phantom stdout: "+data);
+                    utils.log("Phantom stdout: "+data);
                 });
                 phantom.stderr.on('data', function (data) {
                     console.error("Phantom stderr: "+data);
@@ -199,7 +182,7 @@ var Shell = function (container, user, list, index, load, session) {
                     server.close(function () {
                         if (self.list.run === 'forever') {
                             if (user) {
-                                util.log("Respawning "+list);
+                                utils.log("Respawning "+list);
                                 send(user.socket, {
                                     name: user.name,
                                     message: 'data',
@@ -212,7 +195,7 @@ var Shell = function (container, user, list, index, load, session) {
                                     }
                                 });
                             }
-                            var run = new Shell(container, user, list, index, load);
+                            new Shell(container, user, list, index, load, sessions, callback);
                         }
                     });
                 });
@@ -255,27 +238,6 @@ var Shell = function (container, user, list, index, load, session) {
                                         }
                                     });
                                 }
-                                if (args.error) error = args.error;
-                                break;
-                            case 'session':
-                                var args = data.args;
-                                if (session) {
-                                    if (typeof args.value !== 'undefined') {
-                                        session[args.name] = args.value;
-                                    } else if (typeof args.name !== 'object') {
-                                        args.value = session[args.name];
-                                    } else {
-                                        utils.extend(session, args.name);
-                                    }
-                                }
-                                send(socket, {
-                                    message: 'response',
-                                    data: {
-                                        id: data.id,
-                                        command: data.command,
-                                        args: args
-                                    }
-                                });
                                 if (args.error) error = args.error;
                                 break;
                             case 'error':
@@ -379,6 +341,21 @@ function exec(user, data, callback) {
 }
 Shell.prototype.exec = exec;
 
+function session(user, data, callback) {
+    /* jshint validthis:true */
+    var self = this,
+        args = data.args;
+    debug('session  : '+user.name+'  '+JSON.stringify(data)+'  '+(typeof callback)+'  '+(typeof self.sessions));
+    if (self.sessions) {
+        self.callbacks[self.callbackid] = callback;
+        self.sessions(args.id, {callbackid:args.id, id:self.callbackid, name:args.name, value:args.value});
+        self.callbackid++;
+    } else {
+        callback({error:"Session requires HTTP payload", name:args.name, value:args.value});
+    }
+}
+Shell.prototype.session = session;
+
 function out(user, data, callback) {
     /* jshint validthis:true */
     var self = this,
@@ -399,14 +376,13 @@ function out(user, data, callback) {
                             }
                         }
                     });
-                    self.callback({stream:'start', headers:args.headers, length:stats.size});
+                    self.callback(args.id, {stream:'start', headers:args.headers, length:stats.size});
                     var stream = fs.createReadStream(args.data).pipe(new (require('stream-throttle').Throttle)({rate:config.streamrate}));
                     stream.on('data', function (data) {
-                        self.callback({stream:'data', data:data.toString('base64')});
+                        self.callback(args.id, {stream:'data', data:data.toString('base64')});
                     });
                     stream.on('end', function () {
-                        self.callback({stream:'end'});
-                        self.callback = null;
+                        self.callback(args.id, {stream:'end'});
                         send(user.socket, {
                             name: user.name,
                             message: 'data',
@@ -421,8 +397,7 @@ function out(user, data, callback) {
                         callback(args);
                     });
                 } else {
-                    self.callback(args);
-                    self.callback = null;
+                    self.callback(args.id, {data:args.data, headers:args.headers, stream:args.stream});
                     send(user.socket, {
                         name: user.name,
                         message: 'data',
@@ -438,8 +413,7 @@ function out(user, data, callback) {
                 }
             });
         } else {
-            self.callback(args);
-            self.callback = null;
+            self.callback(args.id, {data:args.data, headers:args.headers, stream:args.stream});
             callback(args);
         }
     } else {
@@ -447,6 +421,32 @@ function out(user, data, callback) {
     }
 }
 Shell.prototype.out = out;
+
+function message(index, payload) {
+    /* jshint validthis:true */
+    debug('message  : '+this.container+'  '+index+'  '+JSON.stringify(payload));
+    switch (this.container) {
+        case 'node':
+            this.node.send({
+                message: 'message',
+                data: {
+                    index: index,
+                    payload: payload
+                }
+            });
+            break;
+        case 'phantom':
+            send(this.socket, {
+                message: 'message',
+                data: {
+                    index: index,
+                    payload: payload
+                }
+            });
+            break;
+    }
+}
+Shell.prototype.message = message;
 
 function kill() {
     /* jshint validthis:true */

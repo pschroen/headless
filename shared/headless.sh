@@ -25,10 +25,12 @@ case "$1" in
       ")
     if [ "$UPGRADE" = "true" ]; then
       echo "Upgrading to latest stable..."
-      /sbin/curl -s -O -L -k https://github.com/pschroen/headless/archive/stable.tar.gz
-      /bin/tar xzf stable.tar.gz --overwrite --strip=1 --exclude='config.js' --exclude='shell/config.json'
-      rm stable.tar.gz
-      #bin/npm install
+      /sbin/curl -sLk https://github.com/pschroen/headless/archive/stable.tar.gz | /bin/tar -zx --strip=1 --overwrite --exclude='config.js' --exclude='shell/config.json'
+      #sed -i "/\"phantomjs\":/d" package.json
+      #npm install
+      cd shell
+      /opt/bin/git pull origin stable
+      cd ..
       VERSION=$(bin/node -pe "JSON.parse(require('fs').readFileSync('package.json').toString()).version")
       echo "Upgrade to version $VERSION complete"
     fi
