@@ -18,6 +18,13 @@ npm start
 Return to the setup page, create your first user and happy scripting! :)
 
 
+## Slack integration
+
+Headless was created specifically for developing webhooks to devices, and with that it's perfectly suited for creating public webhooks you can use in your own Slack projects. If you've created a Slack integration with Headless that you want to share, feel free to open a pull request to contribute to the list here.
+
+* [Slack Amp](https://github.com/pschroen/twitspot/wiki/Slack-integration)
+
+
 ## Running your own headless server
 
 For production use and installation on embedded computers, refer to the [Server configuration](https://github.com/pschroen/headless/wiki/Server-configuration) wiki for your environment.
