@@ -727,7 +727,7 @@ function receive(socket, payload, response_url) {
                                 break;
                             case 'restart':
                                 if (response_url) {
-                                    socket.off('close');
+                                    socket.removeAllListeners('close');
                                     socket.close();
                                 }
                                 for (var user in users) {
