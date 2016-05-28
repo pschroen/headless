@@ -967,6 +967,7 @@ function mothership(insert) {
         });
         socket.on('error', function (err) {
             utils.log("Call home to "+url+" failed with "+err+", reconnecting in 20 seconds");
+            if (setup) clearInterval(setup);
             clearInterval(heartbeat);
             setTimeout(function () {
                 mothership(insert);
@@ -974,6 +975,7 @@ function mothership(insert) {
         });
         socket.on('close', function () {
             utils.log("Mothership "+url+" disconnected, reconnecting in 20 seconds");
+            if (setup) clearInterval(setup);
             clearInterval(heartbeat);
             setTimeout(function () {
                 mothership(insert);
