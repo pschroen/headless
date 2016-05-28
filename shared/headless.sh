@@ -18,7 +18,7 @@ case "$1" in
       echo "/opt/lib" >> /etc/ld.so.conf
     fi
     /sbin/ldconfig
-    UPGRADE=$(/sbin/curl -s -L -k https://github.com/pschroen/headless/raw/stable/package.json|\
+    UPGRADE=$(/sbin/curl -sLk https://github.com/pschroen/headless/raw/stable/package.json|\
       bin/node -pe "\
       parseInt(JSON.parse(require('fs').readFileSync('/dev/stdin').toString()).version.replace(/\./g,''),10)>\
       parseInt(JSON.parse(require('fs').readFileSync('package.json').toString()).version.replace(/\./g,''),10)\
@@ -28,9 +28,11 @@ case "$1" in
       /sbin/curl -sLk https://github.com/pschroen/headless/archive/stable.tar.gz | /bin/tar -zx --strip=1 --overwrite --exclude='config.js' --exclude='shell/config.json'
       #sed -i "/\"phantomjs\":/d" package.json
       #npm install
-      cd shell
-      /opt/bin/git pull origin stable
-      cd ..
+      if [ -x shell/.git ]; then
+        cd shell
+        /opt/bin/git pull origin stable
+        cd ..
+      fi
       VERSION=$(bin/node -pe "JSON.parse(require('fs').readFileSync('package.json').toString()).version")
       echo "Upgrade to version $VERSION complete"
     fi
