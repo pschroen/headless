@@ -36,7 +36,7 @@ case "$1" in
       VERSION=$(bin/node -pe "JSON.parse(require('fs').readFileSync('package.json').toString()).version")
       echo "Upgrade to version $VERSION complete"
     fi
-    [ -x /opt/bin/transmission-daemon ] && /opt/bin/transmission-daemon -w /share/Download
+    [ -x /opt/bin/transmission-daemon ] && /opt/bin/transmission-daemon -er -w /share/Download
     bin/node headless 2>&1 < /dev/null &
     ;;
 
