@@ -81,7 +81,7 @@ var insert = [],
     intervals = [],
     server = null,
     wss = null,
-    daemons = null;
+    daemons = {};
 
 var init = function () {
     debug('init');
@@ -195,7 +195,7 @@ var init = function () {
                                                 if (!out.stream || out.stream === 'end') res.end();
                                             };
                                             var api = null;
-                                            if (!daemons) {
+                                            if (!daemons[name]) {
                                                 api = new container(list.list.container, users[name], list.path, i, {id:callbackid, type:'http', data:load}, function (id, out) {
                                                     debug('local http sessionCallback  : '+id+'  '+JSON.stringify(out));
                                                     callbacks[id].session(out);
@@ -204,9 +204,9 @@ var init = function () {
                                                     callbacks[id].callback(out);
                                                     if (!out.stream || out.stream === 'end') delete callbacks[id];
                                                 });
-                                                if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
+                                                if (list.list.shell === 'api' && list.list.run === 'forever') daemons[name] = api;
                                             } else {
-                                                api = daemons;
+                                                api = daemons[name];
                                                 api.message(i, {id:callbackid, type:'http', data:load});
                                             }
                                             callbacks[callbackid].api = api;
@@ -345,15 +345,15 @@ var init = function () {
                                                                 });
                                                             };
                                                             var api = null;
-                                                            if (!daemons) {
+                                                            if (!daemons[name]) {
                                                                 api = new container(list.list.container, users[name], list.path, i, {id:callbackid, type:'ws', data:data}, null, function (id, out) {
                                                                     debug('local ws apiCallback  : '+id+'  '+JSON.stringify(out));
                                                                     callbacks[id].callback(out);
                                                                     if (!out.stream || out.stream === 'end') delete callbacks[id];
                                                                 });
-                                                                if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
+                                                                if (list.list.shell === 'api' && list.list.run === 'forever') daemons[name] = api;
                                                             } else {
-                                                                api = daemons;
+                                                                api = daemons[name];
                                                                 api.message(i, {id:callbackid, type:'ws', data:data});
                                                             }
                                                             callbacks[callbackid].api = api;
@@ -426,7 +426,7 @@ var init = function () {
                             callbacks[id].callback(out);
                             if (!out.stream || out.stream === 'end') delete callbacks[id];
                         });
-                        if (list.list.shell === 'api' && list.list.run === 'forever') daemons = run;
+                        if (list.list.shell === 'api' && list.list.run === 'forever') daemons[name] = run;
                     }
                 }
             });
@@ -833,7 +833,7 @@ function receive(socket, payload, response_url) {
                                             }
                                         };
                                         var api = null;
-                                        if (!daemons) {
+                                        if (!daemons[name]) {
                                             api = new container(list.list.container, users[name], list.path, i, {id:callbackid, type:payload.type, data:data.payload}, function (id, out) {
                                                 debug('local '+payload.type+' sessionCallback  : '+id+'  '+JSON.stringify(out));
                                                 callbacks[id].session(out);
@@ -842,9 +842,9 @@ function receive(socket, payload, response_url) {
                                                 callbacks[id].callback(out);
                                                 if (!out.stream || out.stream === 'end') delete callbacks[id];
                                             });
-                                            if (list.list.shell === 'api' && list.list.run === 'forever') daemons = api;
+                                            if (list.list.shell === 'api' && list.list.run === 'forever') daemons[name] = api;
                                         } else {
-                                            api = daemons;
+                                            api = daemons[name];
                                             api.message(i, {id:callbackid, type:payload.type, data:data.payload});
                                         }
                                         callbacks[callbackid].api = api;
