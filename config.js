@@ -18,3 +18,4 @@ exports.streamrate = 51200;
 //exports.phantomjs = 'bin/phantomjs';
 // Optional git path
 //exports.git = '/opt/bin/git';
+exports.cookiesecret = 'keyboard cat';

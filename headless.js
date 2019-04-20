@@ -87,7 +87,7 @@ var init = function () {
     debug('init');
     var app = connect();
     app.use(require('compression')());
-    app.use(require('cookie-session')({name:'session', secret:'TODO: Salt'}));
+    app.use(require('cookie-session')({secret:config.cookiesecret}));
 
     app.use(function (req, res) {
         var body = '';
