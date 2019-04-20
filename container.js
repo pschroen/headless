@@ -377,9 +377,25 @@ function out(user, data, callback) {
                         }
                     });
                     self.callback(args.id, {stream:'start', headers:args.headers, length:stats.size});
-                    var stream = fs.createReadStream(args.data).pipe(new (require('stream-throttle').Throttle)({rate:config.streamrate}));
+                    var total = 0,
+                        stream = fs.createReadStream(args.data).pipe(new (require('stream-throttle').Throttle)({rate:config.streamrate}));
                     stream.on('data', function (data) {
                         self.callback(args.id, {stream:'data', data:data.toString('base64')});
+                        total += data.length;
+                        var progress = parseInt(total/stats.size*100, 10);
+                        if (progress < 100) {
+                            send(user.socket, {
+                                name: user.name,
+                                message: 'data',
+                                data: {
+                                    args: {
+                                        error: null,
+                                        message: "Stream at "+progress+"%",
+                                        progress: progress
+                                    }
+                                }
+                            });
+                        }
                     });
                     stream.on('end', function () {
                         self.callback(args.id, {stream:'end'});
